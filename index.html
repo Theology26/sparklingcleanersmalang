@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkling Cleaners Malang | Spesialis Cuci Premium</title>
+    <meta name="description"
+        content="Layanan cuci spesialis Sepatu, Tas, Helm, dan Karpet di Malang. Aesthetic, terpercaya, dan profesional.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="styles/main.css?v=2">
+    <style>
+        /* Specific Page Styles */
+        .hero {
+            position: relative;
+            padding: 8rem 5%;
+            text-align: center;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 100vw;
+            opacity: 0.05;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="49" stroke="%231E2A38" stroke-width="0.5" fill="none"/></svg>') center/contain no-repeat;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            max-width: 800px;
+            background: -webkit-linear-gradient(45deg, var(--primary-navy), var(--primary-sky));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            font-weight: 400;
+        }
+
+        .service-card {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .service-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: rgba(52, 152, 219, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(52, 152, 219, 0.4);
+            color: var(--primary-sky);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07), inset 0 4px 6px rgba(255, 255, 255, 0.6);
+            transition: transform 0.3s ease;
+        }
+
+        .service-card:hover .service-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .star-rating {
+            display: inline-flex;
+            gap: 8px;
+            font-size: 1.8rem;
+            color: rgba(200, 200, 200, 0.5);
+            cursor: pointer;
+            padding: 0.5rem 0;
+        }
+
+        .star-rating i {
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .star-rating i:hover {
+            transform: scale(1.15);
+        }
+
+        .star-rating i.active {
+            color: var(--accent-yellow);
+            filter: drop-shadow(0 0 5px rgba(241, 196, 15, 0.4));
+        }
+
+        .service-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-sky);
+            margin-top: 1rem;
+        }
+
+        .service-time {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 0.5rem;
+        }
+
+        /* Tracking Step Bar */
+        .tracking-panel {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem;
+        }
+
+        .track-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .track-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .track-input:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: var(--primary-sky);
+        }
+
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 5%;
+            width: 90%;
+            height: 4px;
+            background: rgba(200, 200, 200, 0.3);
+            z-index: 0;
+            border-radius: 2px;
+        }
+
+        .step {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid var(--primary-sky);
+            color: var(--primary-navy);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-circle {
+            background: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+            color: var(--primary-navy);
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.6);
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .step.active .step-label {
+            color: var(--primary-navy);
+        }
+
+        /* Form WhatsApp */
+        .wa-booking {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .wa-form-container {
+            padding: 2.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-navy);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.5);
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: var(--primary-sky);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary-navy);
+            color: white;
+            padding: 5rem 5% 2rem;
+            border-radius: 40px 40px 0 0;
+            margin-top: 4rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 4rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-brand .logo-text {
+            color: white;
+        }
+
+        .footer-maps iframe {
+            width: 100%;
+            height: 250px;
+            border-radius: 16px;
+            border: none;
+        }
+
+        .footer-address {
+            margin-top: 1.5rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+
+            .wa-booking,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stepper::before {
+                display: none;
+            }
+
+            .stepper {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .step-circle {
+                margin: 0 auto;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar glass-panel">
+        <a href="index.html" class="logo-container">
+            <div class="logo-img-wrapper">
+                <img src="assets/logo.png" alt="Logo Sparkling" class="logo-img">
+            </div>
+            <span class="logo-text">SPARKLING<small>CLEANERS</small></span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#layanan">Layanan</a></li>
+            <li><a href="#tracking">Lacak Pesanan</a></li>
+            <li><a href="#testimoni">Testimoni</a></li>
+            <li><a href="#artikel">Artikel Tips</a></li>
+            <li><a href="#booking">Booking</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero container">
+        <div class="hero-watermark"></div>
+        <h1 id="heroTitle">Spesialis Perawatan Barang Kesayangan Anda</h1>
+        <p id="heroSubtitle">Aesthetic, Modern, dan Clean. Kami memberikan sentuhan magis untuk sepatu, tas, dan helm Anda hingga
+            tampak seperti baru.</p>
+        <a href="#booking" class="btn btn-primary">Booking Sekarang <i class="fa-solid fa-paper-plane"
+                style="margin-left: 5px;"></i></a>
+    </section>
+
+    <!-- Services Grid -->
+    <section id="layanan" class="section container">
+        <div class="text-center mb-2">
+            <h2>Layanan Kami</h2>
+            <p>Perawatan detail spesifik untuk setiap jenis barang.</p>
+        </div>
+        <div class="grid grid-3">
+            <!-- Cuci Sepatu -->
+            <div class="glass-card service-card">
+                <div class="service-icon"><i class="fa-solid fa-shoe-prints"></i></div>
+                <h3>Cuci Sepatu</h3>
+                <p>Deep cleaning untuk segala jenis bahan material dari kanvas hingga kulit.</p>
+                <div class="service-price">Mulai Rp 35.000</div>
+                <span class="service-time">Estimasi: 2-3 Hari</span>
+            </div>
+            <!-- Repaint Sepatu -->
+            <div class="glass-card service-card">
+                <div class="service-icon"><i class="fa-solid fa-paintbrush"></i></div>
+                <h3>Repaint Sepatu</h3>
+                <p>Restorasi warna pudar atau kustomisasi warna agar sepatu tampil baru lagi.</p>
+                <div class="service-price">Mulai Rp 80.000</div>
+                <span class="service-time">Estimasi: 5-7 Hari</span>
+            </div>
+            <!-- Unyellowing -->
+            <div class="glass-card service-card">
+                <div class="service-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <h3>Unyellowing</h3>
+                <p>Menghilangkan noda kuning membandel pada midsole akibat oksidasi.</p>
+                <div class="service-price">Mulai Rp 50.000</div>
+                <span class="service-time">Estimasi: 3-4 Hari</span>
+            </div>
+            <!-- Cuci Tas -->
+            <div class="glass-card service-card">
+                <div class="service-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+                <h3>Cuci Tas</h3>
+                <p>Treatment khusus untuk tas wanita, ransel, koper agar bebas noda.</p>
+                <div class="service-price">Mulai Rp 50.000</div>
+                <span class="service-time">Estimasi: 3-5 Hari</span>
+            </div>
+            <!-- Helm -->
+            <div class="glass-card service-card">
+                <div class="service-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                <h3>Cuci Helm</h3>
+                <p>Pembersihan luar dalam, bebas bau dan bakteri dengan teknologi UV.</p>
+                <div class="service-price">Mulai Rp 40.000</div>
+                <span class="service-time">Estimasi: 1-2 Hari</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Order Tracking -->
+    <section id="tracking" class="section container">
+        <div class="glass-panel tracking-panel">
+            <div class="text-center mb-2">
+                <h2>Lacak Pesanan Anda</h2>
+                <p>Pantau status perawatan barang kesayangan Anda secara real-time.</p>
+            </div>
+            <div class="track-form">
+                <input type="text" id="trackInput" class="track-input"
+                    placeholder="Masukkan Kode Order atau Nomer WA...">
+                <button type="button" class="btn btn-primary" onclick="window.simulateTracking()">Lacak</button>
+            </div>
+
+            <div class="stepper" id="trackingStepper">
+                <div class="step" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Diterima</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Cuci</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Kering</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Finishing</div>
+                </div>
+                <div class="step" data-step="5">
+                    <div class="step-circle">5</div>
+                    <div class="step-label">Siap Ambil</div>
+                </div>
+            </div>
+            <p id="trackingStatusMessage" class="text-center mt-2"
+                style="font-weight: 600; color: var(--primary-sky); display: none;"></p>
+        </div>
+    </section>
+
+    <!-- Testimoni -->
+    <section id="testimoni" class="section container">
+        <div class="text-center mb-2">
+            <h2>Kata Mereka</h2>
+            <p>Ribuan pelanggan telah mempercayakan perawatannya pada kami.</p>
+        </div>
+        <div class="grid grid-3" style="margin-bottom: 2.5rem;">
+            <!-- Review 1 -->
+            <div class="glass-card" style="padding: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <div
+                        style="width: 50px; height: 50px; background: rgba(52, 152, 219, 0.2); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--primary-sky);">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0;">Ridwan K.</h4>
+                        <div style="color: var(--accent-yellow); font-size: 0.8rem;">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                class="fa-solid fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size: 0.95rem; font-style: italic;">"Sepatu lari saya yang kuning dekil jadi putih bersih
+                    lagi. Mantap pelayanannya!"</p>
+            </div>
+            <!-- Review 2 -->
+            <div class="glass-card" style="padding: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <div
+                        style="width: 50px; height: 50px; background: rgba(52, 152, 219, 0.2); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--primary-sky);">
+                        <i class="fa-solid fa-user-secret"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0;">S***h <span
+                                style="font-size:0.7rem; font-weight:normal; color:var(--text-muted);">(Anonim)</span>
+                        </h4>
+                        <div style="color: var(--accent-yellow); font-size: 0.8rem;">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                class="fa-solid fa-star-half-stroke"></i>
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size: 0.95rem; font-style: italic;">"Tas kulit saya yang penuh noda tinta bisa hilang
+                    tanpa merusak kulit. Makasih Sparkling Team."</p>
+            </div>
+            <!-- Review 3 -->
+            <div class="glass-card" style="padding: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <div
+                        style="width: 50px; height: 50px; background: rgba(52, 152, 219, 0.2); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--primary-sky);">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0;">Wahyu D</h4>
+                        <div style="color: var(--accent-yellow); font-size: 0.8rem;">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                                class="fa-solid fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size: 0.95rem; font-style: italic;">"Cuci helm sangat wangi dan cepat. Proteksi anti
+                    bacterial UV nya kerasa banget, nggak apek lagi."</p>
+            </div>
+        </div>
+        <div class="text-center">
+            <button class="btn btn-secondary" onclick="window.openTestimoniModal()">Tulis Ulasan Anda <i
+                    class="fa-solid fa-pen-nib" style="margin-left:8px;"></i></button>
+        </div>
+    </section>
+
+    <!-- Artikel Edukasi -->
+    <section id="artikel" class="section container">
+        <div class="text-center mb-2">
+            <h2>Artikel & Tips Perawatan</h2>
+            <p>Edukasi langsung dari para ahli perawat cuci premium kami.</p>
+        </div>
+        <div class="grid grid-3" style="margin-bottom: 2rem;" id="articles-container">
+            <!-- Artikel 1 -->
+            <div class="glass-card" style="overflow: hidden; text-align: left;">
+                <div
+                    style="height: 200px; background: url('https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500') center/cover;">
+                </div>
+                <div style="padding: 1.5rem;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">Perawatan
+                        Sepatu</span>
+                    <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">Cara Jitu Menghilangkan Noda
+                        Kuning di Sepatu Minimalis Putih</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Noda menguning sering
+                        terjadi pada sol akibat oksidasi suhu. Inilah rahasianya...</p>
+                    <a href="javascript:alert('Fitur baca artikel selengkapnya akan hadir di versi berikutnya!')"
+                        style="color: var(--primary-navy); font-weight: 600; text-decoration: none; font-size: 0.9rem;">Baca
+                        Selengkapnya <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i></a>
+                </div>
+            </div>
+            <!-- Artikel 2 -->
+            <div class="glass-card" style="overflow: hidden; text-align: left;">
+                <div
+                    style="height: 200px; background: url('https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=500') center/cover;">
+                </div>
+                <div style="padding: 1.5rem;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">Perawatan Tas</span>
+                    <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">Perhatikan 3 Hal Ini Sebelum
+                        Mencuci Tas Kulit Asli Anda!</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Mencuci tas kulit butuh
+                        perlakuan khusus agar permukaannya tidak retak (crack).</p>
+                    <a href="javascript:alert('Fitur baca artikel selengkapnya akan hadir di versi berikutnya!')"
+                        style="color: var(--primary-navy); font-weight: 600; text-decoration: none; font-size: 0.9rem;">Baca
+                        Selengkapnya <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i></a>
+                </div>
+            </div>
+            <!-- Artikel 3 -->
+            <div class="glass-card" style="overflow: hidden; text-align: left;">
+                <div
+                    style="height: 200px; background: url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500') center/cover;">
+                </div>
+                <div style="padding: 1.5rem;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">Perawatan Helm</span>
+                    <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">Bahaya Bakteri Keringat Berlebih
+                        Pada Busa Helm Kesayangan</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Busa helm basah adalah
+                        sarang bagi ribuan bakteri yang sering memicu gatal rambut.</p>
+                    <a href="javascript:alert('Fitur baca artikel selengkapnya akan hadir di versi berikutnya!')"
+                        style="color: var(--primary-navy); font-weight: 600; text-decoration: none; font-size: 0.9rem;">Baca
+                        Selengkapnya <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center">
+            <button class="btn btn-secondary" onclick="alert('Belum ada artikel tambahan untuk dimuat saat ini.')">Muat Artikel Lainnya</button>
+        </div>
+    </section>
+
+    <!-- Daftar Menu Layanan / Price List -->
+    <section id="pricelist" class="section container">
+        <div class="text-center mb-2">
+            <h2>Daftar Harga & Menu Layanan</h2>
+            <p>Pilih treatment yang sesuai dengan kebutuhan barang kesayangan Anda.</p>
+        </div>
+
+        <!-- Regular Wash -->
+        <h3 style="margin-top: 2rem; display: flex; align-items: center; gap: 10px;"><span class="badge badge-regular">Regular Wash</span></h3>
+        <div class="price-table-container">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>Item & Keterangan</th>
+                        <th>Estimasi</th>
+                        <th>Small</th>
+                        <th>Medium</th>
+                        <th>Large</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Shoes</strong><br><small style="color:var(--text-muted);">Deep clean (Outsole, Midsole, Upper, Insole)</small></td>
+                        <td>3 Hari</td>
+                        <td>20K</td>
+                        <td>50K</td>
+                        <td>65K</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Helmet</strong><br><small style="color:var(--text-muted);">Interior and Exterior</small></td>
+                        <td>24 Jam</td>
+                        <td>22K (Half Face)</td>
+                        <td>30K (Full Face)</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bag (Leather)</strong><br><small style="color:var(--text-muted);">Shoulder/Sling/Hand Bag (Leather Treatment)</small></td>
+                        <td>24 Jam</td>
+                        <td>25K</td>
+                        <td>30K</td>
+                        <td>35K</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bag (Fabric/Canvas)</strong><br><small style="color:var(--text-muted);">Shoulder/Sling/Hand Bag (Fabric/Canvas)</small></td>
+                        <td>2 Hari</td>
+                        <td>20K</td>
+                        <td>25K</td>
+                        <td>30K</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Special Treatment -->
+        <h3 style="margin-top: 3rem; display: flex; align-items: center; gap: 10px;"><span class="badge badge-special">Special Treatment</span></h3>
+        <div class="price-table-container">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>Item & Layanan Khusus</th>
+                        <th>Estimasi</th>
+                        <th>Harga</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Boots</strong></td>
+                        <td>3 Hari</td>
+                        <td>S: 60K | M: 65K | L: 80K</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Suede Shoes</strong></td>
+                        <td>5 Hari</td>
+                        <td>S: 50K | M: 60K | L: 70K</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dress Shoes</strong></td>
+                        <td>3 Hari</td>
+                        <td>S: 55K | M: 60K | L: 65K</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Repaint Canvas & Leather (Kode P)</strong></td>
+                        <td>10 Hari</td>
+                        <td>Upper 80K | Midsole 50K | Outsole 40K | Insole 30K</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Repaint Canvas & Leather (Kode S)</strong></td>
+                        <td>10 Hari</td>
+                        <td>Upper 100K | Midsole 63K | Outsole 50K | Insole 38K</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Repaint Suede</strong></td>
+                        <td>10 Hari</td>
+                        <td>Upper 120K | Midsole 75K | Outsole 60K | Insole 45K</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ekstra Treatment</strong><br><small style="color:var(--text-muted);">Liquid Remover (+15k Sepatu / +5k Tas) | Unyellowing (+20k) | Canvas Whitener (+20k) | Leather Filler (+25k)</small></td>
+                        <td>10 Hari</td>
+                        <td>Mulai 5K - 25K</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Express Treatment -->
+        <div class="glass-card" style="padding: 1.5rem; border-left: 4px solid var(--accent-yellow);">
+            <h4 style="margin-bottom:0.5rem; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-bolt" style="color:var(--accent-yellow);"></i> Express Service (Add-on)</h4>
+            <p style="font-size: 0.9rem; margin:0;">8 Jam (+20K) | 18 Jam (+15K) | 24 Jam (+10K)</p>
+        </div>
+    </section>
+
+    <!-- Layanan Antar Jemput & Jadwal -->
+    <section id="delivery-info" class="section container">
+        <div class="text-center mb-2">
+            <h2>Informasi Antar Jemput</h2>
+            <p>Kami menyediakan layanan pickup & delivery untuk kenyamanan Anda.</p>
+        </div>
+        <div class="grid grid-2">
+            <div class="glass-card" style="padding: 2rem;">
+                <h3 style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-truck-fast" style="color:var(--primary-sky);"></i> Ketentuan Ongkir</h3>
+                <ul style="list-style:none; margin-top:1rem; line-height:2;">
+                    <li><i class="fa-solid fa-check" style="color:#2ecc71; margin-right:10px;"></i> <strong>0 KM - 10 KM:</strong> <span class="badge badge-regular">FREE ONGKIR</span></li>
+                    <li><i class="fa-solid fa-triangle-exclamation" style="color:var(--accent-yellow); margin-right:10px;"></i> <strong>Lebih dari 10 KM:</strong> Dikenakan +Rp 2.000 / KM</li>
+                    <li><i class="fa-solid fa-location-dot" style="color:var(--text-muted); margin-right:10px;"></i> Titik awal (START) dari: Dusun Jamuran, Sukodadi Wagir</li>
+                </ul>
+            </div>
+            <div class="glass-card" style="padding: 2rem;">
+                <h3 style="display:flex; align-items:center; gap:10px;"><i class="fa-regular fa-calendar-clock" style="color:var(--primary-sky);"></i> Jadwal Pickup</h3>
+                <div style="margin-top:1rem;">
+                    <strong style="color:var(--primary-navy);">Senin - Jumat:</strong>
+                    <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                        <span class="badge badge-regular">Sesi 1: 07.00 - 09.00</span>
+                        <span class="badge badge-regular">Sesi 2: 11.00 - 13.00</span>
+                        <span class="badge badge-regular">Sesi 3: 17.00 - 19.00</span>
+                    </div>
+                    <div style="margin-top:1.5rem; color:#e74c3c; font-weight:600;">
+                        <i class="fa-solid fa-calendar-xmark" style="margin-right:5px;"></i> Sabtu - Minggu: LIBUR (Tidak ada pickup)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking WA -->
+    <section id="booking" class="section container">
+        <div class="glass-panel wa-booking">
+            <div style="padding: 2.5rem;">
+                <h2>Form Order & Booking</h2>
+                <p>Silakan lengkapi data pesanan Anda di bawah ini. Sistem akan otomatis menghitung estimasi biaya dan waktu pengerjaan.</p>
+                <div class="info-card mt-2">
+                    <h4>Catatan Penting:</h4>
+                    <ul>
+                        <li><i class="fa-solid fa-shield-halved"></i> Garansi cuci ulang 1x berlaku 1 hari setelah barang diambil (kondisi belum dipakai).</li>
+                        <li><i class="fa-solid fa-clock"></i> Estimasi waktu bisa berubah sedikit tergantung kondisi antrean / cuaca.</li>
+                    </ul>
+                </div>
+                
+                <div class="qr-container mt-2" style="margin-top: 3rem;">
+                    <div id="ig-qr-code"></div>
+                    <p style="margin-top:15px; font-size:0.9rem; text-align:center; color:var(--text-muted);">Scan untuk ikuti kami di Instagram!</p>
+                    <a href="https://instagram.com/sparklingcleaners_mlg" target="_blank" style="margin-top:5px;">@sparklingcleaners_mlg</a>
+                </div>
+            </div>
+            
+            <div class="wa-form-container glass-card" style="margin: 2rem;">
+                <form id="orderForm" onsubmit="window.processOrder(event)">
+                    <!-- Identitas -->
+                    <div class="input-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="orderName" class="form-control" required placeholder="Cth: Budi Santoso">
+                    </div>
+                    <div class="input-group">
+                        <label>Nomor WhatsApp</label>
+                        <input type="tel" id="orderPhone" class="form-control" required placeholder="Cth: 08123456789">
+                    </div>
+                    
+                    <!-- Detail Barang -->
+                    <div class="grid grid-2" style="gap:1rem;">
+                        <div class="input-group">
+                            <label>Jenis Item</label>
+                            <select id="orderItemType" class="form-control" required onchange="window.updateServiceOptions()">
+                                <option value="">- Pilih Item -</option>
+                                <option value="Sepatu">Sepatu</option>
+                                <option value="Tas">Tas</option>
+                                <option value="Helm">Helm</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Jumlah Item</label>
+                            <input type="number" id="orderQty" class="form-control" required min="1" value="1" onchange="window.calculateTotal()">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-2" style="gap:1rem;">
+                        <div class="input-group">
+                            <label>Jenis Treatment</label>
+                            <select id="orderTreatmentType" class="form-control" required onchange="window.updateServiceOptions()">
+                                <option value="regular">Regular Wash</option>
+                                <option value="special">Special Treatment</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Pilihan Layanan</label>
+                            <select id="orderService" class="form-control" required onchange="window.calculateTotal()">
+                                <option value="">- Pilih Layanan Dulu -</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Layanan Express (Opsional)</label>
+                        <select id="orderExpress" class="form-control" onchange="window.calculateTotal()">
+                            <option value="none">Tidak Pakai (Normal)</option>
+                            <option value="8 Jam">Super Express (8 Jam) +Rp 20.000</option>
+                            <option value="18 Jam">Express (18 Jam) +Rp 15.000</option>
+                            <option value="24 Jam">Sameday (24 Jam) +Rp 10.000</option>
+                        </select>
+                    </div>
+
+                    <!-- Delivery -->
+                    <div class="input-group" style="margin-bottom: 1.5rem;">
+                        <label>Opsi Antar Jemput</label>
+                        <select id="orderDelivery" class="form-control" required onchange="window.toggleDeliveryOptions(this.value)">
+                            <option value="Tidak">Antar Sendiri ke Workshop (Tidak)</option>
+                            <option value="Ya">Jemput / Antar ke Alamat (Ya)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="deliveryDetails" style="display: none; background: rgba(52, 152, 219, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(52, 152, 219, 0.2);">
+                        <div class="input-group">
+                            <label>Alamat Lengkap</label>
+                            <textarea id="orderAddress" class="form-control" rows="2" placeholder="Nama Jalan, RT/RW, Kecamatan, Patokan..." onchange="window.calculateTotal()"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Jarak (KM dari Wagir) - Perkiraan</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="orderDistance" class="form-control" min="0" value="0" onchange="window.calculateTotal()" style="flex: 1;">
+                                <button type="button" class="btn btn-secondary" onclick="window.calculateDistanceGPS()" id="btnGps" style="padding: 0 1rem;"><i class="fa-solid fa-location-crosshairs"></i> GPS</button>
+                            </div>
+                            <small style="color:var(--text-muted);" id="gpsStatus">Isi manual atau klik GPS untuk menghitung otomatis.</small>
+                        </div>
+                        <div class="input-group" style="margin-bottom:0;">
+                            <label>Jadwal Penjemputan</label>
+                            <select id="orderSchedule" class="form-control">
+                                <option value="Sesi 1 (07.00 - 09.00)">Sesi 1 (07.00 - 09.00)</option>
+                                <option value="Sesi 2 (11.00 - 13.00)">Sesi 2 (11.00 - 13.00)</option>
+                                <option value="Sesi 3 (17.00 - 19.00)">Sesi 3 (17.00 - 19.00)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Ekstra -->
+                    <div class="input-group">
+                        <label>Catatan Tambahan</label>
+                        <textarea id="orderNotes" class="form-control" rows="2" placeholder="Sebutkan keluhan: noda tinta, warna pudar, dll..."></textarea>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Foto Kondisi Awal Barang (Opsional tapi Disarankan)</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="orderPhoto" class="file-upload-input" accept="image/*" onchange="window.previewPhoto(this)">
+                            <div class="file-upload-btn">
+                                <i class="fa-solid fa-camera"></i> Pilih Foto Barang
+                            </div>
+                            <img id="photoPreview" class="preview-image" src="" alt="Preview">
+                        </div>
+                    </div>
+                    
+                    <!-- Summary Box -->
+                    <div class="order-summary" id="orderSummaryBox">
+                        <h3>Ringkasan Pesanan</h3>
+                        <div class="summary-row">
+                            <span>Layanan Utama</span>
+                            <span id="sumService">Rp 0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Biaya Tambahan (Express)</span>
+                            <span id="sumExpress">Rp 0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Ongkos Kirim</span>
+                            <span id="sumOngkir">Rp 0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Estimasi Selesai</span>
+                            <span id="sumEst" style="color:var(--primary-sky); font-weight:600;">-</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total Biaya</span>
+                            <span id="sumTotal">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem; display: flex; gap: 10px; align-items: flex-start;">
+                        <input type="checkbox" id="orderTerms" required style="margin-top:5px; width: 18px; height: 18px; cursor: pointer;">
+                        <label for="orderTerms" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; line-height:1.4;">Saya telah membaca dan menyetujui syarat & ketentuan, serta memahami bahwa garansi hanya berlaku maksimal 1 hari setelah barang diambil (kondisi belum terpakai).</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1.2rem;">Konfirmasi & Kirim Pesanan <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i></button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="logo-container" style="margin-bottom: 1.5rem;">
+                    <div class="logo-img-wrapper">
+                        <img src="assets/logo.png" alt="Logo Sparkling" class="logo-img">
+                    </div>
+                    <span class="logo-text" style="color: white;">SPARKLING<small
+                            style="color:rgba(255,255,255,0.7);">CLEANERS</small></span>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); max-width: 300px;">Merawat dengan hati, membersihkan dengan
+                    presisi. Solusi utama untuk kebersihan barang mewah maupun keseharian Anda.</p>
+
+                <h4 style="color:white; margin-top: 2rem;">Ikuti Kami</h4>
+                <div style="display:flex; gap: 10px;">
+                    <a href="#"
+                        style="color:var(--accent-yellow); text-decoration: none; font-weight:600;">@sparklingcleaners_mlg</a>
+                </div>
+            </div>
+            <div class="footer-location">
+                <h3 style="color:white;">Lokasi Kami</h3>
+                <div class="footer-maps">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15802.215570059379!2d112.5855026601438!3d-8.044810756779491!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7882afb4455555%3A0xe6bf4dc34ac8c406!2sWagir%2C%20Malang%20Regency%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid"
+                        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+                <p class="footer-address">
+                    <strong style="color: var(--accent-yellow);">Workshop Wagir:</strong><br>
+                    Jl. Jamuran Rt.06 Rw. 02 Dusun Jamuran,<br>
+                    Desa Sukodadi, Kecamatan Wagir,<br>
+                    Kabupaten Malang, Jawa Timur, Indonesia.<br>
+                    <a href="https://maps.google.com/?q=-8.0261,112.5855" target="_blank" style="color: var(--primary-sky); text-decoration: none; font-size: 0.9rem; margin-top: 5px; display: inline-block;">
+                        <i class="fa-solid fa-map-location-dot"></i> Buka via Google Maps (-8.0261, 112.5855)
+                    </a>
+                </p>
+            </div>
+        </div>
+        <div class="container copyright">
+            &copy; 2026 Sparkling Cleaners Malang. All rights reserved. Designed with Glassmorphism. | <a
+                href="login.html" style="color: inherit; text-decoration: none;">Admin</a>
+        </div>
+    </footer>
+
+    <!-- Modal Testimoni -->
+    <div id="testimoniModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+        <div class="glass-panel"
+            style="background:rgba(255,255,255,0.9); padding: 2.5rem; width: 500px; max-width: 90%; border-radius: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h3 style="margin:0;">Tulis Ulasan</h3>
+                <button onclick="window.closeTestimoniModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+            </div>
+            <form
+                onsubmit="event.preventDefault(); alert('Terima kasih! Ulasan Anda akan ditinjau oleh tim internal kami sebelum ditampilkan.'); window.closeTestimoniModal();">
+                <div class="input-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="reviewerName" class="form-control" placeholder="Cth: Budi Santoso" required>
+                    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="isAnonim" style="width: 16px; height: 16px; cursor: pointer;">
+                        <label for="isAnonim"
+                            style="margin: 0; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; display: inline-block;">Tampilkan
+                            nama secara anonim (Cth: B***i)</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Penilaian (Rating Bintang)</label>
+                    <div style="display:flex; align-items:center;">
+                        <div class="star-rating" id="modalStarRating">
+                            <i class="fa-solid fa-star" data-rating="1"></i>
+                            <i class="fa-solid fa-star" data-rating="2"></i>
+                            <i class="fa-solid fa-star" data-rating="3"></i>
+                            <i class="fa-solid fa-star" data-rating="4"></i>
+                            <i class="fa-solid fa-star" data-rating="5"></i>
+                        </div>
+                        <span id="ratingText"
+                            style="font-size: 0.85rem; color: var(--text-muted); margin-left:15px; font-weight: 600;">Klik
+                            untuk menilai</span>
+                    </div>
+                    <!-- hidden input untuk menyimpan value required-->
+                    <input type="number" id="ratingValue" style="opacity:0; position:absolute; z-index:-1;" required>
+                </div>
+                <div class="input-group">
+                    <label>Pesan / Cerita</label>
+                    <textarea class="form-control" rows="3"
+                        placeholder="Ceritakan pengalaman Anda setelah mencoba layanan kami..." required></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Bukti Foto Barang (Wajib)</label>
+                    <input type="file" accept="image/*" class="form-control"
+                        style="padding: 0.6rem; background: var(--white);" required>
+                    <small style="color:var(--text-muted); font-size: 0.8rem;">Penting: Tambahkan setidaknya 1 foto
+                        kondisi barang. Format: JPG, PNG. Boleh melampirkan before & after.</small>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1rem;">Kirim Testimoni <i
+                        class="fa-solid fa-paper-plane" style="margin-left: 5px;"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/landing.js"></script>
+</body>
+
+</html>

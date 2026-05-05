@@ -1,0 +1,231 @@
+/* Dashboard Layout */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.5rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  position: sticky;
+  top: 1rem;
+  height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.sidebar-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-item {
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.menu-item:hover, .menu-item.active {
+  background: rgba(52, 152, 219, 0.1);
+  color: var(--primary-sky);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.1);
+}
+
+.role-switcher {
+  margin-top: auto;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.role-switcher label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-navy);
+}
+
+.role-select {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.8);
+  outline: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  min-width: 0;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  overflow-y: auto;
+  height: calc(100vh - 2rem);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+/* Table Design */
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(5px);
+  border: 1px solid var(--glass-border);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table th, .data-table td {
+  padding: 1.2rem;
+  border-bottom: 1px solid rgba(200, 200, 200, 0.3);
+}
+
+.data-table th {
+  background: rgba(30, 42, 56, 0.05);
+  font-weight: 600;
+  color: var(--primary-navy);
+}
+
+.data-table tr:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-diterima { background: #e0f2fe; color: #0284c7; }
+.status-cuci { background: #fef08a; color: #854d0e; }
+.status-siap { background: #dcfce7; color: #166534; }
+
+/* Forms & Dropzone */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--primary-navy);
+}
+
+.form-control {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid rgba(200,200,200, 0.5);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.form-control:focus {
+  border-color: var(--primary-sky);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.dropzone {
+  border: 2px dashed var(--primary-sky);
+  border-radius: 16px;
+  padding: 3rem;
+  text-align: center;
+  background: rgba(52, 152, 219, 0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dropzone:hover {
+  background: rgba(52, 152, 219, 0.1);
+  border-color: var(--primary-navy);
+}
+
+.dropzone-icon {
+  font-size: 3rem;
+  color: var(--primary-sky);
+  margin-bottom: 1rem;
+}
+
+.action-bar {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.owner-only {
+  display: none; /* Controlled via JS */
+}
+
+@media (max-width: 900px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 1.5rem;
+  }
+  .sidebar-menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 1;
+    justify-content: center;
+  }
+  .role-switcher {
+    width: 100%;
+    margin-top: 1rem;
+  }
+}

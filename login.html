@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Sparkling Cleaners Internal</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, var(--primary-navy) 0%, #2c3e50 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Abstract blobs for background decoration */
+        .blob-1, .blob-2 {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+        }
+
+        .blob-1 {
+            background: rgba(52, 152, 219, 0.4);
+            width: 400px;
+            height: 400px;
+            top: -100px;
+            left: -100px;
+        }
+
+        .blob-2 {
+            background: rgba(241, 196, 15, 0.2);
+            width: 300px;
+            height: 300px;
+            bottom: -50px;
+            right: -50px;
+        }
+
+        .login-panel {
+            width: 100%;
+            max-width: 400px;
+            padding: 3rem 2rem;
+            z-index: 1;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .login-panel h2 {
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-panel p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-sky);
+        }
+
+        .btn-login {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .links {
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .links a {
+            color: var(--primary-sky);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .dummy-hint {
+            margin-top: 15px;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob-1"></div>
+    <div class="blob-2"></div>
+
+    <div class="glass-panel login-panel">
+        <div class="logo-img-wrapper" style="margin: 0 auto 15px; width: 75px; height: 75px;">
+            <img src="assets/logo.png" alt="Logo" class="logo-img" style="transform: scale(1.15);">
+        </div>
+        <h2>Portal Internal</h2>
+        <p>Silakan login untuk mengelola sistem</p>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="admin@sparkling.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-login">Login Akses</button>
+        </form>
+
+        <div class="dummy-hint">
+            <strong>Hint Dummy Login:</strong><br>
+            Admin: admin@sparkling.com / admin123<br>
+            Owner: owner@sparkling.com / owner123
+        </div>
+
+        <div class="links">
+            Belum punya akun? <a href="javascript:alert('Pembuatan akun mandiri telah dinonaktifkan demi keamanan. Silakan hubungi Superadmin (Owner) untuk pendaftaran staf baru.');">Bikin Akun</a><br><br>
+            <a href="index.html" style="color:var(--text-muted);">&larr; Kembali ke Website Publik</a>
+        </div>
+    </div>
+
+    <script>
+        // Clear local storage on landing at login page just to be safe
+        localStorage.removeItem('userRole');
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (email === 'admin@sparkling.com' && password === 'admin123') {
+                localStorage.setItem('userRole', 'admin');
+                window.location.href = 'dashboard.html';
+            } else if (email === 'owner@sparkling.com' && password === 'owner123') {
+                localStorage.setItem('userRole', 'owner');
+                window.location.href = 'dashboard.html';
+            } else {
+                alert('Email atau Password salah! Periksa kembali.');
+            }
+        });
+    </script>
+</body>
+</html>

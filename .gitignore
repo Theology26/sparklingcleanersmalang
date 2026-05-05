@@ -1,0 +1,16 @@
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Archives
+*.zip
+
+# Gemini
+.gemini/
+
+# Misc
+MASTER_PROMPT.md
