@@ -1,16 +1,5 @@
-# IDE
-.vscode/
-.idea/
-
-# OS
-Thumbs.db
+node_modules/
+.env
+FULL_CODE_BACKUP.txt
+*.log
 .DS_Store
-
-# Archives
-*.zip
-
-# Gemini
-.gemini/
-
-# Misc
-MASTER_PROMPT.md
