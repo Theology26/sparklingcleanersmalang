@@ -96,7 +96,7 @@ CREATE TABLE testimonials (
 
 -- Dummy Inventory
 INSERT INTO inventory (id, name, category, unit, price, stock, min_stock) VALUES
-('INV-000', 'Sabun Upper Cleaner', 'Soap', 'Liter', 50000, 5.00, 2.00),
+('INV-001', 'Sabun Upper Cleaner', 'Soap', 'Liter', 50000, 5.00, 2.00),
 ('INV-002', 'Parfum Sepatu Lemon', 'Scent', 'Liter', 75000, 1.50, 2.00), -- Ini bakal warna Merah (Low)
 ('INV-003', 'Solvent Leather', 'Chemical', 'Liter', 120000, 3.00, 1.00); -- Ini bakal warna Kuning (Warning)
 
