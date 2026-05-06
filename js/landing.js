@@ -1,6 +1,10 @@
 // landing.js
 
-window.PRICING = DB.getPricing();
+let PRICING = {};
+(async () => {
+    PRICING = await DB.getPricing();
+    window.PRICING = PRICING;
+})();
 
 // Generate QR Code
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,7 +44,63 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
+
+    // Dynamic Content Rendering
+    await renderBranding();
+    await renderArticles();
+    await renderTestimonials();
 });
+
+async function renderBranding() {
+    const config = await DB.getConfig();
+    if (config && config.hero) {
+        const heroTitle = document.querySelector('.hero h1');
+        const heroSubtitle = document.querySelector('.hero p');
+        if (heroTitle) heroTitle.innerText = config.hero.title;
+        if (heroSubtitle) heroSubtitle.innerText = config.hero.subtitle;
+    }
+}
+
+async function renderArticles() {
+    const rawArticles = await DB.getArticles();
+    const articles = (rawArticles || []).filter(a => a.status === 'Publik');
+    const container = document.getElementById('articles-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    articles.forEach(a => {
+        container.innerHTML += `
+            <div class="glass-card" style="overflow: hidden; text-align: left;">
+                <div style="height: 200px; background: url('${a.image}') center/cover;"></div>
+                <div style="padding: 1.5rem;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">${DB.sanitize(a.category)}</span>
+                    <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">${DB.sanitize(a.title)}</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">${DB.sanitize(a.desc)}</p>
+                    <a href="javascript:alert('Fitur baca selengkapnya segera hadir!')" 
+                       style="color: var(--primary-navy); font-weight: 600; text-decoration: none; font-size: 0.9rem;">
+                       Baca Selengkapnya <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
+                    </a>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// Visual Selection Handlers
+window.selectItem = function(val, el) {
+    document.querySelectorAll('#itemSelection .selection-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('orderItemType').value = val;
+    window.updateServiceOptions();
+};
+
+window.selectTreatment = function(val, el) {
+    document.querySelectorAll('#treatmentSelection .treatment-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('orderTreatmentType').value = val;
+    window.updateServiceOptions();
+};
 
 // Update Service Options based on Item Type and Treatment Type
 window.updateServiceOptions = function() {
@@ -175,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-window.processOrder = function(event) {
+window.processOrder = async function(event) {
     event.preventDefault();
     
     const name = document.getElementById('orderName').value;
@@ -202,47 +262,49 @@ window.processOrder = function(event) {
     let ongkir = (delivery === 'Ya' && distance > 10) ? (distance - 10) * 2000 : 0;
     const total = (servicePrice * qty) + (expressPrice * qty) + ongkir;
 
+    const orderId = DB.generateOrderCode();
     const orderData = {
+        id: orderId,
         name, phone, itemType, qty, treatment, 
         service: serviceName, express: expressVal,
         delivery, address, distance, schedule, notes,
-        price: servicePrice, expressPrice, ongkir, total
+        price: servicePrice, expressPrice, ongkir, total,
+        status: 1
     };
 
-    const newOrder = DB.addOrder(orderData);
+    await DB.addOrder(orderData);
     
-    // Generate Nota WA
+    // Generate Nota WA (Customer to Admin)
     const shopPhone = "6285965957290"; 
-    let msg = `*SPARKLING CLEANERS - E-NOTA*%0A`;
-    msg += `======================%0A`;
-    msg += `No. Order: *${newOrder.id}*%0A`;
-    msg += `Tgl: ${DB.formatDate(newOrder.date)}%0A`;
-    msg += `======================%0A%0A`;
-    msg += `Halo kak *${name}*, berikut rincian pesanan Anda:%0A%0A`;
-    msg += `*Detail Item:*%0A`;
-    msg += `- ${itemType} (${qty} item)%0A`;
+    let msg = `Halo kak, saya mau pesan layanan cuci di *Sparkling Cleaners* ✨%0A%0A`;
+    msg += `*Detail Pesanan:*%0A`;
+    msg += `- No. Order: *${orderId}*%0A`;
+    msg += `- Nama: ${name}%0A`;
+    msg += `- Item: ${itemType} (${qty} item)%0A`;
     msg += `- Layanan: ${serviceName} (${treatment})%0A`;
+    if (expressVal && expressVal !== 'none') msg += `- Express: ${expressVal}%0A`;
     msg += `- Catatan: ${notes || '-'}%0A%0A`;
     
     if (delivery === 'Ya') {
         msg += `*Pengiriman:*%0A`;
-        msg += `- Pick/Drop: ${schedule}%0A`;
+        msg += `- Jadwal Pickup: ${schedule}%0A`;
         msg += `- Alamat: ${address}%0A%0A`;
     }
     
-    msg += `*Rincian Biaya:*%0A`;
-    msg += `- Jasa cuci: ${DB.formatCurrency(servicePrice * qty)}%0A`;
-    if (expressPrice > 0) msg += `- Express: ${DB.formatCurrency(expressPrice * qty)}%0A`;
-    msg += `- Ongkir: ${ongkir === 0 ? 'Gratis' : DB.formatCurrency(ongkir)}%0A`;
-    msg += `----------------------%0A`;
-    msg += `*TOTAL: ${DB.formatCurrency(total)}*%0A%0A`;
-    msg += `_Catatan:_%0A`;
-    msg += `_Garansi cuci ulang 1x (maks 1 hari setelah diambil & belum terpakai)._%0A%0A`;
-    msg += `Terima kasih telah mempercayakan perawatan barang Anda pada kami! ✨`;
+    msg += `*Estimasi Biaya:*%0A`;
+    msg += `- Total: *${DB.formatCurrency(total)}*%0A%0A`;
+    msg += `Mohon segera dikonfirmasi ya kak, terima kasih! 🙏`;
 
     const waURL = `https://wa.me/${shopPhone}?text=${msg}`;
     
-    alert(`Pesanan berhasil dibuat!\nKode Order: ${newOrder.id}\nAnda akan diarahkan ke WhatsApp untuk mengirim nota.`);
+    alert(`Pesanan berhasil dibuat!\nKode Order: ${newOrder.id}\nAnda akan diarahkan ke WhatsApp untuk mengirim pesanan.`);
+    
+    // Reset Form and UI
+    event.target.reset();
+    document.querySelectorAll('.selection-card, .treatment-opt').forEach(el => el.classList.remove('active'));
+    document.querySelector('.treatment-opt[onclick*="regular"]').classList.add('active'); // Default treatment
+    if (window.calculateTotal) window.calculateTotal();
+    
     window.location.href = waURL;
 };
 
@@ -262,10 +324,12 @@ window.simulateTracking = function() {
     msg.style.display = 'block';
     msg.innerText = "Mencari data pesanan...";
 
-    setTimeout(() => {
-        // Cek dari DB localStorage
-        const orders = DB.get('sparklingOrders');
-        const found = orders.find(o => o.id === input || o.phone === input);
+    const trackOrder = async () => {
+        const code = input.value.trim().toUpperCase();
+        if(!code) return;
+        
+        const orders = await DB.getOrders();
+        const found = orders.find(o => o.id === code || o.phone === code);
         
         let currentStep = 1;
         if (found) {
@@ -376,3 +440,19 @@ window.calculateDistanceGPS = function() {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 };
+async function renderTestimonials() {
+    const rawTests = await DB.getTestimonials();
+    const approved = (rawTests || []).filter(t => t.status === 'Approved');
+    const container = document.getElementById('testimonials-container');
+    if (!container) return;
+    container.innerHTML = '';
+    approved.forEach(t => {
+        container.innerHTML += `
+            <div class="glass-panel" style="padding: 2rem; min-width: 300px; scroll-snap-align: start;">
+                <div style="color: var(--accent-yellow); margin-bottom: 1rem;">${'★'.repeat(t.rating)}${'☆'.repeat(5-t.rating)}</div>
+                <p style="font-style: italic; color: var(--text-muted); margin-bottom: 1.5rem;">"${t.content}"</p>
+                <h4 style="color: var(--primary-navy); margin: 0;">${t.name}</h4>
+            </div>
+        `;
+    });
+}

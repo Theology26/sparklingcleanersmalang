@@ -5,604 +5,252 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Internal Dashboard | Sparkling Cleaners</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/dashboard.css">
-    <style>
-        .role-badge { display: inline-block; padding: 0.2rem 0.5rem; background: var(--accent-yellow); color: var(--primary-navy); border-radius: 4px; font-weight: 700; font-size: 0.8rem; margin-left: auto; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
 </head>
 <body>
+    <div class="blob-bg blob-1"></div>
+    <div class="blob-bg blob-2"></div>
 
-<div class="dashboard-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar glass-panel">
-        <div class="sidebar-header">
-            <div class="logo-img-wrapper" style="margin: 0 auto 15px; width: 65px; height: 65px;">
-                <img src="assets/logo.png" alt="Logo" class="logo-img" style="transform: scale(1.15);">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-img-wrapper">
+                    <img src="/assets/logo.png" alt="Logo" class="logo-img">
+                </div>
+                <h3>Sparkling Ops</h3>
+                <div id="activeRoleText">Admin</div>
             </div>
-            <h3 style="margin-bottom: 0;">Sparkling Ops</h3>
-            <div id="activeRoleText" style="font-size:0.8rem; color:var(--text-muted);">Mode: Admin Operasional</div>
-        </div>
 
-        <ul class="sidebar-menu">
-            <!-- Shared Menu -->
-            <li class="menu-item active" data-target="tab-orders">
-                <i class="fa-solid fa-box" style="width: 20px;"></i> Manajemen Pesanan
-            </li>
-            <li class="menu-item" data-target="tab-new-order">
-                <i class="fa-solid fa-circle-plus" style="width: 20px;"></i> Input Order Baru
-            </li>
-            <li class="menu-item" data-target="tab-admin-restock">
-                <i class="fa-solid fa-cart-arrow-down" style="width: 20px;"></i> Permintaan Restok
-            </li>
-
-            <!-- Owner Only Menus -->
-            <div class="owner-only" id="ownerMenuSection">
-                <hr style="border:0; border-top:1px solid rgba(255,255,255,0.2); margin: 15px 0;">
-                <div style="font-size:0.75rem; color:var(--text-muted); padding-left:12px; margin-bottom: 10px;">MANAJEMEN OWNER</div>
-                
-                <li class="menu-item" data-target="tab-revenue">
-                    <i class="fa-solid fa-chart-line" style="width: 20px;"></i> Laporan Keuangan
+            <ul class="sidebar-menu">
+                <li class="menu-item active" data-target="tab-orders">
+                    <i class="fa-solid fa-box"></i> <span>Pesanan Masuk</span>
                 </li>
-                <li class="menu-item" data-target="tab-stock">
-                    <i class="fa-solid fa-bottle-droplet" style="width: 20px;"></i> Manajemen Stok Bahan
+                <li class="menu-item" data-target="tab-new-order">
+                    <i class="fa-solid fa-circle-plus"></i> <span>Order Baru</span>
                 </li>
-                <li class="menu-item" data-target="tab-catalog">
-                    <i class="fa-solid fa-tags" style="width: 20px;"></i> Manajemen Katalog
+                <li class="menu-item" data-target="tab-admin-restock">
+                    <i class="fa-solid fa-cart-shopping"></i> <span>Restok Gudang</span>
                 </li>
-                <li class="menu-item" data-target="tab-testimonials">
-                    <i class="fa-solid fa-star" style="width: 20px;"></i> Kurasi Testimoni
-                </li>
-                <li class="menu-item" data-target="tab-articles">
-                    <i class="fa-solid fa-pen-to-square" style="width: 20px;"></i> Editor Artikel Edukasi
-                </li>
-                <li class="menu-item" data-target="tab-settings">
-                    <i class="fa-solid fa-gear" style="width: 20px;"></i> Pengaturan Web & Harga
-                </li>
-            </div>
-        </ul>
+                <div id="ownerMenuSection" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 10px;">
+                    <li class="menu-item" data-target="tab-revenue">
+                        <i class="fa-solid fa-chart-line"></i> <span>Keuangan</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-stock">
+                        <i class="fa-solid fa-flask"></i> <span>Stok Bahan</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-catalog">
+                        <i class="fa-solid fa-tags"></i> <span>Katalog & Harga</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-testimonials">
+                        <i class="fa-solid fa-star"></i> <span>Testimoni</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-articles">
+                        <i class="fa-solid fa-pen-to-square"></i> <span>Editor Artikel</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-settings">
+                        <i class="fa-solid fa-gear"></i> <span>Pengaturan Web</span>
+                    </li>
+                </div>
+            </ul>
 
-        <div style="margin-top:20px;">
-            <a href="index.html" class="menu-item" style="color:red; background:rgba(255,0,0,0.05); text-align:center;">Keluar Dashboard</a>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        
-        <!-- Tab: Daftar Pesanan -->
-        <div id="tab-orders" class="tab-content active">
-            <div class="dashboard-header">
-                <h2>Manajemen Pesanan Masuk</h2>
-                <button class="btn btn-primary" onclick="document.querySelector('[data-target=tab-new-order]').click()">+ Order Baru</button>
+            <div class="sidebar-footer">
+                <a href="/" class="menu-item" style="color:#ff4d4d;">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>Keluar</span>
+                </a>
             </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
             
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID Order</th>
-                            <th>Tanggal</th>
-                            <th>Nama Pelanggan</th>
-                            <th>Barang (Layanan)</th>
-                            <th>Status (SOP)</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ORD-001</td>
-                            <td>01 Apr 2026</td>
-                            <td>Budi Santoso</td>
-                            <td>Sepatu Nike (Cuci Sepatu)</td>
-                            <td><span class="status-badge status-diterima">1 - Diterima</span></td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <label class="btn btn-secondary" style="background: rgba(52, 152, 219, 0.1); border-color: rgba(52, 152, 219, 0.3); margin: 0; padding:0.4rem 0.6rem; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Upload Foto Before">
-                                        <i class="fa-solid fa-camera" style="margin-right: 5px; color: var(--primary-sky);"></i> Before
-                                        <input type="file" style="display: none;" accept="image/*" onchange="alert('Foto Before barang #ORD-001 berhasil dilampirkan dan disimpan ke server!')">
-                                    </label>
-                                    <button class="btn" style="background:var(--primary-sky); color:white; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="window.updateProgressModal('ORD-001')">Update Status</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-002</td>
-                            <td>30 Mar 2026</td>
-                            <td>Siti Aisyah</td>
-                            <td>Tas Eiger (Cuci Tas)</td>
-                            <td><span class="status-badge status-cuci">2 - Sedang Dicuci</span></td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <label class="btn btn-secondary" style="background: rgba(52, 152, 219, 0.1); border-color: rgba(52, 152, 219, 0.3); margin: 0; padding:0.4rem 0.6rem; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Upload Foto Before">
-                                        <i class="fa-solid fa-camera" style="margin-right: 5px; color: var(--primary-sky);"></i> Before
-                                        <input type="file" style="display: none;" accept="image/*" onchange="alert('Foto Before barang #ORD-002 berhasil dilampirkan dan disimpan ke server!')">
-                                    </label>
-                                    <button class="btn" style="background:var(--primary-sky); color:white; padding:0.4rem 0.8rem; font-size:0.85rem;">Update Status</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-003</td>
-                            <td>28 Mar 2026</td>
-                            <td>Wahyu D.</td>
-                            <td>Helm INK (Cuci Helm)</td>
-                            <td><span class="status-badge status-siap">5 - Siap Ambil</span></td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <label class="btn btn-secondary" style="background: rgba(52, 152, 219, 0.1); border-color: rgba(52, 152, 219, 0.3); margin: 0; padding:0.4rem 0.6rem; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Upload Foto Before">
-                                        <i class="fa-solid fa-camera" style="margin-right: 5px; color: var(--primary-sky);"></i> Before
-                                        <input type="file" style="display: none;" accept="image/*" onchange="alert('Foto Before barang #ORD-003 berhasil dilampirkan dan disimpan ke server!')">
-                                    </label>
-                                    <button class="btn" style="background:var(--primary-sky); color:white; padding:0.4rem 0.8rem; font-size:0.85rem;">Update Status</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Modal (Simulasi CSS Only / via JS) -->
-            <div id="progressModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-                <div class="glass-panel" style="background:white; padding: 2rem; width: 400px; max-width: 90%;">
-                    <h3 id="modalTitle">Update Progress Pesanan</h3>
-                    <div class="form-group">
-                        <label>Ubah Status SOP ke:</label>
-                        <select class="form-control" id="statusSelect">
-                            <option value="1">Tahap 1: Diterima</option>
-                            <option value="2">Tahap 2: Sedang Dicuci</option>
-                            <option value="3">Tahap 3: Pengeringan</option>
-                            <option value="4">Tahap 4: Finishing / QC</option>
-                            <option value="5">Tahap 5: Siap Diambil / Diantar</option>
-                        </select>
-                    </div>
-                    <div class="action-bar" style="margin-top: 2rem; display:flex; gap:10px;">
-                        <button class="btn btn-primary" onclick="window.closeProgressModal()" style="flex:1;">Simpan</button>
-                        <button class="btn btn-secondary" onclick="window.closeProgressModal()" style="flex:1;">Batal</button>
-                    </div>
+            <!-- Tab: Pesanan Masuk -->
+            <div id="tab-orders" class="tab-content active">
+                <div class="dashboard-header">
+                    <h2>Manajemen Pesanan Masuk</h2>
+                    <button class="btn btn-primary" onclick="document.querySelector('[data-target=\'tab-new-order\']').click()">+ Order Baru</button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Tab: Input Order Baru -->
-        <div id="tab-new-order" class="tab-content">
-            <div class="dashboard-header">
-                <h2>Input Order Baru</h2>
-            </div>
-            
-            <div class="glass-card" style="padding: 2rem;">
-                <form onsubmit="event.preventDefault(); alert('Order berhasil disubmit!'); document.querySelector('[data-target=tab-orders]').click()">
-                    
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label>Nama Pelanggan</label>
-                            <input type="text" class="form-control" placeholder="Nama Lengkap" required>
-                        </div>
-                        <div class="form-group">
-                            <label>No. WhatsApp</label>
-                            <input type="tel" class="form-control" placeholder="08xxx..." required>
-                        </div>
-                        <div class="form-group">
-                            <label>Kategori Layanan</label>
-                            <select class="form-control" required>
-                                <option value="sepatu">Cuci Sepatu</option>
-                                <option value="tas">Cuci Tas</option>
-                                <option value="helm">Cuci Helm</option>
-                                <option value="karpet">Cuci Karpet</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Catatan Keluhan / Merk</label>
-                            <input type="text" class="form-control" placeholder="Cth: Sepatu Adidas, Kena Noda Minyak">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group mt-2">
-                        <label>Foto Kondisi Awal Barang (Wajib)</label>
-                        <div class="dropzone" id="foto-dropzone">
-                            <div class="dropzone-icon"><i class="fa-solid fa-camera"></i></div>
-                            <h4 style="margin-bottom: 5px;">Tarik & Lepas Foto di sini</h4>
-                            <p style="color:var(--text-muted); font-size: 0.9rem;">atau klik untuk mencari dari perangkat (Maks 5MB)</p>
-                            <input type="file" id="foto-input" style="display:none;" accept="image/*">
-                        </div>
-                        <p id="foto-name" style="margin-top: 10px; font-weight:600; color:var(--primary-sky); text-align:center;"></p>
-                    </div>
-
-                    <div class="action-bar" style="margin-top: 2rem; border-top: 1px solid rgba(200,200,200,0.5); padding-top:20px;">
-                        <button type="submit" class="btn btn-primary" style="flex: 1; padding:1rem;">Simpan Order Baru & Cetak Resi</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- ================= OWNER TABS ================= -->
-
-        <!-- Tab: Laporan Keuangan -->
-        <div id="tab-revenue" class="tab-content">
-            <div class="dashboard-header" style="justify-content: space-between;">
-                <h2>Laporan Pemasukan Finansial</h2>
-                <select class="form-control" style="width: auto; padding: 0.5rem;" onchange="window.updateRevenueFilter(this.value)">
-                    <option value="7">7 Hari Terakhir</option>
-                    <option value="28">28 Hari Terakhir</option>
-                    <option value="90">90 Hari Terakhir</option>
-                    <option value="365">1 Tahun Terakhir</option>
-                </select>
-            </div>
-            
-            <div class="grid grid-3" style="margin-bottom: 2rem;">
-                <div class="glass-card" style="padding: 1.5rem; text-align:center;">
-                    <div style="font-size: 2rem; color: var(--primary-sky); margin-bottom: 0.5rem;"><i class="fa-solid fa-wallet"></i></div>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 5px;">Total Pemasukan</p>
-                    <h3 id="rev-total" style="font-size: 1.8rem;">Rp 3.500.000</h3>
-                </div>
-                <div class="glass-card" style="padding: 1.5rem; text-align:center;">
-                    <div style="font-size: 2rem; color: var(--accent-yellow); margin-bottom: 0.5rem;"><i class="fa-solid fa-check-to-slot"></i></div>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 5px;">Pesanan Selesai</p>
-                    <h3 id="rev-orders" style="font-size: 1.8rem;">124</h3>
-                </div>
-                <div class="glass-card" style="padding: 1.5rem; text-align:center;">
-                    <div style="font-size: 2rem; color: #2ecc71; margin-bottom: 0.5rem;"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 5px;">Rata-rata / Transaksi</p>
-                    <h3 id="rev-avg" style="font-size: 1.8rem;">Rp 45.500</h3>
-                </div>
-            </div>
-
-            <div class="glass-card" style="padding: 2rem;">
-                <h3 style="margin-bottom: 2rem;">Tren Pemasukan <span style="font-size: 0.8rem; font-weight: normal; color:var(--text-muted);">(Simulasi)</span></h3>
-                
-                <div style="display: flex; align-items: flex-end; gap: 10px; height: 250px; background: rgba(52, 152, 219, 0.05); border-radius: 12px; padding: 20px 20px 0; border-bottom: 2px solid var(--primary-navy); border-left: 2px solid var(--primary-navy);">
-                    <!-- Simulated Bars -->
-                    <div style="flex: 1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%;">
-                        <div class="chart-bar" style="width: 100%; height: 40%; background: var(--primary-sky); border-radius: 4px 4px 0 0; transition: 0.5s;"></div>
-                        <span style="font-size: 0.7rem; margin-top: 5px; color:var(--text-muted); padding-bottom:10px;">Hari 1</span>
-                    </div>
-                    <div style="flex: 1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%;">
-                        <div class="chart-bar" style="width: 100%; height: 60%; background: var(--primary-sky); border-radius: 4px 4px 0 0; transition: 0.5s;"></div>
-                        <span style="font-size: 0.7rem; margin-top: 5px; color:var(--text-muted); padding-bottom:10px;">Hari 2</span>
-                    </div>
-                    <div style="flex: 1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%;">
-                        <div class="chart-bar" style="width: 100%; height: 45%; background: var(--primary-sky); border-radius: 4px 4px 0 0; transition: 0.5s;"></div>
-                        <span style="font-size: 0.7rem; margin-top: 5px; color:var(--text-muted); padding-bottom:10px;">Hari 3</span>
-                    </div>
-                    <div style="flex: 1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%;">
-                        <div class="chart-bar" style="width: 100%; height: 80%; background: var(--primary-sky); border-radius: 4px 4px 0 0; transition: 0.5s;"></div>
-                        <span style="font-size: 0.7rem; margin-top: 5px; color:var(--text-muted); padding-bottom:10px;">Hari 4</span>
-                    </div>
-                    <div style="flex: 1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%;">
-                        <div class="chart-bar" style="width: 100%; height: 75%; background: var(--primary-sky); border-radius: 4px 4px 0 0; transition: 0.5s;"></div>
-                        <span style="font-size: 0.7rem; margin-top: 5px; color:var(--text-muted); padding-bottom:10px;">Hari 5</span>
-                    </div>
-                    <div style="flex: 1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%;">
-                        <div class="chart-bar" style="width: 100%; height: 50%; background: var(--primary-sky); border-radius: 4px 4px 0 0; transition: 0.5s;"></div>
-                        <span style="font-size: 0.7rem; margin-top: 5px; color:var(--text-muted); padding-bottom:10px;">Hari 6</span>
-                    </div>
-                    <div style="flex: 1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%;">
-                        <div class="chart-bar" style="width: 100%; height: 95%; background: var(--accent-yellow); border-radius: 4px 4px 0 0; transition: 0.5s;"></div>
-                        <span style="font-size: 0.7rem; margin-top: 5px; color:var(--text-muted); font-weight:bold; padding-bottom:10px;">Hari 7</span>
-                    </div>
-                </div>
-            </div>
-            </div>
-        </div>
-
-        <!-- Tab: Admin Restock -->
-        <div id="tab-admin-restock" class="tab-content">
-            <div class="dashboard-header">
-                <h2>Permintaan Restok Bahan</h2>
-                <p>Kirim permohonan ke Owner untuk membeli bahan yang habis.</p>
-            </div>
-            <div class="glass-card" style="padding: 2rem; max-width: 600px; margin-bottom: 2rem;">
-                <div class="input-group">
-                    <label>Pilih Barang Inventaris</label>
-                    <select id="restockItem" class="form-control" required></select>
-                </div>
-                <div class="input-group">
-                    <label>Jumlah Permintaan (Qty)</label>
-                    <input type="number" id="restockQty" class="form-control" min="1" required>
-                </div>
-                <div class="input-group">
-                    <label>Alasan / Keterangan</label>
-                    <textarea id="restockNotes" class="form-control" rows="3" placeholder="Sisa stok tinggal 1 botol..."></textarea>
-                </div>
-                <button class="btn btn-primary" onclick="window.submitRestockRequest()">Kirim Permintaan ke Owner</button>
-            </div>
-            
-            <h3>Riwayat Permintaan Anda</h3>
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Barang</th>
-                            <th>Qty</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminRestockList"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab: Stok Bahan -->
-        <div id="tab-stock" class="tab-content">
-            <div class="dashboard-header">
-                <h2>Manajemen Stok Bahan & Sabun</h2>
-                <button class="btn btn-primary" onclick="window.openCrudModal('Tambah Item Stok Baru')">+ Tambah Item</button>
-            </div>
-            
-            <div id="ownerRestockRequestsBox" style="margin-bottom: 2rem;">
-                <h3 style="color:var(--primary-navy); margin-bottom: 1rem;">Permintaan Restok dari Admin</h3>
                 <div class="table-container">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Barang</th>
-                                <th>Qty</th>
-                                <th>Alasan</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ownerRestockList"></tbody>
+                        <thead><tr><th>ID ORDER</th><th>TANGGAL</th><th>PELANGGAN</th><th>LAYANAN</th><th>STATUS</th><th>AKSI</th></tr></thead>
+                        <tbody><!-- Loaded via JS --></tbody>
                     </table>
                 </div>
             </div>
 
-            <h3 style="color:var(--primary-navy); margin-bottom: 1rem;">Daftar Inventaris Utama</h3>
-            
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Nama Item</th>
-                            <th>Kategori</th>
-                            <th>Stok Tersedia</th>
-                            <th>Satuan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Sabun Deep Clean Premium</td>
-                            <td>Cairan Pembersih</td>
-                            <td>4.5</td>
-                            <td>Liter</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i> Edit</button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i> Hapus</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Sikat Detail Bulu Kuda</td>
-                            <td>Alat Sikat</td>
-                            <td>12</td>
-                            <td>Pcs</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i> Edit</button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i> Hapus</button>
-                            </td>
-                        </tr>
-                        <tr style="background: rgba(255,0,0,0.05);">
-                            <td>Pewangi Helm UV Anti-Bacterial</td>
-                            <td>Cairan Pewangi</td>
-                            <td style="color:red; font-weight:bold;">0.5</td>
-                            <td>Liter (Segera Habis)</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i> Edit</button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i> Hapus</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Tab: Order Baru (Input Manual) -->
+            <div id="tab-new-order" class="tab-content">
+                <h2>Input Pesanan Baru</h2>
+                <div class="glass-panel" style="padding: 2.5rem; margin-top: 1.5rem;">
+                    <form onsubmit="window.processAdminOrder(event)">
+                        <div class="grid grid-2" style="gap: 20px;">
+                            <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="admName" class="form-input" required></div>
+                            <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="admPhone" class="form-input" required></div>
+                            <div class="form-group"><label>Jenis Barang</label><select id="admItem" class="form-input"><option>Sepatu</option><option>Helm</option><option>Tas</option></select></div>
+                            <div class="form-group"><label>Layanan</label><select id="admService" class="form-input"><option>Deep Clean</option><option>Reguler</option><option>Express</option></select></div>
+                            <div class="form-group"><label>Jumlah</label><input type="number" id="admQty" class="form-input" value="1"></div>
+                            <div class="form-group"><label>Harga (Total)</label><input type="number" id="admPrice" class="form-input" required></div>
+                        </div>
+                        <div class="form-group"><label>Catatan Khusus</label><textarea id="admNotes" class="form-input" rows="3"></textarea></div>
+                        <button type="submit" class="btn btn-primary" style="width:100%; padding: 1.2rem; font-size: 1rem;">Simpan & Cetak Pesanan</button>
+                    </form>
+                </div>
             </div>
-        </div>
 
-        <!-- Tab: Katalog Layanan -->
-        <div id="tab-catalog" class="tab-content">
-            <div class="dashboard-header">
-                <h2>Manajemen Katalog Layanan & Harga</h2>
-                <button class="btn btn-primary" onclick="window.openCrudModal('Tambah Katalog Layanan')">+ Tambah Layanan</button>
-            </div>
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Nama Layanan</th>
-                            <th>Kategori</th>
-                            <th>Harga Dasar</th>
-                            <th>Estimasi (Hari)</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Cuci Sepatu Deep Clean</td>
-                            <td>Sepatu</td>
-                            <td>Rp 35.000</td>
-                            <td>2-3</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Repaint Sepatu</td>
-                            <td>Sepatu</td>
-                            <td>Rp 80.000</td>
-                            <td>5-7</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Unyellowing</td>
-                            <td>Sepatu</td>
-                            <td>Rp 50.000</td>
-                            <td>3-4</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Cuci Helm Luar Dalam</td>
-                            <td>Helm</td>
-                            <td>Rp 40.000</td>
-                            <td>1-2</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab: Kurasi Testimoni -->
-        <div id="tab-testimonials" class="tab-content">
-            <div class="dashboard-header">
-                <h2>Kurasi Testimoni Pelanggan</h2>
-                <button class="btn btn-primary" onclick="window.openCrudModal('Entri Testimoni Manual')">+ Entri Manual</button>
-            </div>
-            <div class="grid grid-2">
-                <div class="glass-card" style="padding:1.5rem;">
-                    <p style="font-weight:600; margin-bottom:5px;">"Wah sepatu Adidas saya yang luntur jadi putih bersih lagi! Mantap Sparkling!"</p>
-                    <p style="font-size:0.8rem; color:var(--text-muted);">- Ridwan, lewat Form Website</p>
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button class="btn" style="background:#dcfce7; color:#166534; flex:1; padding: 0.5rem;"><i class="fa-solid fa-check"></i> Approve Publik</button>
-                        <button class="btn" style="background:#fee2e2; color:#991b1b; flex:1; padding: 0.5rem;"><i class="fa-solid fa-trash"></i> Tolak / Hapus</button>
+            <!-- Tab: Restok Gudang -->
+            <div id="tab-admin-restock" class="tab-content">
+                <h2>Manajemen Restok Gudang</h2>
+                <div class="grid grid-2" style="gap: 2rem; margin-top: 1.5rem;">
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3><i class="fa-solid fa-paper-plane" style="color:var(--primary-sky);"></i> Buat Request Restok</h3>
+                        <form onsubmit="event.preventDefault(); window.DB.addRestockRequest(document.getElementById('restockItem').value, document.getElementById('restockQty').value, document.getElementById('restockNotes').value, 'admin').then(() => { alert('Request terkirim!'); renderRestock(); });">
+                            <div class="form-group"><label>Pilih Item Habis</label><select id="restockItem" class="form-input" required></select></div>
+                            <div class="form-group"><label>Jumlah Kebutuhan</label><input type="number" id="restockQty" class="form-input" required></div>
+                            <div class="form-group"><label>Catatan</label><input type="text" id="restockNotes" class="form-input"></div>
+                            <button class="btn btn-primary" style="width:100%;">Kirim Pengajuan</button>
+                        </form>
                     </div>
-                </div>
-                <div class="glass-card" style="padding:1.5rem;">
-                    <p style="font-weight:600; margin-bottom:5px;">"Agak lama sih 4 hari, tapi hasilnya memuaskan untuk tas kulit koper saya."</p>
-                    <p style="font-size:0.8rem; color:var(--text-muted);">- Dina A.</p>
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button class="btn" style="background:#dcfce7; color:#166534; flex:1; padding: 0.5rem;"><i class="fa-solid fa-check"></i> Approve Publik</button>
-                        <button class="btn" style="background:#fee2e2; color:#991b1b; flex:1; padding: 0.5rem;"><i class="fa-solid fa-trash"></i> Tolak / Hapus</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Editor Artikel -->
-        <div id="tab-articles" class="tab-content">
-            <div class="dashboard-header">
-                <h2>Manajemen Artikel Edukasi</h2>
-                <button class="btn btn-primary" onclick="alert('Gulir ke bawah untuk menulis artikel baru!')">+ Tulis Baru</button>
-            </div>
-            
-            <div class="table-container" style="margin-bottom: 2rem;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Judul Artikel</th>
-                            <th>Kategori</th>
-                            <th>Status</th>
-                            <th>Dilihat</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Cara Jitu Menghilangkan Noda Kuning di Sepatu Putih</td>
-                            <td>Perawatan Sepatu</td>
-                            <td><span style="color:#2ecc71; font-weight:bold;">Tampil (Publik)</span></td>
-                            <td>1.2k</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Perbedaan Mencuci Tas Kulit dan Kanvas</td>
-                            <td>Perawatan Tas</td>
-                            <td><span style="color:var(--text-muted); font-weight:bold;">Draft</span></td>
-                            <td>-</td>
-                            <td>
-                                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <h3 style="margin-bottom: 1rem;">Form Penulisan</h3>
-            <div class="glass-card" style="padding:2rem;">
-                <div class="form-group">
-                    <label>Judul Artikel</label>
-                    <input type="text" class="form-control" placeholder="Cth: Cara Jitu Menghilangkan Noda Kuning di Sepatu Putih">
-                </div>
-                
-                <div class="grid grid-2" style="margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem;">
-                    <div class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 0;">
-                        <label>Thumbnail / Foto Artikel</label>
-                        <div class="dropzone" id="article-dropzone" style="padding: 1.5rem; text-align: center;">
-                            <div class="dropzone-icon" style="font-size: 2rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-image"></i></div>
-                            <h4 style="font-size: 0.95rem; margin-bottom: 3px;">Tarik foto ke sini</h4>
-                            <p style="color:var(--text-muted); font-size: 0.8rem;">(Atau klik untuk memilih, maks 2MB)</p>
-                            <input type="file" id="article-foto-input" style="display:none;" accept="image/*">
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent-yellow);"></i> Status Request</h3>
+                        <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 10px;">
+                            <!-- JS will render here -->
                         </div>
                     </div>
-                    <div class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 0;">
-                        <label>Kategori Konten</label>
-                        <select class="form-control" style="margin-bottom: 1rem;">
-                            <option>Perawatan Sepatu</option>
-                            <option>Perawatan Tas</option>
-                            <option>Tips & Trik Umum</option>
-                            <option>Berita Promo</option>
-                        </select>
-                        <label>Status Visibilitas</label>
-                        <select class="form-control">
-                            <option>Publik (Muncul di Landing Page)</option>
-                            <option>Sembunyikan Sementara</option>
-                        </select>
+                </div>
+            </div>
+
+            <!-- Tab: Keuangan -->
+            <div id="tab-revenue" class="tab-content">
+                <h2>Laporan Keuangan & Performa</h2>
+                <div class="grid grid-2" style="gap: 1.5rem; margin-top: 1.5rem;">
+                    <div class="stat-card glass-panel" style="padding: 2rem;"><h3>Total Pemasukan</h3><h2 id="rev-total">Rp 0</h2></div>
+                    <div class="stat-card glass-panel" style="padding: 2rem;"><h3>Total Pesanan</h3><h2 id="rev-orders">0</h2></div>
+                </div>
+                <div class="revenue-chart glass-panel" style="margin-top:1.5rem; height: 350px; padding: 2rem;">
+                    <div class="revenue-chart-bars" style="display:flex; height:100%; gap:15px; align-items:flex-end;"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Stok Bahan -->
+            <div id="tab-stock" class="tab-content">
+                <div class="dashboard-header">
+                    <h2>Manajemen Stok Bahan</h2>
+                    <button class="btn btn-primary">+ Item Baru</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr><th>ID</th><th>NAMA BAHAN</th><th>STOK</th><th>HARGA/UNIT</th><th>AKSI</th></tr></thead>
+                        <tbody id="inventoryList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Katalog & Harga (Editor Harga di Sini) -->
+            <div id="tab-catalog" class="tab-content">
+                <div class="dashboard-header">
+                    <h2>Katalog & Paket Layanan</h2>
+                </div>
+                
+                <div class="grid grid-2" style="gap: 2rem; margin-bottom: 2rem;">
+                    <div class="glass-panel" style="padding: 1.5rem; text-align: center;">
+                        <i class="fa-solid fa-shoe-prints" style="font-size: 2rem; color: var(--primary-sky);"></i>
+                        <h3>Deep Clean Sepatu</h3>
+                        <p style="color:var(--text-muted);">Mulai dari Rp 30.000</p>
+                    </div>
+                    <div class="glass-panel" style="padding: 1.5rem; text-align: center;">
+                        <i class="fa-solid fa-helmet-safety" style="font-size: 2rem; color: var(--accent-yellow);"></i>
+                        <h3>Cuci Helm Premium</h3>
+                        <p style="color:var(--text-muted);">Mulai dari Rp 25.000</p>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Konten Tulisan Utama</label>
-                    <textarea class="form-control" rows="8" placeholder="Tuliskan artikel atau upload gambar inline di sini..." style="resize: vertical; min-height: 200px;"></textarea>
+                <div class="glass-panel" style="padding: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-tags"></i> Edit Harga Layanan Live</h3>
+                    <div class="grid grid-2" style="gap: 2.5rem;">
+                        <div>
+                            <div class="form-group"><label>Sepatu Small</label><input type="number" id="price-reg-shoes-Small" class="form-input"></div>
+                            <div class="form-group"><label>Sepatu Medium</label><input type="number" id="price-reg-shoes-Medium" class="form-input"></div>
+                            <div class="form-group"><label>Sepatu Large</label><input type="number" id="price-reg-shoes-Large" class="form-input"></div>
+                        </div>
+                        <div>
+                            <div class="form-group"><label>Helm Half Face</label><input type="number" id="price-reg-helmet-HalfFace" class="form-input"></div>
+                            <div class="form-group"><label>Helm Full Face</label><input type="number" id="price-reg-helmet-FullFace" class="form-input"></div>
+                            <div class="form-group"><label>Express 8 Jam (+)</label><input type="number" id="price-exp-8" class="form-input"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.saveAllSettings()" style="width: 100%; padding: 1.2rem; margin-top: 1rem;">Simpan Semua Harga Baru <i class="fa-solid fa-save" style="margin-left: 10px;"></i></button>
                 </div>
-                
-                <div class="action-bar" style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px;">
-                    <button class="btn btn-primary" style="flex: 2;">Publish Artikel <i class="fa-solid fa-rocket" style="margin-left: 8px;"></i></button>
-                    <button class="btn btn-secondary" style="flex: 1;">Simpan Draft <i class="fa-solid fa-floppy-disk" style="margin-left: 8px;"></i></button>
+            </div>
+
+            <!-- Tab: Testimoni -->
+            <div id="tab-testimonials" class="tab-content">
+                <h2>Moderasi Testimoni</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr><th>PELANGGAN</th><th>RATING</th><th>KOMENTAR</th><th>STATUS</th></tr></thead>
+                        <tbody><!-- JS Render --></tbody>
+                    </table>
                 </div>
             </div>
-        </div>
 
-    </main>
-</div>
+            <!-- Tab: Editor Artikel -->
+            <div id="tab-articles" class="tab-content">
+                <div class="dashboard-header">
+                    <h2>Editor Artikel Edukasi</h2>
+                    <button class="btn btn-primary">+ Artikel Baru</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr><th>JUDUL</th><th>KATEGORI</th><th>STATUS</th><th>AKSI</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <input type="hidden" id="articleId">
+            </div>
 
-<!-- Generic CRUD Modal -->
-<div id="crudModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
-    <div class="glass-panel" style="background:rgba(255,255,255,0.95); padding: 2.5rem; width: 500px; max-width: 90%; border-radius: 20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-            <h3 id="crudModalTitle" style="margin:0; color:var(--primary-navy);">Tambah Data</h3>
-            <button onclick="window.closeCrudModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
-        </div>
-        <form onsubmit="event.preventDefault(); alert('Data berhasil disimpan!'); window.closeCrudModal();">
-            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Formulir ini adalah antarmuka standar. Pada versi Backend mendatang, kolom input (Harga, Bahan, dsb) akan menyesuaikan konteks tombol secara fungsional.</p>
-            <div class="input-group">
-                <label>Identifier Utama / Judul</label>
-                <input type="text" class="form-control" placeholder="Tuliskan nama entitas data..." required>
+            <!-- Tab: Pengaturan Web (Branding di Sini) -->
+            <div id="tab-settings" class="tab-content">
+                <h2>Pengaturan Website & Branding</h2>
+                <div class="glass-panel" style="padding: 2.5rem; margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-sky);"><i class="fa-solid fa-display"></i> Branding & Hero Section</h3>
+                    <div class="form-group">
+                        <label>Judul Utama (Hero Title)</label>
+                        <input type="text" id="configHeroTitle" class="form-input" placeholder="Cth: Laundry Sepatu Premium">
+                    </div>
+                    <div class="form-group">
+                        <label>Sub-judul (Hero Subtitle)</label>
+                        <textarea id="configHeroSubtitle" class="form-input" rows="3" placeholder="Deskripsi singkat layanan..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.saveAllSettings()" style="width: 100%; padding: 1.2rem; margin-top: 1.5rem;">Simpan Branding <i class="fa-solid fa-save" style="margin-left: 10px;"></i></button>
+                </div>
             </div>
-            <div class="input-group">
-                <label>Detail Tambahan</label>
-                <textarea class="form-control" rows="3" placeholder="Deskripsi stok liter, harga, dsb..."></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 10px;">Simpan Perubahan <i class="fa-solid fa-save" style="margin-left: 5px;"></i></button>
-        </form>
+
+        </main>
     </div>
-</div>
 
-<script src="js/db.js"></script>
-<script src="js/dashboard.js"></script>
+    <!-- Modal Status Update -->
+    <div id="progressModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(8px);">
+        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 450px; border-radius: 24px; text-align: center;">
+            <h3 style="margin-bottom: 1.5rem;">Update Progress Pesanan</h3>
+            <div class="form-group">
+                <label>Pilih Status Terbaru</label>
+                <select id="statusSelect" class="form-input">
+                    <option value="1">Diterima (Antrian)</option>
+                    <option value="2">Proses Treatment</option>
+                    <option value="3">Pengeringan</option>
+                    <option value="4">Detailing/Finishing</option>
+                    <option value="5">Siap Diambil</option>
+                    <option value="6">Selesai/Lunas</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+                <button class="btn" style="flex:1; background:#64748b; color:white;" onclick="window.closeProgressModal()">Batal</button>
+                <button class="btn btn-primary" style="flex:2;" onclick="window.DB.updateOrderStatus(window.currentUpdateId, document.getElementById('statusSelect').value).then(() => { alert('Status Berhasil Diupdate!'); window.location.reload(); })">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>

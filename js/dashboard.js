@@ -1,384 +1,308 @@
-// dashboard.js
+// dashboard.js - PRODUCTION GRADE LOGIC
+console.log("Dashboard JS Loaded");
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Check Authentication
-    const userRole = localStorage.getItem('userRole');
-    if (!userRole) {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // Init UI
-    window.switchRole(userRole);
+window.onload = async () => {
+    const userRole = localStorage.getItem('userRole') || 'admin';
     setupTabs();
-    initDropzones();
-    
-    // Initial Render
-    renderOrders();
-    renderAdminRestock(); // For all roles (mostly admin)
-    
-    if(userRole === 'owner') {
-        renderFinance();
-        renderInventory();
-        renderArticles();
-        renderOwnerRestockRequests();
-        renderSettings();
+    switchRole(userRole);
+    await loadDashboardData(userRole);
+};
+
+async function loadDashboardData(role) {
+    const jobs = [
+        safeRender(renderOrders, "Orders"),
+        safeRender(renderRestock, "Restock")
+    ];
+    if (role === 'owner') {
+        jobs.push(
+            safeRender(renderFinance, "Finance"),
+            safeRender(renderInventory, "Inventory"),
+            safeRender(renderCatalog, "Catalog"),
+            safeRender(renderArticles, "Articles"),
+            safeRender(renderTestimonials, "Testimonials"),
+            safeRender(renderSettings, "Settings")
+        );
     }
-});
+    await Promise.allSettled(jobs);
+}
+
+async function safeRender(fn, name) {
+    try { await fn(); } catch (err) { console.error(`Render ${name} failed:`, err); }
+}
 
 function setupTabs() {
     const menuItems = document.querySelectorAll('.menu-item[data-target]');
     const tabContents = document.querySelectorAll('.tab-content');
-
     menuItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
+        item.onclick = function() {
+            const targetId = this.getAttribute('data-target');
             menuItems.forEach(m => m.classList.remove('active'));
             tabContents.forEach(t => t.classList.remove('active'));
-
             this.classList.add('active');
-            const targetId = this.getAttribute('data-target');
-            document.getElementById(targetId).classList.add('active');
-        });
+            const target = document.getElementById(targetId);
+            if (target) target.classList.add('active');
+        };
     });
 }
 
-function initDropzones() {
-    const initZone = (dropzoneId, inputId, nameId) => {
-        const dropzone = document.getElementById(dropzoneId);
-        const fileInput = document.getElementById(inputId);
-        const fotoName = document.getElementById(nameId);
-
-        if(dropzone && fileInput) {
-            dropzone.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files.length > 0) {
-                    if (fotoName) fotoName.innerText = "File Dipilih: " + this.files[0].name;
-                    dropzone.style.borderColor = "#2ecc71";
-                    dropzone.style.background = 'rgba(46, 204, 113, 0.1)';
-                }
-            });
-        }
-    };
-    initZone('foto-dropzone', 'foto-input', 'foto-name');
-    initZone('article-dropzone', 'article-foto-input', null);
-}
-
-window.switchRole = function(role) {
+function switchRole(role) {
     const ownerSection = document.getElementById('ownerMenuSection');
     const activeRoleText = document.getElementById('activeRoleText');
+    if (ownerSection) ownerSection.style.display = (role === 'owner' ? 'block' : 'none');
+    if (activeRoleText) activeRoleText.innerText = (role === 'owner' ? "Mode: Owner (Superadmin)" : "Mode: Admin Operasional");
+}
 
-    if (role === 'owner') {
-        ownerSection.style.display = 'block';
-        activeRoleText.innerText = "Mode: Owner (Superadmin)";
-    } else {
-        ownerSection.style.display = 'none';
-        activeRoleText.innerText = "Mode: Admin Operasional";
-        
-        const activeTabTarget = document.querySelector('.menu-item.active').getAttribute('data-target');
-        if (['tab-revenue', 'tab-stock', 'tab-catalog', 'tab-testimonials', 'tab-articles'].includes(activeTabTarget)) {
-            document.querySelector('[data-target="tab-orders"]').click();
-        }
-    }
-};
-
-// ================= ORDERS LOGIC =================
-function renderOrders() {
-    const orders = DB.get('sparklingOrders');
+// [ORDERS]
+async function renderOrders() {
+    const orders = await DB.getOrders();
     const tbody = document.querySelector('#tab-orders tbody');
-    if(!tbody) return;
-    
+    if (!tbody) return;
     tbody.innerHTML = '';
-    
-    const statusText = ['Unknown', 'Diterima', 'Treatment', 'Kering', 'Finishing', 'Siap Ambil'];
-    const statusClasses = ['unknown', 'diterima', 'treatment', 'kering', 'finishing', 'siap'];
-
+    const statusText = ['Unknown', 'Diterima', 'Treatment', 'Kering', 'Finishing', 'Siap Ambil', 'Selesai'];
+    const statusClasses = ['unknown', 'diterima', 'treatment', 'kering', 'finishing', 'siap', 'selesai'];
     orders.forEach(o => {
-        const badge = `<span class="status-badge status-${statusClasses[o.status]}">${o.status} - ${statusText[o.status]}</span>`;
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${o.id}</td>
-            <td>${DB.formatDate(o.date)}</td>
-            <td>${o.name}</td>
-            <td>${o.itemType} (${o.service})</td>
-            <td>${badge}</td>
-            <td>
-                <div style="display: flex; gap: 8px;">
-                    <label class="btn btn-secondary" style="padding:0.4rem 0.6rem; font-size: 0.85rem; cursor: pointer;">
-                        <i class="fa-solid fa-camera"></i> Before
-                        <input type="file" style="display: none;" accept="image/*" onchange="alert('Foto tersimpan untuk ${o.id}')">
-                    </label>
-                    <button class="btn" style="background:var(--primary-sky); color:white; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="window.updateProgressModal('${o.id}', ${o.status})">Update Status</button>
-                </div>
-            </td>
-        `;
+        tr.innerHTML = `<td>#${o.id}</td><td>${DB.formatDate(o.date)}</td><td><strong>${o.name}</strong></td><td>${o.item_type} (${o.service})</td><td><span class="status-badge status-${statusClasses[o.status || 1]}">${statusText[o.status || 1]}</span></td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="window.updateProgressModal('${o.id}', ${o.status || 1})"><i class="fa-solid fa-pen"></i></button></td>`;
         tbody.appendChild(tr);
     });
 }
 
-window.updateProgressModal = function(id, currentStatus) {
-    const modal = document.getElementById('progressModal');
-    document.getElementById('modalTitle').innerText = `Update Progress ${id}`;
-    document.getElementById('statusSelect').value = currentStatus;
-    
-    // Simpan ID ke button
-    const btn = modal.querySelector('.btn-primary');
-    btn.onclick = () => {
-        const newStatus = document.getElementById('statusSelect').value;
-        DB.updateOrderStatus(id, newStatus);
-        renderOrders();
-        window.closeProgressModal();
-    };
-    
-    modal.style.display = 'flex';
-};
-
-window.closeProgressModal = function() {
-    document.getElementById('progressModal').style.display = 'none';
-};
-
-// ================= REVENUE LOGIC =================
-function renderFinance() {
-    const finance = DB.get('sparklingFinance');
-    
-    let totalRev = 0;
-    let totalOrders = finance.length;
-    
-    finance.forEach(f => {
-        totalRev += parseFloat(f.total);
-    });
-    
-    const avg = totalOrders > 0 ? totalRev / totalOrders : 0;
-    
-    document.getElementById('rev-total').innerText = DB.formatCurrency(totalRev);
-    document.getElementById('rev-orders').innerText = totalOrders;
-    document.getElementById('rev-avg').innerText = DB.formatCurrency(avg);
-    
-    // Animate bars
-    const bars = document.querySelectorAll('.chart-bar');
-    bars.forEach(bar => {
-        bar.style.height = `${Math.floor(Math.random() * 60) + 30}%`;
-    });
-}
-
-window.updateRevenueFilter = function(days) {
-    // Simulasi filter untuk MVP
-    renderFinance();
-};
-
-// ================= INVENTORY LOGIC =================
-function renderInventory() {
-    const inv = DB.get('sparklingInventory');
-    const tbody = document.querySelector('#tab-stock tbody');
-    if(!tbody) return;
-    
+// [INVENTORY]
+async function renderInventory() {
+    const inv = await DB.getInventory();
+    const tbody = document.getElementById('inventoryList');
+    if (!tbody) return;
     tbody.innerHTML = '';
-    
     inv.forEach(i => {
-        const isLow = i.stock < i.minStock;
-        const rowStyle = isLow ? 'background: rgba(255,0,0,0.05);' : '';
-        const stockStyle = isLow ? 'color:red; font-weight:bold;' : '';
-        const unitSuffix = isLow ? ` ${i.unit} (Segera Habis!)` : ` ${i.unit}`;
-
+        let warningClass = '';
+        if (parseFloat(i.stock) <= 0) warningClass = 'stock-critical';
+        else if (parseFloat(i.stock) <= parseFloat(i.min_stock)) warningClass = 'stock-warning';
+        
         const tr = document.createElement('tr');
-        tr.style = rowStyle;
-        tr.innerHTML = `
-            <td>${i.name}</td>
-            <td>${i.category}</td>
-            <td style="${stockStyle}">${i.stock}</td>
-            <td>${unitSuffix}</td>
-            <td>
-                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;" onclick="window.openStockModal('${i.id}')"><i class="fa-solid fa-pen"></i> Update</button>
-            </td>
-        `;
+        if(warningClass) tr.className = warningClass;
+        tr.innerHTML = `<td>${i.id}</td><td>${i.name}</td><td><strong>${i.stock} ${i.unit}</strong></td><td>${DB.formatCurrency(i.price)}</td><td><button class="btn btn-primary" style="padding:5px 10px;" onclick="window.useInventory('${i.id}')">Pakai</button></td>`;
         tbody.appendChild(tr);
     });
 }
 
-window.openStockModal = function(id) {
-    window.openCrudModal(`Update Stok (Koreksi)`);
-    // Logic untuk form modal bisa dikembangkan nanti. Sementara hanya UI standard.
+window.useInventory = async function(id) {
+    const amount = prompt("Berapa jumlah yang digunakan?");
+    if (!amount || isNaN(amount)) return;
+    const res = await DB.updateInventory(id, amount, 'subtract');
+    if (res && res.success) { renderInventory(); } else { alert("Gagal update stok."); }
 };
 
-// ================= ARTICLES LOGIC =================
-function renderArticles() {
-    const articles = DB.get('sparklingArticles');
-    const tbody = document.querySelector('#tab-articles tbody');
-    if(!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    articles.forEach(a => {
-        const statusColor = a.status === 'Publik' ? '#2ecc71' : 'var(--text-muted)';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${a.title}</td>
-            <td>${a.category}</td>
-            <td><span style="color:${statusColor}; font-weight:bold;">${a.status}</span></td>
-            <td>${a.views}</td>
-            <td>
-                <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;"><i class="fa-solid fa-trash"></i></button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-// Generic CRUD Modal Logic
-window.openCrudModal = function(title) {
-    const modal = document.getElementById('crudModal');
-    const modalTitle = document.getElementById('crudModalTitle');
-    
-    if (modal && modalTitle) {
-        modalTitle.innerText = title;
-        modal.style.display = 'flex';
-    }
-};
-
-window.closeCrudModal = function() {
-    const modal = document.getElementById('crudModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-};
-
-// ================= ADMIN RESTOCK LOGIC =================
-function renderAdminRestock() {
-    const inv = DB.get('sparklingInventory');
+// [RESTOCK]
+async function renderRestock() {
+    const inv = await DB.getInventory();
     const select = document.getElementById('restockItem');
     if(select) {
         select.innerHTML = '<option value="">- Pilih Barang -</option>';
-        inv.forEach(i => {
-            select.innerHTML += `<option value="${i.id}">${i.name} (Stok: ${i.stock} ${i.unit})</option>`;
-        });
+        inv.forEach(i => { select.innerHTML += `<option value="${i.id}">${i.name} (Sisa: ${i.stock})</option>`; });
     }
-
-    const requests = DB.get('sparklingRestockRequests');
-    const tbody = document.getElementById('adminRestockList');
-    if(tbody) {
-        tbody.innerHTML = '';
+    
+    const requests = (await DB.getRestockRequests()).filter(r => r.status === 'Pending');
+    const statusContainer = document.querySelector('#tab-admin-restock .grid-2 > div:last-child');
+    if (statusContainer) {
+        const listDiv = statusContainer.querySelector('div:last-child');
+        listDiv.innerHTML = '';
         requests.forEach(r => {
-            let statusColor = 'var(--text-muted)';
-            if(r.status === 'Approved') statusColor = 'green';
-            if(r.status === 'Rejected') statusColor = 'red';
-            
-            tbody.innerHTML += `
-                <tr>
-                    <td>${DB.formatDate(r.date)}</td>
-                    <td>${r.itemName}</td>
-                    <td>${r.qty}</td>
-                    <td style="color:${statusColor}; font-weight:bold;">${r.status}</td>
-                </tr>
+            const card = document.createElement('div');
+            card.className = 'glass-card';
+            card.style.padding = '1.2rem';
+            card.style.marginBottom = '10px';
+            card.style.borderLeft = '4px solid var(--accent-yellow)';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>REQ: ${r.itemId} (${r.qty})</strong>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">${r.notes}</p>
+                    </div>
+                    <button class="btn btn-primary" style="padding:6px 15px; font-size:0.75rem;" onclick="window.approveRestock('${r.id}')">Selesaikan</button>
+                </div>
             `;
+            listDiv.appendChild(card);
         });
     }
 }
 
-window.submitRestockRequest = function() {
-    const itemId = document.getElementById('restockItem').value;
-    const qty = document.getElementById('restockQty').value;
-    const notes = document.getElementById('restockNotes').value;
-    const userRole = localStorage.getItem('userRole');
-
-    if(!itemId || !qty) {
-        alert("Pilih barang dan masukkan jumlah!");
-        return;
+window.approveRestock = async function(id) {
+    if(confirm("Apakah barang sudah datang dan stok sudah bertambah?")) {
+        const res = await DB.updateRestockStatus(id, 'Completed');
+        if(res && res.success) { 
+            alert("Stok berhasil ditambahkan otomatis!");
+            renderRestock(); 
+            renderInventory(); 
+        }
     }
-
-    DB.addRestockRequest(itemId, qty, notes, userRole);
-    alert("Permintaan berhasil dikirim ke Owner!");
-    document.getElementById('restockQty').value = '';
-    document.getElementById('restockNotes').value = '';
-    renderAdminRestock();
 };
 
-// ================= OWNER RESTOCK LOGIC =================
-function renderOwnerRestockRequests() {
-    const requests = DB.get('sparklingRestockRequests').filter(r => r.status === 'Pending');
-    const tbody = document.getElementById('ownerRestockList');
-    const box = document.getElementById('ownerRestockRequestsBox');
-    
-    if(!tbody || !box) return;
-
-    if (requests.length === 0) {
-        box.style.display = 'none';
-        return;
-    }
-    
-    box.style.display = 'block';
+// [TESTIMONIALS]
+async function renderTestimonials() {
+    const tests = await DB.getTestimonials();
+    const tbody = document.querySelector('#tab-testimonials tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
-    
-    requests.forEach(r => {
-        tbody.innerHTML += `
-            <tr style="background: rgba(241, 196, 15, 0.1);">
-                <td>${DB.formatDate(r.date)}</td>
-                <td><strong>${r.itemName}</strong></td>
-                <td><span style="color:red; font-weight:bold;">+${r.qty}</span></td>
-                <td>${r.notes}</td>
-                <td>
-                    <button class="btn btn-primary" style="padding:0.3rem 0.6rem; font-size:0.8rem; margin-right: 5px;" onclick="window.ownerApprove('${r.id}')"><i class="fa-solid fa-check"></i> Setujui</button>
-                    <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border: 1px solid #e74c3c;" onclick="window.ownerReject('${r.id}')"><i class="fa-solid fa-xmark"></i> Tolak</button>
-                </td>
-            </tr>
-        `;
+    tests.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${t.name}</strong></td><td>${'⭐'.repeat(t.rating)}</td><td>"${t.content}"</td><td>${t.status === 'Pending' ? `<button class="btn" style="background:#2ecc71; color:white;" onclick="window.moderateTestimonial(${t.id}, 'Approved')">Acc</button>` : `<span style="color:#2ecc71; font-weight:700;">LIVE</span>`}</td>`;
+        tbody.appendChild(tr);
     });
 }
 
-window.ownerApprove = function(reqId) {
-    const cost = prompt("Masukkan total harga pembelian untuk laporan keuangan (contoh: 50000):");
-    if (cost && !isNaN(cost)) {
-        if (DB.approveRestockRequest(reqId, cost)) {
-            alert("Permintaan disetujui! Stok bertambah dan laporan keuangan terupdate.");
-            renderOwnerRestockRequests();
-            renderInventory();
-            renderFinance();
-        }
-    } else if (cost !== null) {
-        alert("Input tidak valid!");
-    }
+window.moderateTestimonial = async function(id, status) {
+    const res = await DB.updateTestimonialStatus(id, status);
+    if(res && res.success) renderTestimonials();
 };
 
-window.ownerReject = function(reqId) {
-    const reason = prompt("Alasan penolakan:");
-    if (reason !== null) {
-        DB.rejectRestockRequest(reqId, reason);
-        alert("Permintaan ditolak.");
-        renderOwnerRestockRequests();
-    }
-};
-
-// ================= SETTINGS LOGIC =================
-function renderSettings() {
-    const config = DB.getConfig();
-    
-    const hTitle = document.getElementById('configHeroTitle');
-    const hSub = document.getElementById('configHeroSubtitle');
-    if(hTitle) hTitle.value = config.heroTitle;
-    if(hSub) hSub.value = config.heroSubtitle;
-
-    const rShoes = document.getElementById('cfgRegShoes');
-    const rBagF = document.getElementById('cfgRegBagF');
-    const rHelm = document.getElementById('cfgRegHelm');
-    const sSuede = document.getElementById('cfgSpecSuede');
-
-    if(rShoes) rShoes.value = config.pricing.regular.shoes.Small;
-    if(rBagF) rBagF.value = config.pricing.regular.bag_fabric.Small;
-    if(rHelm) rHelm.value = config.pricing.regular.helmet["Half Face"];
-    if(sSuede) sSuede.value = config.pricing.special.suede.Small;
+// [ARTICLES]
+async function renderArticles() {
+    const articles = await DB.getArticles();
+    const tbody = document.querySelector('#tab-articles tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    articles.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${a.title}</td><td>${a.category}</td><td><span class="status-badge">${a.status}</span></td><td><button class="btn btn-primary" style="padding:4px 8px;" onclick="window.editArticle('${a.id}')"><i class="fa-solid fa-pen-to-square"></i></button> <button class="btn" style="padding:4px 8px; background:#e74c3c; color:white;" onclick="window.deleteArticle('${a.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+        tbody.appendChild(tr);
+    });
 }
 
-window.saveConfig = function() {
-    const config = DB.getConfig();
-    
-    config.heroTitle = document.getElementById('configHeroTitle').value;
-    config.heroSubtitle = document.getElementById('configHeroSubtitle').value;
-
-    config.pricing.regular.shoes.Small = parseInt(document.getElementById('cfgRegShoes').value);
-    config.pricing.regular.bag_fabric.Small = parseInt(document.getElementById('cfgRegBagF').value);
-    config.pricing.regular.helmet["Half Face"] = parseInt(document.getElementById('cfgRegHelm').value);
-    config.pricing.special.suede.Small = parseInt(document.getElementById('cfgSpecSuede').value);
-
-    DB.updateConfig(config);
-    alert("Pengaturan dan Harga berhasil disimpan! Perubahan akan langsung terlihat di Halaman Depan.");
+window.editArticle = async function(id) {
+    const articles = await DB.getArticles();
+    const a = articles.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('artTitle').value = a.title;
+    document.getElementById('artCategory').value = a.category;
+    document.getElementById('artImage').value = a.image;
+    document.getElementById('artContent').value = a.content;
+    document.getElementById('articleId').value = a.id;
+    // Scroll to form or switch focus
+    alert("Data artikel telah dimuat ke form di atas.");
 };
+
+window.deleteArticle = async function(id) {
+    if(confirm("Hapus artikel ini?")) {
+        const res = await DB.deleteArticle(id);
+        if(res && res.success) renderArticles();
+    }
+};
+
+// [SETTINGS & CONFIG]
+async function renderSettings() {
+    const config = await DB.getConfig();
+    if (!config) return;
+    const hero = config.hero || {};
+    if (document.getElementById('configHeroTitle')) document.getElementById('configHeroTitle').value = hero.title || '';
+    if (document.getElementById('configHeroSubtitle')) document.getElementById('configHeroSubtitle').value = hero.subtitle || '';
+    
+    const p = config.pricing || {};
+    if (p.regShoes) {
+        document.getElementById('price-reg-shoes-Small').value = p.regShoes.Small || 0;
+        document.getElementById('price-reg-shoes-Medium').value = p.regShoes.Medium || 0;
+        document.getElementById('price-reg-shoes-Large').value = p.regShoes.Large || 0;
+    }
+    if (p.regHelmet) {
+        document.getElementById('price-reg-helmet-HalfFace').value = p.regHelmet.HalfFace || 0;
+        document.getElementById('price-reg-helmet-FullFace').value = p.regHelmet.FullFace || 0;
+    }
+    if (p.express) {
+        document.getElementById('price-exp-8').value = p.express["8h"] || 0;
+        document.getElementById('price-exp-18').value = p.express["18h"] || 0;
+        document.getElementById('price-exp-24').value = p.express["24h"] || 0;
+    }
+}
+
+window.saveAllSettings = async function() {
+    const config = {
+        hero: {
+            title: document.getElementById('configHeroTitle').value,
+            subtitle: document.getElementById('configHeroSubtitle').value
+        },
+        pricing: {
+            regShoes: { Small: parseInt(document.getElementById('price-reg-shoes-Small').value), Medium: parseInt(document.getElementById('price-reg-shoes-Medium').value), Large: parseInt(document.getElementById('price-reg-shoes-Large').value) },
+            regHelmet: { HalfFace: parseInt(document.getElementById('price-reg-helmet-HalfFace').value), FullFace: parseInt(document.getElementById('price-reg-helmet-FullFace').value) },
+            express: { "8h": parseInt(document.getElementById('price-exp-8').value), "18h": parseInt(document.getElementById('price-exp-18').value), "24h": parseInt(document.getElementById('price-exp-24').value) }
+        }
+    };
+    const res = await DB.saveConfig(config);
+    if (res && res.success) { alert("Pengaturan Website Berhasil Disimpan!"); window.location.reload(); } else { alert("Gagal menyimpan."); }
+};
+
+// [FINANCE]
+async function renderFinance() {
+    const finance = (await DB.getFinance()) || [];
+    const lunas = finance.filter(f => f.status === 'Lunas');
+    const total = lunas.reduce((s, f) => s + parseFloat(f.total || 0), 0);
+    if (document.getElementById('rev-total')) document.getElementById('rev-total').innerText = DB.formatCurrency(total);
+    if (document.getElementById('rev-orders')) document.getElementById('rev-orders').innerText = lunas.length;
+
+    // Render Infographic Bars (Last 7 Days)
+    const chartContainer = document.querySelector('.revenue-chart-bars');
+    if (!chartContainer) return;
+    chartContainer.innerHTML = '';
+    
+    const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    const today = new Date();
+    const dailyData = [];
+
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const dayTotal = lunas.filter(f => f.date && f.date.includes(dateStr))
+                              .reduce((s, f) => s + parseFloat(f.total || 0), 0);
+        dailyData.push({ day: days[d.getDay()], total: dayTotal });
+    }
+
+    const maxVal = Math.max(...dailyData.map(d => d.total), 50000);
+    
+    dailyData.forEach(d => {
+        const height = (d.total / maxVal) * 100;
+        const bar = document.createElement('div');
+        bar.style.flex = '1';
+        bar.style.display = 'flex';
+        bar.style.flexDirection = 'column';
+        bar.style.alignItems = 'center';
+        bar.style.justifyContent = 'flex-end';
+        bar.style.height = '100%';
+        bar.innerHTML = `
+            <div style="font-size:0.7rem; color:var(--primary-sky); font-weight:700; margin-bottom:5px;">${d.total > 0 ? (d.total/1000)+'k' : ''}</div>
+            <div style="width:100%; height:${height}%; background:linear-gradient(to top, var(--primary-sky), #a78bfa); border-radius:10px; min-height:5px; transition: height 1s ease;"></div>
+            <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-top:10px;">${d.day}</div>
+        `;
+        chartContainer.appendChild(bar);
+    });
+}
+
+// [OTHERS]
+window.processAdminOrder = async function(event) {
+    event.preventDefault();
+    const btn = event.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+        const orderData = { 
+            id: DB.generateOrderCode(), 
+            name: document.getElementById('admName').value, 
+            phone: document.getElementById('admPhone').value, 
+            item_type: document.getElementById('admItem').value, 
+            qty: parseInt(document.getElementById('admQty').value), 
+            treatment: 'Manual', 
+            service: document.getElementById('admService').value, 
+            express: 'none', delivery: 'Tidak', address: '-', distance: 0, schedule: '-', 
+            notes: document.getElementById('admNotes').value, 
+            price: parseFloat(document.getElementById('admPrice').value), 
+            express_price: 0, ongkir: 0, 
+            total: parseFloat(document.getElementById('admPrice').value) * parseInt(document.getElementById('admQty').value), 
+            status: 1 
+        };
+        await DB.addOrder(orderData);
+        alert("Pesanan berhasil disimpan!");
+        event.target.reset();
+        renderOrders();
+    } catch (err) { alert("Gagal menyimpan."); } finally { btn.disabled = false; }
+};
+
+function initDropzones() {}
+window.updateProgressModal = (id, status) => { document.getElementById('progressModal').style.display = 'flex'; window.currentUpdateId = id; document.getElementById('statusSelect').value = status; };
+window.closeProgressModal = () => { document.getElementById('progressModal').style.display = 'none'; };

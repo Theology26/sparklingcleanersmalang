@@ -744,36 +744,45 @@
                     </div>
                     
                     <!-- Detail Barang -->
-                    <div class="grid grid-2" style="gap:1rem;">
-                        <div class="input-group">
-                            <label>Jenis Item</label>
-                            <select id="orderItemType" class="form-control" required onchange="window.updateServiceOptions()">
-                                <option value="">- Pilih Item -</option>
-                                <option value="Sepatu">Sepatu</option>
-                                <option value="Tas">Tas</option>
-                                <option value="Helm">Helm</option>
-                            </select>
+                    <div class="input-group">
+                        <label>Jenis Item</label>
+                        <div class="selection-cards" id="itemSelection">
+                            <div class="selection-card" onclick="window.selectItem('Sepatu', this)">
+                                <i class="fa-solid fa-shoe-prints"></i>
+                                <span>Sepatu</span>
+                            </div>
+                            <div class="selection-card" onclick="window.selectItem('Tas', this)">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                                <span>Tas</span>
+                            </div>
+                            <div class="selection-card" onclick="window.selectItem('Helm', this)">
+                                <i class="fa-solid fa-motorcycle"></i>
+                                <span>Helm</span>
+                            </div>
                         </div>
+                        <input type="hidden" id="orderItemType" required>
+                    </div>
+
+                    <div class="grid grid-2" style="gap:1rem;">
                         <div class="input-group">
                             <label>Jumlah Item</label>
                             <input type="number" id="orderQty" class="form-control" required min="1" value="1" onchange="window.calculateTotal()">
                         </div>
-                    </div>
-                    
-                    <div class="grid grid-2" style="gap:1rem;">
                         <div class="input-group">
                             <label>Jenis Treatment</label>
-                            <select id="orderTreatmentType" class="form-control" required onchange="window.updateServiceOptions()">
-                                <option value="regular">Regular Wash</option>
-                                <option value="special">Special Treatment</option>
-                            </select>
+                            <div class="treatment-select" id="treatmentSelection">
+                                <div class="treatment-opt active" onclick="window.selectTreatment('regular', this)">Regular Wash</div>
+                                <div class="treatment-opt" onclick="window.selectTreatment('special', this)">Special</div>
+                            </div>
+                            <input type="hidden" id="orderTreatmentType" value="regular">
                         </div>
-                        <div class="input-group">
-                            <label>Pilihan Layanan</label>
-                            <select id="orderService" class="form-control" required onchange="window.calculateTotal()">
-                                <option value="">- Pilih Layanan Dulu -</option>
-                            </select>
-                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Pilihan Layanan</label>
+                        <select id="orderService" class="form-control" required onchange="window.calculateTotal()">
+                            <option value="">- Pilih Layanan Dulu -</option>
+                        </select>
                     </div>
                     
                     <div class="input-group">

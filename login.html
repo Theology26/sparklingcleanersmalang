@@ -3,181 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Sparkling Cleaners Internal</title>
-    <link rel="stylesheet" href="styles/main.css">
+    <title>Login Sistem | Sparkling Cleaners</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/dashboard.css"> <!-- Mengambil efek frost -->
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, var(--primary-navy) 0%, #2c3e50 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Abstract blobs for background decoration */
-        .blob-1, .blob-2 {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            z-index: 0;
-        }
-
-        .blob-1 {
-            background: rgba(52, 152, 219, 0.4);
-            width: 400px;
-            height: 400px;
-            top: -100px;
-            left: -100px;
-        }
-
-        .blob-2 {
-            background: rgba(241, 196, 15, 0.2);
-            width: 300px;
-            height: 300px;
-            bottom: -50px;
-            right: -50px;
-        }
-
-        .login-panel {
-            width: 100%;
-            max-width: 400px;
-            padding: 3rem 2rem;
-            z-index: 1;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .login-panel h2 {
-            color: white;
-            margin-bottom: 0.5rem;
-        }
-
-        .login-panel p {
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: rgba(255,255,255,0.9);
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .form-control::placeholder {
-            color: rgba(255,255,255,0.3);
-        }
-
-        .form-control:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary-sky);
-        }
-
-        .btn-login {
-            width: 100%;
-            margin-top: 1rem;
-        }
-
-        .links {
-            margin-top: 2rem;
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.6);
-        }
-
-        .links a {
-            color: var(--primary-sky);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .dummy-hint {
-            margin-top: 15px;
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.4);
-            text-align: left;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 8px;
-        }
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .login-wrapper { width: 100%; max-width: 420px; padding: 3rem 2.5rem; text-align: center; border-radius: 32px; }
+        .login-wrapper .logo-img-wrapper { margin: 0 auto 1.5rem auto; width: 90px; height: 90px; border-radius: 50%; padding: 10px; background: rgba(255,255,255,0.5); }
+        .input-group { text-align: left; margin-bottom: 1.5rem; position: relative; }
+        .input-group label { display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--primary-navy); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .input-group i { position: absolute; margin-top: 17px; margin-left: 18px; color: var(--text-muted); font-size: 1.2rem; }
+        .form-control.with-icon { padding-left: 55px; height: 55px; border-radius: 16px; }
+        .btn-login { background: linear-gradient(135deg, #F1C40F, #F39C12); color: #fff; border-radius: 16px; font-weight: 800; font-size: 1.1rem; height: 55px; border: none; box-shadow: 0 10px 20px rgba(241, 196, 15, 0.3); }
+        .btn-login:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(241, 196, 15, 0.4); }
     </style>
 </head>
 <body>
+    <!-- Abstract Background Elements -->
+    <div class="blob-bg blob-1"></div>
+    <div class="blob-bg blob-2"></div>
 
-    <div class="blob-1"></div>
-    <div class="blob-2"></div>
-
-    <div class="glass-panel login-panel">
-        <div class="logo-img-wrapper" style="margin: 0 auto 15px; width: 75px; height: 75px;">
-            <img src="assets/logo.png" alt="Logo" class="logo-img" style="transform: scale(1.15);">
+    <div class="login-wrapper glass-panel">
+        <div class="logo-img-wrapper glass-panel">
+            <img src="/assets/logo.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; transform: scale(1.2);">
         </div>
-        <h2>Portal Internal</h2>
-        <p>Silakan login untuk mengelola sistem</p>
+        <h2 style="font-weight: 800; letter-spacing: -1px; margin-bottom: 5px;">Sparkling Ops</h2>
+        <p style="color: #64748b; margin-bottom: 2.5rem; font-weight: 500;">Secure Portal Authentication</p>
 
-        <form id="loginForm">
-            <div class="form-group">
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="input-group">
                 <label>Email Address</label>
-                <input type="email" id="email" class="form-control" placeholder="admin@sparkling.com" required>
+                <i class="fa-solid fa-at"></i>
+                <input type="email" id="email" class="form-control with-icon" placeholder="owner@sparkling.com" required>
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+            <div class="input-group">
+                <label>Security Key</label>
+                <i class="fa-solid fa-fingerprint"></i>
+                <input type="password" id="password" class="form-control with-icon" placeholder="••••••••" required>
             </div>
-            <button type="submit" class="btn btn-primary btn-login">Login Akses</button>
+            
+            <button type="submit" class="btn btn-login" style="width: 100%; margin-top: 1rem;">
+                Akses Dashboard <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
+            </button>
         </form>
-
-        <div class="dummy-hint">
-            <strong>Hint Dummy Login:</strong><br>
-            Admin: admin@sparkling.com / admin123<br>
-            Owner: owner@sparkling.com / owner123
-        </div>
-
-        <div class="links">
-            Belum punya akun? <a href="javascript:alert('Pembuatan akun mandiri telah dinonaktifkan demi keamanan. Silakan hubungi Superadmin (Owner) untuk pendaftaran staf baru.');">Bikin Akun</a><br><br>
-            <a href="index.html" style="color:var(--text-muted);">&larr; Kembali ke Website Publik</a>
-        </div>
     </div>
 
     <script>
-        // Clear local storage on landing at login page just to be safe
-        localStorage.removeItem('userRole');
-
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-
-            if (email === 'admin@sparkling.com' && password === 'admin123') {
-                localStorage.setItem('userRole', 'admin');
-                window.location.href = 'dashboard.html';
-            } else if (email === 'owner@sparkling.com' && password === 'owner123') {
-                localStorage.setItem('userRole', 'owner');
-                window.location.href = 'dashboard.html';
+            const email = document.getElementById('email').value.toLowerCase();
+            let role = email.includes('owner') ? 'owner' : (email.includes('admin') ? 'admin' : '');
+            if (role) {
+                localStorage.setItem('userRole', role);
+                document.querySelector('.btn-login').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...';
+                setTimeout(() => { window.location.href = '/dashboard.html'; }, 1000);
             } else {
-                alert('Email atau Password salah! Periksa kembali.');
+                alert('Akses Ditolak: Email tidak terdaftar di sistem Ops.');
             }
-        });
+        }
     </script>
 </body>
 </html>

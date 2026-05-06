@@ -1,202 +1,141 @@
-# ✨ Sparkling Cleaners Malang
+# ✨ Sparkling Cleaners Malang (Production Edition)
 
-> Sistem Manajemen Bisnis & Landing Page untuk layanan cuci premium sepatu, tas, dan helm berbasis di Wagir, Malang.
+> **Sistem Manajemen Bisnis & Landing Page Premium** untuk layanan cuci sepatu, tas, dan helm berbasis di Wagir, Malang. Kini hadir dengan arsitektur **Production-Ready** menggunakan MySQL Backend & Aesthetic Frost UI.
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
 
 ---
 
-## 📋 Deskripsi
+## 📋 Deskripsi Evolusi
 
-**Sparkling Cleaners** adalah aplikasi web all-in-one yang menggabungkan:
+Project ini telah berevolusi dari MVP berbasis `localStorage` menjadi sistem manajemen bisnis tingkat produksi yang stabil. **Sparkling Cleaners v2.0** menawarkan sinkronisasi data real-time, keamanan backend, dan desain antarmuka yang sangat premium.
 
-- **Landing Page** publik untuk pelanggan (booking, pricelist, artikel edukasi)
-- **Dashboard Internal** dengan sistem Role-Based Access Control (RBAC) untuk Admin dan Owner
-- **Backend simulasi** menggunakan `localStorage` sebagai database lokal
-
-Dibangun sepenuhnya dengan **Vanilla HTML, CSS, dan JavaScript** tanpa framework — ringan, cepat, dan mudah di-deploy.
+- **Frontend**: Vanilla JavaScript dengan optimasi DOM tinggi.
+- **Backend**: Node.js & Express.js dengan sistem **Connection Pooling** untuk efisiensi memori.
+- **Database**: MySQL Relasional dengan skema operasional lengkap (Inventory, Finance, Orders).
 
 ---
 
-## 🎨 Design Language
+## 🎨 Premium Design Language: "Aesthetic Frost"
 
-- **Glassmorphism** — Panel transparan dengan efek blur dan border halus
-- **Responsive** — Menyesuaikan ukuran layar dari mobile hingga desktop
-- **Modern Typography** — Google Fonts (Inter)
-- **Micro-animations** — Transisi halus pada hover, tab switching, dan status badge
+Sistem ini menggunakan bahasa desain eksklusif yang disebut **Aesthetic Frost**, yang menggabungkan:
+- **Crumpled Blue Texture**: Tekstur kertas lecek biru tua yang memberikan kesan artistik dan identitas brand yang kuat pada sidebar.
+- **High-End Glassmorphism**: Panel transparan dengan efek blur tinggi (`backdrop-filter: 25px`) dan border kaca halus.
+- **Micro-interactions**: Sidebar auto-collapse, transisi tab yang mulus, dan logo yang mengecil secara dinamis.
+- **Responsive Mastery**: Antarmuka yang tetap elegan baik di layar desktop lebar maupun ponsel.
 
 ---
 
-## 🗂️ Struktur Proyek
+## 🚀 Instalasi & Cara Menjalankan
+
+### 1. Prasyarat
+- [Node.js](https://nodejs.org/) (v16+)
+- [MySQL/MariaDB](https://www.mysql.com/) (XAMPP/Laragon direkomendasikan)
+
+### 2. Setup Database
+1. Buka **phpMyAdmin**.
+2. Buat database baru bernama `sparkling_cleaners`.
+3. Import file `database.sql` ke dalam database tersebut.
+
+### 3. Konfigurasi Environment
+Buat file `.env` di dalam folder `server/` dan sesuaikan:
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=sparkling_cleaners
+PORT=3000
+```
+
+### 4. Jalankan Server
+```bash
+# Masuk ke folder server (opsional jika sudah di root)
+cd server
+npm install
+node server.js
+```
+Akses Dashboard di: **http://localhost:3000/dashboard**
+
+---
+
+## 🗂️ Struktur Proyek Terbaru
 
 ```
 sparklingcleanersmalang/
-├── index.html          # Landing page publik (utama)
-├── login.html          # Halaman login dashboard
-├── dashboard.html      # Dashboard internal Admin/Owner
-├── README.md
+├── index.html          # Landing Page Publik
+├── dashboard.html      # Dashboard Operasional
+├── database.sql        # Skema Produksi & Dummy Data
 │
-├── assets/
-│   └── logo.png        # Logo Sparkling Cleaners
+├── server/
+│   ├── server.js       # Core API (Node/Express + Pooling)
+│   └── .env            # Konfigurasi Database
 │
 ├── js/
-│   ├── db.js           # Database layer (localStorage CRUD + business logic)
-│   ├── landing.js      # Logic landing page (booking, GPS, pricing, artikel)
-│   └── dashboard.js    # Logic dashboard (orders, inventory, restock, settings)
+│   ├── db.js           # API Wrapper (Frontend-to-Backend)
+│   ├── dashboard.js    # Logic Bisnis Dashboard
+│   └── landing.js      # Logic Landing Page
+│
+├── assets/
+│   ├── logo.png        # Logo Utama
+│   └── sidebar-texture.png # Tekstur Kertas Biru Eksklusif
 │
 └── styles/
-    ├── main.css         # Design system utama (variabel, komponen, tabel harga)
-    └── dashboard.css    # Styling khusus layout dashboard
+    ├── main.css        # Global Styles
+    └── dashboard.css   # Aesthetic Frost UI Styles
 ```
 
 ---
 
-## 🚀 Cara Menjalankan
+## 🔑 Akun Akses
 
-### Prasyarat
-- Browser modern (Chrome, Firefox, Edge)
-- [Node.js](https://nodejs.org/) terinstal (untuk HTTP server)
-
-### Langkah
-
-```bash
-# 1. Clone repository
-git clone https://github.com/Theology26/sparklingcleanersmalang.git
-cd sparklingcleanersmalang
-
-# 2. Jalankan local server
-npx -y http-server . -p 8080 -o
-```
-
-> **Catatan:** Jika PowerShell menolak menjalankan `npx`, jalankan perintah berikut terlebih dahulu:
-> ```powershell
-> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-> ```
-
-Buka browser dan akses: **http://127.0.0.1:8080**
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin@sparkling.com` | `admin123` |
+| **Owner** | `owner@sparkling.com` | `owner123` |
 
 ---
 
-## 🔑 Akun Login Dashboard
+## 🛠️ Fitur Produksi (v2.0)
 
-| Role    | Email                  | Password    |
-|---------|------------------------|-------------|
-| Admin   | `admin@sparkling.com`  | `admin123`  |
-| Owner   | `owner@sparkling.com`  | `owner123`  |
-
----
-
-## ✅ Fitur Utama
-
-### 🏠 Landing Page (Pelanggan)
-
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Hero Section** | Teks dinamis (dapat diubah Owner dari dashboard) |
-| **Layanan Kami** | Grid kartu layanan: Sepatu, Tas, Helm |
-| **Daftar Harga** | Tabel harga lengkap Regular Wash & Special Treatment |
-| **Testimoni** | Kartu testimoni pelanggan + modal tulis ulasan |
-| **Artikel Edukasi** | Kartu artikel dinamis dari database |
-| **Form Booking** | Formulir order lengkap dengan kalkulasi harga otomatis |
-| **GPS Distance** | Deteksi lokasi otomatis via Geolocation API + Haversine formula |
-| **WhatsApp E-Nota** | Kirim nota otomatis ke WhatsApp setelah booking |
-| **Lacak Pesanan** | Cek status pesanan dengan kode order |
-| **Google Maps** | Link exact location workshop di footer |
-
-### 📊 Dashboard Admin
-
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Manajemen Pesanan** | Lihat, update status (SOP 5 tahap), upload foto before/after |
-| **Input Order Baru** | Form input pesanan manual dari dashboard |
-| **Permintaan Restok** | Ajukan request bahan/alat ke Owner |
-
-### 👑 Dashboard Owner
-
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Semua fitur Admin** | + akses penuh ke modul berikut |
-| **Laporan Keuangan** | Ringkasan pendapatan, jumlah order, rata-rata transaksi |
-| **Manajemen Stok** | Inventaris bahan + approval/reject permintaan restok Admin |
-| **Manajemen Katalog** | CRUD layanan dan harga |
-| **Kurasi Testimoni** | Moderasi ulasan pelanggan |
-| **Editor Artikel** | Tulis & publish artikel edukasi dengan upload foto |
-| **Pengaturan Web & Harga** | Edit teks landing page + harga dasar layanan secara live |
+- **Inventory Tracking**: Pengurangan stok otomatis saat barang digunakan dan penambahan otomatis saat restok diselesaikan.
+- **Financial Analytics**: Grafik batang (infografis) pendapatan 7 hari terakhir yang dinamis.
+- **Restok Moderation**: Admin mengajukan request, Owner menyetujui, stok bertambah otomatis.
+- **Live Config Editor**: Owner bisa mengubah Judul Hero dan Harga Layanan langsung dari dashboard tanpa edit kode.
+- **Order Lifecycle**: SOP 6 tahap dari "Diterima" hingga "Selesai/Lunas".
 
 ---
 
-## 💾 Arsitektur Data
+## 🧠 Master Prompt (Buku Manual AI)
 
-Semua data disimpan di `localStorage` browser dengan key berikut:
+*Salin teks di bawah ini jika ingin mengembangkan project ini lebih lanjut menggunakan AI:*
 
-| Key | Deskripsi |
-|-----|-----------|
-| `sparklingOrders` | Daftar pesanan pelanggan |
-| `sparklingFinance` | Catatan transaksi keuangan (pemasukan & pengeluaran) |
-| `sparklingInventory` | Stok bahan dan alat |
-| `sparklingPurchaseHistory` | Riwayat pembelian bahan |
-| `sparklingRestockRequests` | Permintaan restok dari Admin |
-| `sparklingTestimonials` | Ulasan pelanggan |
-| `sparklingArticles` | Artikel edukasi |
-| `sparklingConfig` | Konfigurasi website (teks hero, harga dasar) |
-
----
-
-## 🔄 Alur Bisnis (SOP)
-
-### Alur Pesanan
-```
-Pelanggan Booking → Status: Diterima → Treatment → Kering → Finishing → Siap Ambil
-```
-
-### Alur Restok Bahan
-```
-Admin Request → Owner Review → Approve (+ input harga beli) → Stok bertambah + Keuangan tercatat
-                             → Reject (+ alasan)
-```
-
-### Alur Keuangan
-```
-Order Masuk → Otomatis tercatat di Finance (pemasukan)
-Restok Disetujui → Otomatis tercatat di Finance (pengeluaran, nilai minus)
+```markdown
+Role: Senior Full-Stack Developer (Vanilla JS, Node.js, MySQL).
+Project Context: Sparkling Cleaners Malang Management System.
+Design System: "Aesthetic Frost" (Glassmorphism, Blue Crumpled Texture, Inter Font).
+Backend Specs: Node.js Express server with mysql2/promise connection pooling.
+Core Logic Rules:
+1. Inventory ID format: 'INV-XXX' (String). 
+2. Inventory logic: Always use parseFloat() for stock amounts.
+3. Database: Ensure all write operations to 'inventory' and 'restock_requests' are synchronized.
+4. UI: Maintain high backdrop-filter (20-25px) on all panels and sidebars.
+5. Code Style: No frameworks (React/Vue/Tailwind) allowed. Use Vanilla CSS and ES6 JS only.
 ```
 
 ---
 
-## 📍 Lokasi Workshop
+## 📄 Lisensi & Kredit
 
-**Sparkling Cleaners — Workshop Wagir**
-
-```
-Jl. Jamuran Rt.06 Rw.02 Dusun Jamuran,
-Desa Sukodadi, Kecamatan Wagir,
-Kabupaten Malang, Jawa Timur, Indonesia
-```
-
-📌 Koordinat: **-8.0261, 112.5855**
-🗺️ [Buka di Google Maps](https://maps.google.com/?q=-8.0261,112.5855)
-
----
-
-## 🛣️ Roadmap
-
-- [ ] Migrasi database ke Supabase/Firebase untuk akses multi-device
-- [ ] Integrasi Google Maps Distance Matrix API untuk presisi jarak
-- [ ] Export laporan ke PDF/Excel (jsPDF)
-- [ ] Upload gambar artikel ke base64 / cloud storage
-- [ ] Progressive Web App (PWA) untuk akses offline
-- [ ] Notifikasi WhatsApp otomatis saat status pesanan berubah
-
----
-
-## 📄 Lisensi
-
-© 2026 Sparkling Cleaners Malang. All rights reserved.
+© 2026 **Sparkling Cleaners Malang**. 
+Developed with precision by **Theology26** & AI Assistant.
 
 ---
 
 <p align="center">
-  <strong>Built with 💛 in Malang, Indonesia</strong>
+  <strong>Built with 💙 and Paper Texture in Malang, Indonesia</strong>
 </p>
