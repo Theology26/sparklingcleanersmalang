@@ -129,7 +129,7 @@ window.updateServiceOptions = function() {
                 "Repaint P Upper": 80000, "Repaint P Midsole": 50000, "Repaint P Outsole": 40000, "Repaint P Insole": 30000,
                 "Repaint S Upper": 100000, "Repaint S Midsole": 63000, "Repaint S Outsole": 50000, "Repaint S Insole": 38000,
                 "Repaint Suede Upper": 120000, "Repaint Suede Midsole": 75000, "Repaint Suede Outsole": 60000, "Repaint Suede Insole": 45000,
-                "Liquid Remover": 15000, "Unyellowing": 20000, "Canvas Whitener": 20000, "Leather Filler": 25000
+                "Liquid Remover": 15000, "Unyellowing": 20000, "Canvas Cleaner & Whitener": 20000, "Leather Filler": 25000
             };
         }
         if (type === 'Tas') options = { "Liquid Remover Small Fabric": 5000 };
