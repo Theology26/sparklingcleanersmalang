@@ -80,7 +80,17 @@ async function renderInventory() {
         
         const tr = document.createElement('tr');
         if(warningClass) tr.className = warningClass;
-        tr.innerHTML = `<td>${i.id}</td><td>${i.name}</td><td><strong>${i.stock} ${i.unit}</strong></td><td>${DB.formatCurrency(i.price)}</td><td><button class="btn btn-primary" style="padding:5px 10px;" onclick="window.useInventory('${i.id}')">Pakai</button></td>`;
+        tr.innerHTML = `
+            <td>${i.id}</td>
+            <td>${i.name}</td>
+            <td><strong>${i.stock} ${i.unit}</strong></td>
+            <td>${DB.formatCurrency(i.price)}</td>
+            <td>
+                <button class="btn btn-primary" style="padding:4px 8px; margin-right:4px;" onclick="window.useInventory('${i.id}')" title="Pakai Bahan"><i class="fa-solid fa-minus"></i> Pakai</button>
+                <button class="btn" style="padding:4px 8px; margin-right:4px; background:var(--primary-navy); color:white;" onclick="window.editInventory('${i.id}')" title="Edit Item"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn" style="padding:4px 8px; background:#e74c3c; color:white;" onclick="window.deleteInventoryItem('${i.id}')" title="Hapus Item"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        `;
         tbody.appendChild(tr);
     });
 }
@@ -90,6 +100,84 @@ window.useInventory = async function(id) {
     if (!amount || isNaN(amount)) return;
     const res = await DB.updateInventory(id, amount, 'subtract');
     if (res && res.success) { renderInventory(); } else { alert("Gagal update stok."); }
+};
+
+window.openStockModal = function() {
+    document.getElementById('stockModal').style.display = 'flex';
+    document.getElementById('stockModalTitle').innerText = 'Tambah Item Stok Baru';
+    document.getElementById('stockId').value = '';
+    document.getElementById('stockName').value = '';
+    document.getElementById('stockCategory').value = '';
+    document.getElementById('stockUnit').value = '';
+    document.getElementById('stockPrice').value = '';
+    document.getElementById('stockQty').value = '';
+    document.getElementById('stockQty').disabled = false;
+    document.getElementById('stockMin').value = '';
+    document.getElementById('btnSubmitStock').innerText = 'Simpan Item';
+};
+
+window.closeStockModal = function() {
+    document.getElementById('stockModal').style.display = 'none';
+};
+
+window.editInventory = async function(id) {
+    const invList = await DB.getInventory();
+    const item = invList.find(i => i.id === id);
+    if (!item) return;
+
+    document.getElementById('stockModal').style.display = 'flex';
+    document.getElementById('stockModalTitle').innerText = 'Edit Item Stok';
+    document.getElementById('stockId').value = item.id;
+    document.getElementById('stockName').value = item.name;
+    document.getElementById('stockCategory').value = item.category;
+    document.getElementById('stockUnit').value = item.unit;
+    document.getElementById('stockPrice').value = Math.round(item.price);
+    document.getElementById('stockQty').value = item.stock;
+    document.getElementById('stockQty').disabled = false;
+    document.getElementById('stockMin').value = item.min_stock;
+    document.getElementById('btnSubmitStock').innerText = 'Update Item';
+};
+
+window.deleteInventoryItem = async function(id) {
+    if (confirm("Apakah Anda yakin ingin menghapus item inventaris ini secara permanen?")) {
+        const res = await DB.deleteInventory(id);
+        if (res && res.success) {
+            alert("Item berhasil dihapus!");
+            renderInventory();
+            if (window.renderRestock) renderRestock();
+        } else {
+            alert("Gagal menghapus item.");
+        }
+    }
+};
+
+window.saveStockItem = async function(event) {
+    event.preventDefault();
+    const id = document.getElementById('stockId').value;
+    const name = document.getElementById('stockName').value;
+    const category = document.getElementById('stockCategory').value;
+    const unit = document.getElementById('stockUnit').value;
+    const price = parseFloat(document.getElementById('stockPrice').value);
+    const stock = parseFloat(document.getElementById('stockQty').value);
+    const min_stock = parseFloat(document.getElementById('stockMin').value);
+
+    const itemData = { name, category, unit, price, stock, min_stock };
+
+    let res;
+    if (id) {
+        res = await DB.updateInventoryDetails(id, itemData);
+    } else {
+        res = await DB.addInventory(itemData);
+    }
+
+    if (res && res.success) {
+        alert(id ? "Item inventaris berhasil diperbarui!" : "Item inventaris baru berhasil ditambahkan!");
+        window.closeStockModal();
+        renderInventory();
+        if (window.renderRestock) renderRestock();
+    } else {
+        alert("Gagal menyimpan data item.");
+    }
 };
 
 // [RESTOCK]
@@ -188,6 +276,93 @@ window.deleteArticle = async function(id) {
     }
 };
 
+// [CATALOG]
+async function renderCatalog() {
+    const config = await DB.getConfig();
+    if (!config) return;
+    const p = config.pricing || {};
+    
+    // Dynamically update active services count based on DOM inputs
+    const activeInputs = document.querySelectorAll('#tab-catalog input[type="number"]').length;
+    if (document.getElementById('stat-active-services')) {
+        document.getElementById('stat-active-services').innerText = `${activeInputs} Layanan Aktif`;
+    }
+    
+    // Regular Wash
+    if (p.regular) {
+        if (p.regular.shoes) {
+            if (document.getElementById('price-reg-shoes-Small')) document.getElementById('price-reg-shoes-Small').value = p.regular.shoes.Small || 0;
+            if (document.getElementById('price-reg-shoes-Medium')) document.getElementById('price-reg-shoes-Medium').value = p.regular.shoes.Medium || 0;
+            if (document.getElementById('price-reg-shoes-Large')) document.getElementById('price-reg-shoes-Large').value = p.regular.shoes.Large || 0;
+        }
+        if (p.regular.helmet) {
+            if (document.getElementById('price-reg-helmet-HalfFace')) document.getElementById('price-reg-helmet-HalfFace').value = p.regular.helmet["Half Face"] || 0;
+            if (document.getElementById('price-reg-helmet-FullFace')) document.getElementById('price-reg-helmet-FullFace').value = p.regular.helmet["Full Face"] || 0;
+        }
+        if (p.regular.bag_leather) {
+            if (document.getElementById('price-reg-bag_leather-Small')) document.getElementById('price-reg-bag_leather-Small').value = p.regular.bag_leather.Small || 0;
+            if (document.getElementById('price-reg-bag_leather-Medium')) document.getElementById('price-reg-bag_leather-Medium').value = p.regular.bag_leather.Medium || 0;
+            if (document.getElementById('price-reg-bag_leather-Large')) document.getElementById('price-reg-bag_leather-Large').value = p.regular.bag_leather.Large || 0;
+        }
+        if (p.regular.bag_fabric) {
+            if (document.getElementById('price-reg-bag_fabric-Small')) document.getElementById('price-reg-bag_fabric-Small').value = p.regular.bag_fabric.Small || 0;
+            if (document.getElementById('price-reg-bag_fabric-Medium')) document.getElementById('price-reg-bag_fabric-Medium').value = p.regular.bag_fabric.Medium || 0;
+            if (document.getElementById('price-reg-bag_fabric-Large')) document.getElementById('price-reg-bag_fabric-Large').value = p.regular.bag_fabric.Large || 0;
+        }
+    }
+
+    // Special Treatment
+    if (p.special) {
+        if (p.special.boots) {
+            if (document.getElementById('price-spec-boots-Small')) document.getElementById('price-spec-boots-Small').value = p.special.boots.Small || 0;
+            if (document.getElementById('price-spec-boots-Medium')) document.getElementById('price-spec-boots-Medium').value = p.special.boots.Medium || 0;
+            if (document.getElementById('price-spec-boots-Large')) document.getElementById('price-spec-boots-Large').value = p.special.boots.Large || 0;
+        }
+        if (p.special.suede) {
+            if (document.getElementById('price-spec-suede-Small')) document.getElementById('price-spec-suede-Small').value = p.special.suede.Small || 0;
+            if (document.getElementById('price-spec-suede-Medium')) document.getElementById('price-spec-suede-Medium').value = p.special.suede.Medium || 0;
+            if (document.getElementById('price-spec-suede-Large')) document.getElementById('price-spec-suede-Large').value = p.special.suede.Large || 0;
+        }
+        if (p.special.dress_shoes) {
+            if (document.getElementById('price-spec-dress_shoes-Small')) document.getElementById('price-spec-dress_shoes-Small').value = p.special.dress_shoes.Small || 0;
+            if (document.getElementById('price-spec-dress_shoes-Medium')) document.getElementById('price-spec-dress_shoes-Medium').value = p.special.dress_shoes.Medium || 0;
+            if (document.getElementById('price-spec-dress_shoes-Large')) document.getElementById('price-spec-dress_shoes-Large').value = p.special.dress_shoes.Large || 0;
+        }
+        if (p.special.repaint_p) {
+            if (document.getElementById('price-spec-repaint_p-Upper')) document.getElementById('price-spec-repaint_p-Upper').value = p.special.repaint_p.Upper || 0;
+            if (document.getElementById('price-spec-repaint_p-Midsole')) document.getElementById('price-spec-repaint_p-Midsole').value = p.special.repaint_p.Midsole || 0;
+            if (document.getElementById('price-spec-repaint_p-Outsole')) document.getElementById('price-spec-repaint_p-Outsole').value = p.special.repaint_p.Outsole || 0;
+            if (document.getElementById('price-spec-repaint_p-Insole')) document.getElementById('price-spec-repaint_p-Insole').value = p.special.repaint_p.Insole || 0;
+        }
+        if (p.special.repaint_s) {
+            if (document.getElementById('price-spec-repaint_s-Upper')) document.getElementById('price-spec-repaint_s-Upper').value = p.special.repaint_s.Upper || 0;
+            if (document.getElementById('price-spec-repaint_s-Midsole')) document.getElementById('price-spec-repaint_s-Midsole').value = p.special.repaint_s.Midsole || 0;
+            if (document.getElementById('price-spec-repaint_s-Outsole')) document.getElementById('price-spec-repaint_s-Outsole').value = p.special.repaint_s.Outsole || 0;
+            if (document.getElementById('price-spec-repaint_s-Insole')) document.getElementById('price-spec-repaint_s-Insole').value = p.special.repaint_s.Insole || 0;
+        }
+        if (p.special.repaint_suede) {
+            if (document.getElementById('price-spec-repaint_suede-Upper')) document.getElementById('price-spec-repaint_suede-Upper').value = p.special.repaint_suede.Upper || 0;
+            if (document.getElementById('price-spec-repaint_suede-Midsole')) document.getElementById('price-spec-repaint_suede-Midsole').value = p.special.repaint_suede.Midsole || 0;
+            if (document.getElementById('price-spec-repaint_suede-Outsole')) document.getElementById('price-spec-repaint_suede-Outsole').value = p.special.repaint_suede.Outsole || 0;
+            if (document.getElementById('price-spec-repaint_suede-Insole')) document.getElementById('price-spec-repaint_suede-Insole').value = p.special.repaint_suede.Insole || 0;
+        }
+        if (p.special.extra) {
+            if (document.getElementById('price-spec-extra-LiquidRemoverSepatu')) document.getElementById('price-spec-extra-LiquidRemoverSepatu').value = p.special.extra["Liquid Remover Sepatu"] || 0;
+            if (document.getElementById('price-spec-extra-LiquidRemoverTas')) document.getElementById('price-spec-extra-LiquidRemoverTas').value = p.special.extra["Liquid Remover Tas"] || 0;
+            if (document.getElementById('price-spec-extra-Unyellowing')) document.getElementById('price-spec-extra-Unyellowing').value = p.special.extra["Unyellowing"] || 0;
+            if (document.getElementById('price-spec-extra-CanvasCleaner')) document.getElementById('price-spec-extra-CanvasCleaner').value = p.special.extra["Canvas Cleaner"] || 0;
+            if (document.getElementById('price-spec-extra-LeatherFiller')) document.getElementById('price-spec-extra-LeatherFiller').value = p.special.extra["Leather Filler"] || 0;
+        }
+    }
+
+    // Express
+    if (p.express) {
+        if (document.getElementById('price-exp-8')) document.getElementById('price-exp-8').value = p.express["8 Jam"] || 0;
+        if (document.getElementById('price-exp-18')) document.getElementById('price-exp-18').value = p.express["18 Jam"] || 0;
+        if (document.getElementById('price-exp-24')) document.getElementById('price-exp-24').value = p.express["24 Jam"] || 0;
+    }
+}
+
 // [SETTINGS & CONFIG]
 async function renderSettings() {
     const config = await DB.getConfig();
@@ -195,38 +370,113 @@ async function renderSettings() {
     const hero = config.hero || {};
     if (document.getElementById('configHeroTitle')) document.getElementById('configHeroTitle').value = hero.title || '';
     if (document.getElementById('configHeroSubtitle')) document.getElementById('configHeroSubtitle').value = hero.subtitle || '';
-    
-    const p = config.pricing || {};
-    if (p.regShoes) {
-        document.getElementById('price-reg-shoes-Small').value = p.regShoes.Small || 0;
-        document.getElementById('price-reg-shoes-Medium').value = p.regShoes.Medium || 0;
-        document.getElementById('price-reg-shoes-Large').value = p.regShoes.Large || 0;
-    }
-    if (p.regHelmet) {
-        document.getElementById('price-reg-helmet-HalfFace').value = p.regHelmet.HalfFace || 0;
-        document.getElementById('price-reg-helmet-FullFace').value = p.regHelmet.FullFace || 0;
-    }
-    if (p.express) {
-        document.getElementById('price-exp-8').value = p.express["8h"] || 0;
-        document.getElementById('price-exp-18').value = p.express["18h"] || 0;
-        document.getElementById('price-exp-24').value = p.express["24h"] || 0;
-    }
 }
 
 window.saveAllSettings = async function() {
+    const existing = await DB.getConfig() || {};
+    
+    const titleVal = document.getElementById('configHeroTitle') ? document.getElementById('configHeroTitle').value : (existing.hero?.title || '');
+    const subtitleVal = document.getElementById('configHeroSubtitle') ? document.getElementById('configHeroSubtitle').value : (existing.hero?.subtitle || '');
+    
+    const getVal = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el && el.value !== '' ? parseInt(el.value) : fallback;
+    };
+    
     const config = {
         hero: {
-            title: document.getElementById('configHeroTitle').value,
-            subtitle: document.getElementById('configHeroSubtitle').value
+            title: titleVal,
+            subtitle: subtitleVal
         },
         pricing: {
-            regShoes: { Small: parseInt(document.getElementById('price-reg-shoes-Small').value), Medium: parseInt(document.getElementById('price-reg-shoes-Medium').value), Large: parseInt(document.getElementById('price-reg-shoes-Large').value) },
-            regHelmet: { HalfFace: parseInt(document.getElementById('price-reg-helmet-HalfFace').value), FullFace: parseInt(document.getElementById('price-reg-helmet-FullFace').value) },
-            express: { "8h": parseInt(document.getElementById('price-exp-8').value), "18h": parseInt(document.getElementById('price-exp-18').value), "24h": parseInt(document.getElementById('price-exp-24').value) }
+            regular: {
+                shoes: {
+                    Small: getVal('price-reg-shoes-Small', existing.pricing?.regular?.shoes?.Small || 20000),
+                    Medium: getVal('price-reg-shoes-Medium', existing.pricing?.regular?.shoes?.Medium || 30000),
+                    Large: getVal('price-reg-shoes-Large', existing.pricing?.regular?.shoes?.Large || 35000),
+                    est: existing.pricing?.regular?.shoes?.est || "3 Hari"
+                },
+                helmet: {
+                    "Half Face": getVal('price-reg-helmet-HalfFace', existing.pricing?.regular?.helmet?.["Half Face"] || 22000),
+                    "Full Face": getVal('price-reg-helmet-FullFace', existing.pricing?.regular?.helmet?.["Full Face"] || 30000),
+                    est: existing.pricing?.regular?.helmet?.est || "24 Jam"
+                },
+                bag_leather: {
+                    Small: getVal('price-reg-bag_leather-Small', existing.pricing?.regular?.bag_leather?.Small || 25000),
+                    Medium: getVal('price-reg-bag_leather-Medium', existing.pricing?.regular?.bag_leather?.Medium || 30000),
+                    Large: getVal('price-reg-bag_leather-Large', existing.pricing?.regular?.bag_leather?.Large || 35000),
+                    est: existing.pricing?.regular?.bag_leather?.est || "24 Jam"
+                },
+                bag_fabric: {
+                    Small: getVal('price-reg-bag_fabric-Small', existing.pricing?.regular?.bag_fabric?.Small || 20000),
+                    Medium: getVal('price-reg-bag_fabric-Medium', existing.pricing?.regular?.bag_fabric?.Medium || 25000),
+                    Large: getVal('price-reg-bag_fabric-Large', existing.pricing?.regular?.bag_fabric?.Large || 30000),
+                    est: existing.pricing?.regular?.bag_fabric?.est || "2 Hari"
+                }
+            },
+            special: {
+                boots: {
+                    Small: getVal('price-spec-boots-Small', existing.pricing?.special?.boots?.Small || 60000),
+                    Medium: getVal('price-spec-boots-Medium', existing.pricing?.special?.boots?.Medium || 65000),
+                    Large: getVal('price-spec-boots-Large', existing.pricing?.special?.boots?.Large || 80000),
+                    est: existing.pricing?.special?.boots?.est || "3 Hari"
+                },
+                suede: {
+                    Small: getVal('price-spec-suede-Small', existing.pricing?.special?.suede?.Small || 50000),
+                    Medium: getVal('price-spec-suede-Medium', existing.pricing?.special?.suede?.Medium || 60000),
+                    Large: getVal('price-spec-suede-Large', existing.pricing?.special?.suede?.Large || 70000),
+                    est: existing.pricing?.special?.suede?.est || "5 Hari"
+                },
+                dress_shoes: {
+                    Small: getVal('price-spec-dress_shoes-Small', existing.pricing?.special?.dress_shoes?.Small || 55000),
+                    Medium: getVal('price-spec-dress_shoes-Medium', existing.pricing?.special?.dress_shoes?.Medium || 60000),
+                    Large: getVal('price-spec-dress_shoes-Large', existing.pricing?.special?.dress_shoes?.Large || 65000),
+                    est: existing.pricing?.special?.dress_shoes?.est || "3 Hari"
+                },
+                repaint_p: {
+                    Upper: getVal('price-spec-repaint_p-Upper', existing.pricing?.special?.repaint_p?.Upper || 80000),
+                    Midsole: getVal('price-spec-repaint_p-Midsole', existing.pricing?.special?.repaint_p?.Midsole || 50000),
+                    Outsole: getVal('price-spec-repaint_p-Outsole', existing.pricing?.special?.repaint_p?.Outsole || 40000),
+                    Insole: getVal('price-spec-repaint_p-Insole', existing.pricing?.special?.repaint_p?.Insole || 30000),
+                    est: existing.pricing?.special?.repaint_p?.est || "10 Hari"
+                },
+                repaint_s: {
+                    Upper: getVal('price-spec-repaint_s-Upper', existing.pricing?.special?.repaint_s?.Upper || 100000),
+                    Midsole: getVal('price-spec-repaint_s-Midsole', existing.pricing?.special?.repaint_s?.Midsole || 63000),
+                    Outsole: getVal('price-spec-repaint_s-Outsole', existing.pricing?.special?.repaint_s?.Outsole || 50000),
+                    Insole: getVal('price-spec-repaint_s-Insole', existing.pricing?.special?.repaint_s?.Insole || 38000),
+                    est: existing.pricing?.special?.repaint_s?.est || "10 Hari"
+                },
+                repaint_suede: {
+                    Upper: getVal('price-spec-repaint_suede-Upper', existing.pricing?.special?.repaint_suede?.Upper || 120000),
+                    Midsole: getVal('price-spec-repaint_suede-Midsole', existing.pricing?.special?.repaint_suede?.Midsole || 75000),
+                    Outsole: getVal('price-spec-repaint_suede-Outsole', existing.pricing?.special?.repaint_suede?.Outsole || 60000),
+                    Insole: getVal('price-spec-repaint_suede-Insole', existing.pricing?.special?.repaint_suede?.Insole || 45000),
+                    est: existing.pricing?.special?.repaint_suede?.est || "10 Hari"
+                },
+                extra: {
+                    "Liquid Remover Sepatu": getVal('price-spec-extra-LiquidRemoverSepatu', existing.pricing?.special?.extra?.["Liquid Remover Sepatu"] || 15000),
+                    "Liquid Remover Tas": getVal('price-spec-extra-LiquidRemoverTas', existing.pricing?.special?.extra?.["Liquid Remover Tas"] || 5000),
+                    "Unyellowing": getVal('price-spec-extra-Unyellowing', existing.pricing?.special?.extra?.["Unyellowing"] || 20000),
+                    "Canvas Cleaner": getVal('price-spec-extra-CanvasCleaner', existing.pricing?.special?.extra?.["Canvas Cleaner"] || 20000),
+                    "Leather Filler": getVal('price-spec-extra-LeatherFiller', existing.pricing?.special?.extra?.["Leather Filler"] || 25000)
+                }
+            },
+            express: {
+                "8 Jam": getVal('price-exp-8', existing.pricing?.express?.["8 Jam"] || 20000),
+                "18 Jam": getVal('price-exp-18', existing.pricing?.express?.["18 Jam"] || 15000),
+                "24 Jam": getVal('price-exp-24', existing.pricing?.express?.["24 Jam"] || 10000)
+            }
         }
     };
+    
     const res = await DB.saveConfig(config);
-    if (res && res.success) { alert("Pengaturan Website Berhasil Disimpan!"); window.location.reload(); } else { alert("Gagal menyimpan."); }
+    if (res && res.success) {
+        alert("Pengaturan Website Berhasil Disimpan!");
+        window.location.reload();
+    } else {
+        alert("Gagal menyimpan.");
+    }
 };
 
 // [FINANCE]

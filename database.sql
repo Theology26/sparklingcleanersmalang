@@ -103,7 +103,7 @@ INSERT INTO inventory (id, name, category, unit, price, stock, min_stock) VALUES
 -- Dummy Config (Hero & Harga)
 INSERT INTO config (cfg_key, cfg_value) VALUES
 ('hero', '{"title":"Laundry Sepatu & Helm Premium di Malang","subtitle":"Kembalikan kilau sepatu kesayanganmu dengan teknologi deep clean terbaru kami."}'),
-('pricing', '{"regular":{"shoes":{"Small":20000,"Medium":30000,"Large":35000},"helmet":{"Half Face":22000,"Full Face":30000},"bag_fabric":{"Small":20000,"Medium":25000,"Large":30000}},"special":{"suede":{"Small":50000,"Medium":60000,"Large":70000}},"express":{"8 Jam":20000,"18 Jam":15000,"24 Jam":10000}}');
+('pricing', '{"regular":{"shoes":{"Small":20000,"Medium":30000,"Large":35000,"est":"3 Hari"},"helmet":{"Half Face":22000,"Full Face":30000,"est":"24 Jam"},"bag_leather":{"Small":25000,"Medium":30000,"Large":35000,"est":"24 Jam"},"bag_fabric":{"Small":20000,"Medium":25000,"Large":30000,"est":"2 Hari"}},"special":{"boots":{"Small":60000,"Medium":65000,"Large":80000,"est":"3 Hari"},"suede":{"Small":50000,"Medium":60000,"Large":70000,"est":"5 Hari"},"dress_shoes":{"Small":55000,"Medium":60000,"Large":65000,"est":"3 Hari"},"repaint_p":{"Upper":80000,"Midsole":50000,"Outsole":40000,"Insole":30000,"est":"10 Hari"},"repaint_s":{"Upper":100000,"Midsole":63000,"Outsole":50000,"Insole":38000,"est":"10 Hari"},"repaint_suede":{"Upper":120000,"Midsole":75000,"Outsole":60000,"Insole":45000,"est":"10 Hari"},"extra":{"Liquid Remover Sepatu":15000,"Liquid Remover Tas":5000,"Unyellowing":20000,"Canvas Cleaner":20000,"Leather Filler":25000}},"express":{"8 Jam":20000,"18 Jam":15000,"24 Jam":10000}}');
 
 -- Dummy Testimonials
 INSERT INTO testimonials (name, rating, content, status) VALUES

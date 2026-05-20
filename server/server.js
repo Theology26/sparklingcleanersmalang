@@ -78,6 +78,30 @@ app.get('/api/inventory', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/inventory', async (req, res) => {
+    try {
+        const { name, category, unit, price, stock, min_stock } = req.body;
+        const id = `INV-${Date.now()}`;
+        await pool.query(
+            'INSERT INTO inventory (id, name, category, unit, price, stock, min_stock) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [id, name, category, unit, parseFloat(price), parseFloat(stock || 0), parseFloat(min_stock || 2)]
+        );
+        res.status(201).json({ success: true, id });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/inventory/:id/details', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, category, unit, price, min_stock, stock } = req.body;
+        await pool.query(
+            'UPDATE inventory SET name = ?, category = ?, unit = ?, price = ?, min_stock = ?, stock = ? WHERE id = ?',
+            [name, category, unit, parseFloat(price), parseFloat(min_stock), parseFloat(stock), id]
+        );
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.put('/api/inventory/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -88,6 +112,14 @@ app.put('/api/inventory/:id', async (req, res) => {
         } else {
             await pool.query('UPDATE inventory SET stock = stock - ? WHERE id = ?', [val, id]);
         }
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/inventory/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM inventory WHERE id = ?', [id]);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

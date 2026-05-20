@@ -8,11 +8,26 @@ const FALLBACKS = {
         heroSubtitle: "Aesthetic, Modern, dan Clean.",
         pricing: {
             regular: {
-                shoes: { Small: 20000, Medium: 30000, Large: 35000, est: 3 },
-                helmet: { "Half Face": 22000, "Full Face": 30000, est: 1 },
-                bag_fabric: { Small: 20000, Medium: 25000, Large: 30000, est: 2 }
+                shoes: { Small: 20000, Medium: 30000, Large: 35000, est: "3 Hari" },
+                helmet: { "Half Face": 22000, "Full Face": 30000, est: "24 Jam" },
+                bag_leather: { Small: 25000, Medium: 30000, Large: 35000, est: "24 Jam" },
+                bag_fabric: { Small: 20000, Medium: 25000, Large: 30000, est: "2 Hari" }
             },
-            special: { suede: { Small: 50000, Medium: 60000, Large: 70000, est: 5 } },
+            special: {
+                boots: { Small: 59000, Medium: 65000, Large: 80000, est: "3 Hari" },
+                suede: { Small: 50000, Medium: 60000, Large: 70000, est: "5 Hari" },
+                dress_shoes: { Small: 55000, Medium: 60000, Large: 65000, est: "3 Hari" },
+                repaint_p: { Upper: 80000, Midsole: 50000, Outsole: 40000, Insole: 30000, est: "10 Hari" },
+                repaint_s: { Upper: 100000, Midsole: 63000, Outsole: 50000, Insole: 38000, est: "10 Hari" },
+                repaint_suede: { Upper: 120000, Midsole: 75000, Outsole: 60000, Insole: 45000, est: "10 Hari" },
+                extra: {
+                    "Liquid Remover Sepatu": 15000,
+                    "Liquid Remover Tas": 5000,
+                    "Unyellowing": 20000,
+                    "Canvas Cleaner": 20000,
+                    "Leather Filler": 25000
+                }
+            },
             express: { "8 Jam": 20000, "18 Jam": 15000, "24 Jam": 10000 }
         }
     },
@@ -85,6 +100,15 @@ const DB = {
     },
     async updateInventory(id, amount, action) {
         return await this.call(`/inventory/${id}`, 'PUT', { amount, action });
+    },
+    async addInventory(item) {
+        return await this.call('/inventory', 'POST', item);
+    },
+    async updateInventoryDetails(id, item) {
+        return await this.call(`/inventory/${id}/details`, 'PUT', item);
+    },
+    async deleteInventory(id) {
+        return await this.call(`/inventory/${id}`, 'DELETE');
     },
     async getTestimonials() {
         return (await this.call('/testimonials')) || [];

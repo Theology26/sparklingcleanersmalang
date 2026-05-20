@@ -1,13 +1,10 @@
 // landing.js
 
-let PRICING = {};
-(async () => {
-    PRICING = await DB.getPricing();
-    window.PRICING = PRICING;
-})();
-
 // Generate QR Code
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load pricing first to ensure it's available for all renders and options
+    window.PRICING = await DB.getPricing();
+
     const qrContainer = document.getElementById('ig-qr-code');
     if (qrContainer && typeof QRCode !== 'undefined') {
         new QRCode(qrContainer, {
@@ -47,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Dynamic Content Rendering
     await renderBranding();
+    await renderPricing();
     await renderArticles();
     await renderTestimonials();
 });
@@ -58,6 +56,170 @@ async function renderBranding() {
         const heroSubtitle = document.querySelector('.hero p');
         if (heroTitle) heroTitle.innerText = config.hero.title;
         if (heroSubtitle) heroSubtitle.innerText = config.hero.subtitle;
+    }
+}
+
+async function renderPricing() {
+    const p = window.PRICING || await DB.getPricing();
+    if (!p) return;
+    
+    const kFormat = (num) => (num >= 1000 ? Math.round(num / 1000) + 'K' : num);
+
+    // 1. Regular Wash
+    if (p.regular) {
+        if (p.regular.shoes) {
+            if (document.getElementById('tbl-reg-shoes-est')) document.getElementById('tbl-reg-shoes-est').innerText = p.regular.shoes.est || '';
+            if (document.getElementById('tbl-reg-shoes-Small')) document.getElementById('tbl-reg-shoes-Small').innerText = kFormat(p.regular.shoes.Small);
+            if (document.getElementById('tbl-reg-shoes-Medium')) document.getElementById('tbl-reg-shoes-Medium').innerText = kFormat(p.regular.shoes.Medium);
+            if (document.getElementById('tbl-reg-shoes-Large')) document.getElementById('tbl-reg-shoes-Large').innerText = kFormat(p.regular.shoes.Large);
+        }
+        if (p.regular.helmet) {
+            if (document.getElementById('tbl-reg-helmet-est')) document.getElementById('tbl-reg-helmet-est').innerText = p.regular.helmet.est || '';
+            if (document.getElementById('tbl-reg-helmet-HalfFace')) document.getElementById('tbl-reg-helmet-HalfFace').innerText = kFormat(p.regular.helmet["Half Face"]) + ' (Half Face)';
+            if (document.getElementById('tbl-reg-helmet-FullFace')) document.getElementById('tbl-reg-helmet-FullFace').innerText = kFormat(p.regular.helmet["Full Face"]) + ' (Full Face)';
+        }
+        if (p.regular.bag_leather) {
+            if (document.getElementById('tbl-reg-bag_leather-est')) document.getElementById('tbl-reg-bag_leather-est').innerText = p.regular.bag_leather.est || '';
+            if (document.getElementById('tbl-reg-bag_leather-Small')) document.getElementById('tbl-reg-bag_leather-Small').innerText = kFormat(p.regular.bag_leather.Small);
+            if (document.getElementById('tbl-reg-bag_leather-Medium')) document.getElementById('tbl-reg-bag_leather-Medium').innerText = kFormat(p.regular.bag_leather.Medium);
+            if (document.getElementById('tbl-reg-bag_leather-Large')) document.getElementById('tbl-reg-bag_leather-Large').innerText = kFormat(p.regular.bag_leather.Large);
+        }
+        if (p.regular.bag_fabric) {
+            if (document.getElementById('tbl-reg-bag_fabric-est')) document.getElementById('tbl-reg-bag_fabric-est').innerText = p.regular.bag_fabric.est || '';
+            if (document.getElementById('tbl-reg-bag_fabric-Small')) document.getElementById('tbl-reg-bag_fabric-Small').innerText = kFormat(p.regular.bag_fabric.Small);
+            if (document.getElementById('tbl-reg-bag_fabric-Medium')) document.getElementById('tbl-reg-bag_fabric-Medium').innerText = kFormat(p.regular.bag_fabric.Medium);
+            if (document.getElementById('tbl-reg-bag_fabric-Large')) document.getElementById('tbl-reg-bag_fabric-Large').innerText = kFormat(p.regular.bag_fabric.Large);
+        }
+    }
+
+    // 2. Special Treatment
+    if (p.special) {
+        if (p.special.boots) {
+            if (document.getElementById('tbl-spec-boots-est')) document.getElementById('tbl-spec-boots-est').innerText = p.special.boots.est || '';
+            if (document.getElementById('tbl-spec-boots-price')) {
+                document.getElementById('tbl-spec-boots-price').innerText = `S: ${kFormat(p.special.boots.Small)} | M: ${kFormat(p.special.boots.Medium)} | L: ${kFormat(p.special.boots.Large)}`;
+            }
+        }
+        if (p.special.suede) {
+            if (document.getElementById('tbl-spec-suede-est')) document.getElementById('tbl-spec-suede-est').innerText = p.special.suede.est || '';
+            if (document.getElementById('tbl-spec-suede-price')) {
+                document.getElementById('tbl-spec-suede-price').innerText = `S: ${kFormat(p.special.suede.Small)} | M: ${kFormat(p.special.suede.Medium)} | L: ${kFormat(p.special.suede.Large)}`;
+            }
+        }
+        if (p.special.dress_shoes) {
+            if (document.getElementById('tbl-spec-dress_shoes-est')) document.getElementById('tbl-spec-dress_shoes-est').innerText = p.special.dress_shoes.est || '';
+            if (document.getElementById('tbl-spec-dress_shoes-price')) {
+                document.getElementById('tbl-spec-dress_shoes-price').innerText = `S: ${kFormat(p.special.dress_shoes.Small)} | M: ${kFormat(p.special.dress_shoes.Medium)} | L: ${kFormat(p.special.dress_shoes.Large)}`;
+            }
+        }
+        if (p.special.repaint_p) {
+            if (document.getElementById('tbl-spec-repaint_p-est')) document.getElementById('tbl-spec-repaint_p-est').innerText = p.special.repaint_p.est || '';
+            if (document.getElementById('tbl-spec-repaint_p-price')) {
+                document.getElementById('tbl-spec-repaint_p-price').innerText = `Upper ${kFormat(p.special.repaint_p.Upper)} | Midsole ${kFormat(p.special.repaint_p.Midsole)} | Outsole ${kFormat(p.special.repaint_p.Outsole)} | Insole ${kFormat(p.special.repaint_p.Insole)}`;
+            }
+        }
+        if (p.special.repaint_s) {
+            if (document.getElementById('tbl-spec-repaint_s-est')) document.getElementById('tbl-spec-repaint_s-est').innerText = p.special.repaint_s.est || '';
+            if (document.getElementById('tbl-spec-repaint_s-price')) {
+                document.getElementById('tbl-spec-repaint_s-price').innerText = `Upper ${kFormat(p.special.repaint_s.Upper)} | Midsole ${kFormat(p.special.repaint_s.Midsole)} | Outsole ${kFormat(p.special.repaint_s.Outsole)} | Insole ${kFormat(p.special.repaint_s.Insole)}`;
+            }
+        }
+        if (p.special.repaint_suede) {
+            if (document.getElementById('tbl-spec-repaint_suede-est')) document.getElementById('tbl-spec-repaint_suede-est').innerText = p.special.repaint_suede.est || '';
+            if (document.getElementById('tbl-spec-repaint_suede-price')) {
+                document.getElementById('tbl-spec-repaint_suede-price').innerText = `Upper ${kFormat(p.special.repaint_suede.Upper)} | Midsole ${kFormat(p.special.repaint_suede.Midsole)} | Outsole ${kFormat(p.special.repaint_suede.Outsole)} | Insole ${kFormat(p.special.repaint_suede.Insole)}`;
+            }
+        }
+        if (p.special.extra) {
+            if (document.getElementById('tbl-spec-extra-est')) document.getElementById('tbl-spec-extra-est').innerText = p.special.extra.est || '10 Hari';
+            if (document.getElementById('tbl-spec-extra-price')) {
+                document.getElementById('tbl-spec-extra-price').innerText = 'Mulai 5K - 25K';
+            }
+            if (document.getElementById('tbl-spec-extra-desc')) {
+                document.getElementById('tbl-spec-extra-desc').innerText = `Liquid Remover (+${kFormat(p.special.extra["Liquid Remover Sepatu"] || 15000).toString().toLowerCase()} Sepatu / +${kFormat(p.special.extra["Liquid Remover Tas"] || 5000).toString().toLowerCase()} Tas) | Unyellowing (+${kFormat(p.special.extra["Unyellowing"] || 20000).toString().toLowerCase()}) | Canvas Cleaner & Whitener (+${kFormat(p.special.extra["Canvas Cleaner"] || 20000).toString().toLowerCase()}) | Leather Filler (+${kFormat(p.special.extra["Leather Filler"] || 25000).toString().toLowerCase()})`;
+            }
+        }
+    }
+
+    // 3. Express Service Add-on
+    if (p.express && document.getElementById('tbl-exp-service-desc')) {
+        document.getElementById('tbl-exp-service-desc').innerText = `8 Jam (+${kFormat(p.express["8 Jam"] || 20000)}) | 18 Jam (+${kFormat(p.express["18 Jam"] || 15000)}) | 24 Jam (+${kFormat(p.express["24 Jam"] || 10000)})`;
+    }
+
+    // 4. Dynamic Service Cards (Mulai Dari & Estimasi)
+    // - Cuci Sepatu
+    if (p.regular?.shoes) {
+        const shoesPrices = [
+            p.regular.shoes.Small,
+            p.regular.shoes.Medium,
+            p.regular.shoes.Large
+        ].filter(v => v !== undefined && v !== null && typeof v === 'number');
+        if (shoesPrices.length > 0 && document.getElementById('card-price-shoes')) {
+            document.getElementById('card-price-shoes').innerText = `Mulai ${DB.formatCurrency(Math.min(...shoesPrices))}`;
+        }
+        if (document.getElementById('card-time-shoes')) {
+            document.getElementById('card-time-shoes').innerText = `Estimasi: ${p.regular.shoes.est || '2-3 Hari'}`;
+        }
+    }
+
+    // - Repaint Sepatu
+    if (p.special) {
+        const repaintPrices = [
+            p.special.repaint_p?.Upper,
+            p.special.repaint_s?.Upper,
+            p.special.repaint_suede?.Upper
+        ].filter(v => v !== undefined && v !== null && typeof v === 'number');
+        if (repaintPrices.length > 0 && document.getElementById('card-price-repaint')) {
+            document.getElementById('card-price-repaint').innerText = `Mulai ${DB.formatCurrency(Math.min(...repaintPrices))}`;
+        }
+        if (document.getElementById('card-time-repaint')) {
+            const repaintEst = p.special.repaint_p?.est || p.special.repaint_s?.est || p.special.repaint_suede?.est;
+            document.getElementById('card-time-repaint').innerText = `Estimasi: ${repaintEst || '5-7 Hari'}`;
+        }
+    }
+
+    // - Unyellowing
+    if (p.special?.extra) {
+        const unyellowingVal = p.special.extra["Unyellowing"];
+        if (unyellowingVal !== undefined && unyellowingVal !== null && document.getElementById('card-price-unyellowing')) {
+            document.getElementById('card-price-unyellowing').innerText = `Mulai ${DB.formatCurrency(unyellowingVal)}`;
+        }
+        if (document.getElementById('card-time-unyellowing')) {
+            document.getElementById('card-time-unyellowing').innerText = `Estimasi: ${p.special.extra.est || '3-4 Hari'}`;
+        }
+    }
+
+    // - Cuci Tas
+    if (p.regular) {
+        const bagPrices = [
+            p.regular.bag_leather?.Small,
+            p.regular.bag_leather?.Medium,
+            p.regular.bag_leather?.Large,
+            p.regular.bag_fabric?.Small,
+            p.regular.bag_fabric?.Medium,
+            p.regular.bag_fabric?.Large
+        ].filter(v => v !== undefined && v !== null && typeof v === 'number');
+        if (bagPrices.length > 0 && document.getElementById('card-price-bag')) {
+            document.getElementById('card-price-bag').innerText = `Mulai ${DB.formatCurrency(Math.min(...bagPrices))}`;
+        }
+        if (document.getElementById('card-time-bag')) {
+            const bagEst = p.regular.bag_fabric?.est || p.regular.bag_leather?.est || '3-5 Hari';
+            document.getElementById('card-time-bag').innerText = `Estimasi: ${bagEst}`;
+        }
+    }
+
+    // - Cuci Helm
+    if (p.regular?.helmet) {
+        const helmetPrices = [
+            p.regular.helmet["Half Face"],
+            p.regular.helmet["Full Face"]
+        ].filter(v => v !== undefined && v !== null && typeof v === 'number');
+        if (helmetPrices.length > 0 && document.getElementById('card-price-helmet')) {
+            document.getElementById('card-price-helmet').innerText = `Mulai ${DB.formatCurrency(Math.min(...helmetPrices))}`;
+        }
+        if (document.getElementById('card-time-helmet')) {
+            document.getElementById('card-time-helmet').innerText = `Estimasi: ${p.regular.helmet.est || '1-2 Hari'}`;
+        }
     }
 }
 
@@ -110,30 +272,84 @@ window.updateServiceOptions = function() {
     
     serviceSelect.innerHTML = '<option value="">- Pilih Layanan -</option>';
     
-    if (!type) return;
+    if (!type || !window.PRICING) return;
+    const p = window.PRICING;
 
     let options = {};
     if (treatment === 'regular') {
-        if (type === 'Sepatu') options = window.PRICING.regular.shoes;
-        if (type === 'Tas') {
-            options = { "Leather Small": 25000, "Leather Medium": 30000, "Leather Large": 35000, "Fabric Small": 20000, "Fabric Medium": 25000, "Fabric Large": 30000 };
-        }
-        if (type === 'Helm') options = window.PRICING.regular.helmet;
-    } else {
-        // Special Treatment
-        if (type === 'Sepatu') {
+        if (type === 'Sepatu' && p.regular.shoes) {
             options = {
-                "Boots Small": 60000, "Boots Medium": 65000, "Boots Large": 80000,
-                "Suede Small": 50000, "Suede Medium": 60000, "Suede Large": 70000,
-                "Dress Shoes Small": 55000, "Dress Shoes Medium": 60000, "Dress Shoes Large": 65000,
-                "Repaint P Upper": 80000, "Repaint P Midsole": 50000, "Repaint P Outsole": 40000, "Repaint P Insole": 30000,
-                "Repaint S Upper": 100000, "Repaint S Midsole": 63000, "Repaint S Outsole": 50000, "Repaint S Insole": 38000,
-                "Repaint Suede Upper": 120000, "Repaint Suede Midsole": 75000, "Repaint Suede Outsole": 60000, "Repaint Suede Insole": 45000,
-                "Liquid Remover": 15000, "Unyellowing": 20000, "Canvas Cleaner & Whitener": 20000, "Leather Filler": 25000
+                "Small": p.regular.shoes.Small,
+                "Medium": p.regular.shoes.Medium,
+                "Large": p.regular.shoes.Large
             };
         }
-        if (type === 'Tas') options = { "Liquid Remover Small Fabric": 5000 };
-        if (type === 'Helm') options = { "Belum ada layanan special": 0 };
+        if (type === 'Tas' && p.regular.bag_leather && p.regular.bag_fabric) {
+            options = {
+                "Leather Small": p.regular.bag_leather.Small,
+                "Leather Medium": p.regular.bag_leather.Medium,
+                "Leather Large": p.regular.bag_leather.Large,
+                "Fabric Small": p.regular.bag_fabric.Small,
+                "Fabric Medium": p.regular.bag_fabric.Medium,
+                "Fabric Large": p.regular.bag_fabric.Large
+            };
+        }
+        if (type === 'Helm' && p.regular.helmet) {
+            options = {
+                "Half Face": p.regular.helmet["Half Face"],
+                "Full Face": p.regular.helmet["Full Face"]
+            };
+        }
+    } else {
+        // Special Treatment
+        if (type === 'Sepatu' && p.special) {
+            options = {};
+            if (p.special.boots) {
+                options["Boots Small"] = p.special.boots.Small;
+                options["Boots Medium"] = p.special.boots.Medium;
+                options["Boots Large"] = p.special.boots.Large;
+            }
+            if (p.special.suede) {
+                options["Suede Small"] = p.special.suede.Small;
+                options["Suede Medium"] = p.special.suede.Medium;
+                options["Suede Large"] = p.special.suede.Large;
+            }
+            if (p.special.dress_shoes) {
+                options["Dress Shoes Small"] = p.special.dress_shoes.Small;
+                options["Dress Shoes Medium"] = p.special.dress_shoes.Medium;
+                options["Dress Shoes Large"] = p.special.dress_shoes.Large;
+            }
+            if (p.special.repaint_p) {
+                options["Repaint P Upper"] = p.special.repaint_p.Upper;
+                options["Repaint P Midsole"] = p.special.repaint_p.Midsole;
+                options["Repaint P Outsole"] = p.special.repaint_p.Outsole;
+                options["Repaint P Insole"] = p.special.repaint_p.Insole;
+            }
+            if (p.special.repaint_s) {
+                options["Repaint S Upper"] = p.special.repaint_s.Upper;
+                options["Repaint S Midsole"] = p.special.repaint_s.Midsole;
+                options["Repaint S Outsole"] = p.special.repaint_s.Outsole;
+                options["Repaint S Insole"] = p.special.repaint_s.Insole;
+            }
+            if (p.special.repaint_suede) {
+                options["Repaint Suede Upper"] = p.special.repaint_suede.Upper;
+                options["Repaint Suede Midsole"] = p.special.repaint_suede.Midsole;
+                options["Repaint Suede Outsole"] = p.special.repaint_suede.Outsole;
+                options["Repaint Suede Insole"] = p.special.repaint_suede.Insole;
+            }
+            if (p.special.extra) {
+                options["Liquid Remover"] = p.special.extra["Liquid Remover Sepatu"] || 15000;
+                options["Unyellowing"] = p.special.extra["Unyellowing"] || 20000;
+                options["Canvas Cleaner & Whitener"] = p.special.extra["Canvas Cleaner"] || 20000;
+                options["Leather Filler"] = p.special.extra["Leather Filler"] || 25000;
+            }
+        }
+        if (type === 'Tas' && p.special && p.special.extra) {
+            options = { "Liquid Remover Small Fabric": p.special.extra["Liquid Remover Tas"] || 5000 };
+        }
+        if (type === 'Helm') {
+            options = { "Belum ada layanan special": 0 };
+        }
     }
 
     for (const [key, val] of Object.entries(options)) {
@@ -208,33 +424,7 @@ window.calculateTotal = function() {
     document.getElementById('sumEst').innerText = est;
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Load config
-    const config = DB.getConfig();
-    const heroTitle = document.getElementById('heroTitle');
-    const heroSubtitle = document.getElementById('heroSubtitle');
-    if (heroTitle) heroTitle.innerText = config.heroTitle;
-    if (heroSubtitle) heroSubtitle.innerText = config.heroSubtitle;
 
-    // Load Articles
-    const articles = DB.get('sparklingArticles');
-    const container = document.getElementById('articles-container');
-    if(container && articles.length > 0) {
-        container.innerHTML = '';
-        articles.filter(a => a.status === 'Publik').forEach(a => {
-            container.innerHTML += `
-            <div class="glass-card" style="overflow: hidden; text-align: left; display: flex; flex-direction: column;">
-                <div style="height: 200px; background: url('${a.image}') center/cover;"></div>
-                <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column;">
-                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">${a.category}</span>
-                    <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">${a.title}</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem; flex: 1;">${a.desc}</p>
-                    <a href="javascript:alert('Fitur baca artikel selengkapnya akan hadir di versi berikutnya!')" style="color: var(--primary-navy); font-weight: 600; text-decoration: none; font-size: 0.9rem; align-self: flex-start;">Baca Selengkapnya <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i></a>
-                </div>
-            </div>`;
-        });
-    }
-});
 window.processOrder = async function(event) {
     event.preventDefault();
     
@@ -297,7 +487,7 @@ window.processOrder = async function(event) {
 
     const waURL = `https://wa.me/${shopPhone}?text=${msg}`;
     
-    alert(`Pesanan berhasil dibuat!\nKode Order: ${newOrder.id}\nAnda akan diarahkan ke WhatsApp untuk mengirim pesanan.`);
+    alert(`Pesanan berhasil dibuat!\nKode Order: ${orderData.id}\nAnda akan diarahkan ke WhatsApp untuk mengirim pesanan.`);
     
     // Reset Form and UI
     event.target.reset();
@@ -324,9 +514,8 @@ window.simulateTracking = function() {
     msg.style.display = 'block';
     msg.innerText = "Mencari data pesanan...";
 
-    const trackOrder = async () => {
-        const code = input.value.trim().toUpperCase();
-        if(!code) return;
+    setTimeout(async () => {
+        const code = input.toUpperCase();
         
         const orders = await DB.getOrders();
         const found = orders.find(o => o.id === code || o.phone === code);
