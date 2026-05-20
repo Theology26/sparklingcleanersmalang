@@ -8,7 +8,7 @@ const FALLBACKS = {
         heroSubtitle: "Aesthetic, Modern, dan Clean.",
         pricing: {
             regular: {
-                shoes: { Small: 20000, Medium: 50000, Large: 65000, est: 3 },
+                shoes: { Small: 20000, Medium: 30000, Large: 35000, est: 3 },
                 helmet: { "Half Face": 22000, "Full Face": 30000, est: 1 },
                 bag_fabric: { Small: 20000, Medium: 25000, Large: 30000, est: 2 }
             },

@@ -103,7 +103,7 @@ INSERT INTO inventory (id, name, category, unit, price, stock, min_stock) VALUES
 -- Dummy Config (Hero & Harga)
 INSERT INTO config (cfg_key, cfg_value) VALUES
 ('hero', '{"title":"Laundry Sepatu & Helm Premium di Malang","subtitle":"Kembalikan kilau sepatu kesayanganmu dengan teknologi deep clean terbaru kami."}'),
-('pricing', '{"regular":{"shoes":{"Small":20000,"Medium":50000,"Large":65000},"helmet":{"Half Face":22000,"Full Face":30000},"bag_fabric":{"Small":20000,"Medium":25000,"Large":30000}},"special":{"suede":{"Small":50000,"Medium":60000,"Large":70000}},"express":{"8 Jam":20000,"18 Jam":15000,"24 Jam":10000}}');
+('pricing', '{"regular":{"shoes":{"Small":20000,"Medium":30000,"Large":35000},"helmet":{"Half Face":22000,"Full Face":30000},"bag_fabric":{"Small":20000,"Medium":25000,"Large":30000}},"special":{"suede":{"Small":50000,"Medium":60000,"Large":70000}},"express":{"8 Jam":20000,"18 Jam":15000,"24 Jam":10000}}');
 
 -- Dummy Testimonials
 INSERT INTO testimonials (name, rating, content, status) VALUES
