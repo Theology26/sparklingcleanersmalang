@@ -4,16 +4,14 @@ const API_BASE = 'http://localhost:3000/api';
 
 const FALLBACKS = {
     config: {
-        heroTitle: "Spesialis Perawatan Barang Kesayangan Anda",
-        heroSubtitle: "Aesthetic, Modern, dan Clean.",
+        hero: {
+            title: "Spesialis Perawatan Barang Kesayangan Anda",
+            subtitle: "Aesthetic, Modern, dan Clean. Kami memberikan sentuhan magis untuk sepatu, tas, dan helm Anda hingga tampak seperti baru."
+        },
         pricing: {
-            regular: {
-                shoes: { Small: 20000, Medium: 50000, Large: 65000, est: 3 },
-                helmet: { "Half Face": 22000, "Full Face": 30000, est: 1 },
-                bag_fabric: { Small: 20000, Medium: 25000, Large: 30000, est: 2 }
-            },
-            special: { suede: { Small: 50000, Medium: 60000, Large: 70000, est: 5 } },
-            express: { "8 Jam": 20000, "18 Jam": 15000, "24 Jam": 10000 }
+            regShoes: { Small: 30000, Medium: 35000, Large: 40000 },
+            regHelmet: { HalfFace: 25000, FullFace: 30000 },
+            express: { "8h": 15000, "18h": 10000, "24h": 5000 }
         }
     },
     inventory: [
@@ -29,16 +27,23 @@ const DB = {
         const options = {
             method,
             headers: { 'Content-Type': 'application/json' },
-            mode: 'cors'
+            mode: 'cors',
+            cache: 'no-store'
         };
         if (data) options.body = JSON.stringify(data);
         
         try {
             const resp = await fetch(`${API_BASE}${endpoint}`, options);
-            if (!resp.ok) throw new Error('API Error');
-            return await resp.json();
+            const result = await resp.json();
+            if (!resp.ok) {
+                // GET gagal → return null agar fallback aktif
+                // POST/PUT/DELETE gagal → return objek error agar bisa ditampilkan
+                if (method === 'GET') return null;
+                return { success: false, error: result.error || 'Terjadi kesalahan pada server.', code: result.code };
+            }
+            return result;
         } catch (err) {
-            console.warn(`API Offline (${endpoint}), using local fallback.`);
+            console.warn(`Koneksi Gagal (${endpoint}):`, err);
             return null;
         }
     },
@@ -74,6 +79,9 @@ const DB = {
     async deleteArticle(id) {
         return await this.call(`/articles/${id}`, 'DELETE');
     },
+    async updateArticle(id, article) {
+        return await this.call(`/articles/${id}`, 'PUT', article);
+    },
     async getRestockRequests() {
         return (await this.call('/restock')) || [];
     },
@@ -88,6 +96,9 @@ const DB = {
     },
     async getTestimonials() {
         return (await this.call('/testimonials')) || [];
+    },
+    async addTestimonial(testimonial) {
+        return await this.call('/testimonials', 'POST', testimonial);
     },
     async updateTestimonialStatus(id, status) {
         return await this.call(`/testimonials/${id}`, 'PUT', { status });

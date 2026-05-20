@@ -61,9 +61,10 @@ CREATE TABLE articles (
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     title VARCHAR(255),
     category VARCHAR(50),
-    status VARCHAR(20) DEFAULT 'Published',
+    status VARCHAR(20) DEFAULT 'Publik',
     image TEXT,
-    content TEXT
+    content TEXT,
+    `desc` TEXT
 );
 
 -- 5. Tabel Konfigurasi (Landing Page & Harga)
