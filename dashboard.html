@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Dashboard | Sparkling Cleaners</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <!-- Chart.js CDN for interactive visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Background Blobs -->
+    <div class="blob-bg blob-1"></div>
+    <div class="blob-bg blob-2"></div>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-img-wrapper">
+                    <img src="/assets/logo.png" alt="Logo" class="logo-img">
+                </div>
+                <h3>Sparkling Ops</h3>
+                <div id="activeRoleText">Admin</div>
+            </div>
+
+            <!-- Profile Info in Sidebar -->
+            <div class="sidebar-profile">
+                <div class="profile-avatar-circle">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <div class="profile-details">
+                    <h4 id="sidebarProfileName">Sandy Syahbana</h4>
+                    <span class="status-indicator"><span class="status-dot"></span> Online</span>
+                </div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-label">FITUR UTAMA</li>
+                
+                <li class="menu-item active" data-target="tab-summary">
+                    <i class="fa-solid fa-chart-pie"></i> <span>Ringkasan Kinerja</span>
+                </li>
+                
+                <li class="menu-item" data-target="tab-orders">
+                    <i class="fa-solid fa-box"></i> <span>Pesanan Masuk</span>
+                </li>
+                <li class="menu-item" data-target="tab-new-order">
+                    <i class="fa-solid fa-circle-plus"></i> <span>Order Baru</span>
+                </li>
+                <li class="menu-item" data-target="tab-admin-restock">
+                    <i class="fa-solid fa-cart-shopping"></i> <span>Restok Gudang</span>
+                </li>
+                
+                <!-- Owner Section -->
+                <div id="ownerMenuSection" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 10px;">
+                    <li class="menu-label">FITUR OWNER</li>
+                    <li class="menu-item" data-target="tab-revenue">
+                        <i class="fa-solid fa-chart-line"></i> <span>Keuangan</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-stock">
+                        <i class="fa-solid fa-flask"></i> <span>Stok Bahan</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-catalog">
+                        <i class="fa-solid fa-tags"></i> <span>Katalog & Harga</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-testimonials">
+                        <i class="fa-solid fa-star"></i> <span>Testimoni</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-articles">
+                        <i class="fa-solid fa-pen-to-square"></i> <span>Editor Artikel</span>
+                    </li>
+                    <li class="menu-item" data-target="tab-settings">
+                        <i class="fa-solid fa-gear"></i> <span>Pengaturan Web</span>
+                    </li>
+                </div>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="window.logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>JELAJAHI UTAMA</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Panel Content -->
+        <div class="main-wrapper">
+            <!-- Top Navigation Bar -->
+            <header class="top-nav">
+                <div class="nav-left">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Cari pesanan..." id="globalSearch" oninput="window.handleGlobalSearch(this.value)">
+                    </div>
+                    <div class="nav-pills">
+                        <button class="nav-pill active" onclick="window.switchSubTab('ringkasan')">Ringkasan</button>
+                        <button class="nav-pill" onclick="window.switchSubTab('tabel')">Tabel data</button>
+                        <button class="nav-pill" onclick="window.switchSubTab('laporan')">Laporan</button>
+                    </div>
+                </div>
+                <div class="nav-right">
+                    <div class="nav-icon-btn notification-btn">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="badge-dot"></span>
+                    </div>
+                    <div class="theme-toggle-btn" onclick="window.toggleTheme()">
+                        <i class="fa-regular fa-moon" id="themeIcon"></i>
+                    </div>
+                    <div class="lang-selector">
+                        <img src="https://flagcdn.com/w40/id.png" alt="ID" class="flag-icon">
+                    </div>
+                    <div class="nav-user">
+                        <span class="user-greeting">Hai, <strong id="navUsername">Sandy Syahbana</strong></span>
+                        <div class="user-avatar-wrapper">
+                            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop" alt="Avatar" class="user-avatar-img">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-content">
+                
+                <!-- Tab: Overview Dashboard (NEW) -->
+                <div id="tab-summary" class="tab-content active">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Dashboard</a> / <span>Ringkasan</span>
+                    </div>
+                    
+                    <div class="dashboard-header flex-header">
+                        <div class="header-title-block">
+                            <h2>Ringkasan Kinerja</h2>
+                            <p class="subtitle-text">Pantau statistik operasional dan performa Sparkling Cleaners secara live.</p>
+                        </div>
+                        <div class="date-filter-pill">
+                            <i class="fa-regular fa-calendar"></i>
+                            <span id="currentDateRange">Mei 21, 2028 - Jun 21, 2028</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards Row -->
+                    <div class="kpi-grid">
+                        <!-- KPI 1 -->
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content">
+                                <span class="kpi-value" id="kpi-completion-rate">90%</span>
+                                <span class="kpi-label">Penyelesaian Order</span>
+                                <span class="kpi-status status-up"><i class="fa-solid fa-circle-check"></i> Waktu pengerjaan aktif</span>
+                            </div>
+                            <div class="kpi-card-chart">
+                                <div class="mini-progress-circle">
+                                    <svg viewBox="0 0 36 36" class="circular-chart sky">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="circle" id="kpi-ring-completion" stroke-dasharray="90, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 2 -->
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content">
+                                <span class="kpi-value" id="kpi-visitors">49,832</span>
+                                <span class="kpi-label">Jumlah Pengunjung</span>
+                                <span class="kpi-status status-normal"><i class="fa-solid fa-users"></i> Trafik web stabil</span>
+                            </div>
+                            <div class="kpi-card-chart">
+                                <div class="kpi-icon-box bg-purple">
+                                    <i class="fa-solid fa-chart-simple"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 3 -->
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content">
+                                <span class="kpi-value" id="kpi-revenue">Rp 30.000.000</span>
+                                <span class="kpi-label">Pendapatan Bersih</span>
+                                <span class="kpi-status status-up"><i class="fa-solid fa-wallet"></i> Total omset lunas</span>
+                            </div>
+                            <div class="kpi-card-chart">
+                                <div class="kpi-icon-box bg-orange">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 4 -->
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content">
+                                <span class="kpi-value" id="kpi-stock">84%</span>
+                                <span class="kpi-label">Kapasitas Workshop</span>
+                                <span class="kpi-status status-normal"><i class="fa-solid fa-database"></i> Stok bahan tersedia</span>
+                            </div>
+                            <div class="kpi-card-chart">
+                                <div class="mini-progress-circle">
+                                    <svg viewBox="0 0 36 36" class="circular-chart pink">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="circle" id="kpi-ring-stock" stroke-dasharray="84, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 1 -->
+                    <div class="charts-row-4">
+                        <!-- Chart 1: Pie -->
+                        <div class="chart-card glass-card">
+                            <div class="chart-card-header">
+                                <h4>Layanan Terlaris</h4>
+                                <div class="dropdown-trigger"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="chartLayananLaris"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 2: Donut -->
+                        <div class="chart-card glass-card">
+                            <div class="chart-card-header">
+                                <h4>Metode Pemesanan</h4>
+                                <div class="dropdown-trigger"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="chartMetodePesan"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 3: Realtime area -->
+                        <div class="chart-card glass-card">
+                            <div class="chart-card-header">
+                                <h4>Lalu Lintas Realtime</h4>
+                                <div class="dropdown-trigger"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="chartLaluLintasRealtime"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 4: Storage donut -->
+                        <div class="chart-card glass-card">
+                            <div class="chart-card-header">
+                                <h4>Kapasitas Workshop</h4>
+                                <div class="dropdown-trigger"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="chartKapasitasWork"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 2 -->
+                    <div class="charts-row-2">
+                        <!-- Chart 5: Performance line -->
+                        <div class="chart-card glass-card">
+                            <div class="chart-card-header">
+                                <h4>Performa Pengerjaan (Hari)</h4>
+                                <div class="dropdown-trigger"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="chartPerformaPengerjaan"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 6: Wave area -->
+                        <div class="chart-card glass-card">
+                            <div class="chart-card-header">
+                                <h4>Kunjungan Web vs Booking</h4>
+                                <div class="dropdown-trigger"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="chartKunjunganBooking"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Pesanan Masuk -->
+                <div id="tab-orders" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Dashboard</a> / <span>Pesanan Masuk</span>
+                    </div>
+                    <div class="dashboard-header flex-header">
+                        <h2>Manajemen Pesanan Masuk</h2>
+                        <button class="btn btn-primary" onclick="document.querySelector('[data-target=\'tab-new-order\']').click()">+ Order Baru</button>
+                    </div>
+                    <div class="table-container glass-panel">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID ORDER</th>
+                                    <th>TANGGAL</th>
+                                    <th>PELANGGAN</th>
+                                    <th>LAYANAN</th>
+                                    <th>STATUS</th>
+                                    <th>AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody><!-- Loaded via JS --></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Order Baru (Input Manual) -->
+                <div id="tab-new-order" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Dashboard</a> / <span>Order Baru</span>
+                    </div>
+                    <h2>Input Pesanan Baru</h2>
+                    <div class="glass-panel" style="padding: 2.5rem; margin-top: 1.5rem;">
+                        <form onsubmit="window.processAdminOrder(event)">
+                            <div class="grid grid-2" style="gap: 20px;">
+                                <div class="form-group">
+                                    <label>Nama Pelanggan</label>
+                                    <input type="text" id="admName" class="form-input" required placeholder="Cth: Ahmad">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nomor WhatsApp</label>
+                                    <input type="text" id="admPhone" class="form-input" required placeholder="Cth: 0812...">
+                                </div>
+                                <div class="form-group">
+                                    <label>Jenis Barang</label>
+                                    <select id="admItem" class="form-input">
+                                        <option>Sepatu</option>
+                                        <option>Helm</option>
+                                        <option>Tas</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Layanan</label>
+                                    <select id="admService" class="form-input">
+                                        <option>Deep Clean</option>
+                                        <option>Reguler</option>
+                                        <option>Express</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Jumlah</label>
+                                    <input type="number" id="admQty" class="form-input" value="1" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Harga (Total)</label>
+                                    <input type="number" id="admPrice" class="form-input" required placeholder="Cth: 50000">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Catatan Khusus</label>
+                                <textarea id="admNotes" class="form-input" rows="3" placeholder="Detail khusus barang..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width:100%; padding: 1.2rem; font-size: 1rem;">Simpan & Cetak Pesanan</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab: Restok Gudang -->
+                <div id="tab-admin-restock" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Dashboard</a> / <span>Restok Gudang</span>
+                    </div>
+                    <h2>Manajemen Restok Gudang</h2>
+                    <div class="grid grid-2" style="gap: 2rem; margin-top: 1.5rem;">
+                        <div class="glass-panel" style="padding: 2rem;">
+                            <h3><i class="fa-solid fa-paper-plane" style="color:var(--primary-sky);"></i> Buat Request Restok</h3>
+                            <form onsubmit="event.preventDefault(); window.DB.addRestockRequest(document.getElementById('restockItem').value, document.getElementById('restockQty').value, document.getElementById('restockNotes').value, 'admin').then(() => { alert('Request terkirim!'); renderRestock(); });">
+                                <div class="form-group">
+                                    <label>Pilih Item Habis</label>
+                                    <select id="restockItem" class="form-input" required></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Jumlah Kebutuhan</label>
+                                    <input type="number" id="restockQty" class="form-input" required min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Catatan</label>
+                                    <input type="text" id="restockNotes" class="form-input" placeholder="Tulis alasan restok...">
+                                </div>
+                                <button class="btn btn-primary" style="width:100%;">Kirim Pengajuan</button>
+                            </form>
+                        </div>
+                        <div class="glass-panel" style="padding: 2rem;">
+                            <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent-yellow);"></i> Status Request</h3>
+                            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 10px;">
+                                <!-- JS will render here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Keuangan -->
+                <div id="tab-revenue" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Owner</a> / <span>Laporan Keuangan</span>
+                    </div>
+                    <h2>Laporan Keuangan & Performa</h2>
+                    <div class="grid grid-2" style="gap: 1.5rem; margin-top: 1.5rem;">
+                        <div class="stat-card glass-panel" style="padding: 2rem;">
+                            <h3>Total Pemasukan</h3>
+                            <h2 id="rev-total">Rp 0</h2>
+                        </div>
+                        <div class="stat-card glass-panel" style="padding: 2rem;">
+                            <h3>Total Pesanan</h3>
+                            <h2 id="rev-orders">0</h2>
+                        </div>
+                    </div>
+                    <div class="revenue-chart glass-panel" style="margin-top:1.5rem; height: 350px; padding: 2rem;">
+                        <div class="revenue-chart-bars" style="display:flex; height:100%; gap:15px; align-items:flex-end;"></div>
+                    </div>
+                </div>
+
+                <!-- Tab: Stok Bahan -->
+                <div id="tab-stock" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Owner</a> / <span>Stok Bahan</span>
+                    </div>
+                    <div class="dashboard-header flex-header">
+                        <h2>Manajemen Stok Bahan</h2>
+                        <button class="btn btn-primary" onclick="alert('Fitur tambah item baru akan segera diintegrasikan.')">+ Item Baru</button>
+                    </div>
+                    <div class="table-container glass-panel">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>NAMA BAHAN</th>
+                                    <th>STOK</th>
+                                    <th>HARGA/UNIT</th>
+                                    <th>AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryList"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Katalog & Harga (Editor Harga di Sini) -->
+                <div id="tab-catalog" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Owner</a> / <span>Katalog & Harga</span>
+                    </div>
+                    <div class="dashboard-header">
+                        <h2>Katalog & Paket Layanan</h2>
+                    </div>
+                    
+                    <div class="grid grid-2" style="gap: 2rem; margin-bottom: 2rem;">
+                        <div class="glass-panel" style="padding: 1.5rem; text-align: center;">
+                            <i class="fa-solid fa-shoe-prints" style="font-size: 2rem; color: var(--primary-sky);"></i>
+                            <h3>Deep Clean Sepatu</h3>
+                            <p style="color:var(--text-muted);">Mulai dari Rp 30.000</p>
+                        </div>
+                        <div class="glass-panel" style="padding: 1.5rem; text-align: center;">
+                            <i class="fa-solid fa-helmet-safety" style="font-size: 2rem; color: var(--accent-yellow);"></i>
+                            <h3>Cuci Helm Premium</h3>
+                            <p style="color:var(--text-muted);">Mulai dari Rp 25.000</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-tags"></i> Edit Harga Layanan Live</h3>
+                        <div class="grid grid-2" style="gap: 2.5rem;">
+                            <div>
+                                <div class="form-group"><label>Sepatu Small</label><input type="number" id="price-reg-shoes-Small" class="form-input"></div>
+                                <div class="form-group"><label>Sepatu Medium</label><input type="number" id="price-reg-shoes-Medium" class="form-input"></div>
+                                <div class="form-group"><label>Sepatu Large</label><input type="number" id="price-reg-shoes-Large" class="form-input"></div>
+                            </div>
+                            <div>
+                                <div class="form-group"><label>Helm Half Face</label><input type="number" id="price-reg-helmet-HalfFace" class="form-input"></div>
+                                <div class="form-group"><label>Helm Full Face</label><input type="number" id="price-reg-helmet-FullFace" class="form-input"></div>
+                                <div class="form-group"><label>Express 8 Jam (+)</label><input type="number" id="price-exp-8" class="form-input"></div>
+                                <div class="form-group"><label>Express 18 Jam (+)</label><input type="number" id="price-exp-18" class="form-input"></div>
+                                <div class="form-group"><label>Express 24 Jam (+)</label><input type="number" id="price-exp-24" class="form-input"></div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="window.saveAllSettings()" style="width: 100%; padding: 1.2rem; margin-top: 1rem;">Simpan Semua Harga Baru <i class="fa-solid fa-save" style="margin-left: 10px;"></i></button>
+                    </div>
+                </div>
+
+                <!-- Tab: Testimoni -->
+                <div id="tab-testimonials" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Owner</a> / <span>Testimoni</span>
+                    </div>
+                    <h2>Moderasi Testimoni</h2>
+                    <div class="table-container glass-panel">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>PELANGGAN</th>
+                                    <th>RATING</th>
+                                    <th>KOMENTAR</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody><!-- JS Render --></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Editor Artikel -->
+                <div id="tab-articles" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Owner</a> / <span>Editor Artikel</span>
+                    </div>
+                    <div class="dashboard-header flex-header">
+                        <h2>Editor Artikel Edukasi</h2>
+                    </div>
+                    
+                    <!-- Article List Table -->
+                    <div class="table-container glass-panel" style="margin-bottom: 2rem;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>JUDUL</th>
+                                    <th>KATEGORI</th>
+                                    <th>STATUS</th>
+                                    <th>AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Article Writer Form (Added to support the existing code) -->
+                    <div class="glass-panel" style="padding: 2rem;">
+                        <h3><i class="fa-solid fa-pen-nib"></i> Form Tulis / Edit Artikel</h3>
+                        <form onsubmit="event.preventDefault(); window.saveArticle();" style="margin-top: 1.5rem;">
+                            <input type="hidden" id="articleId">
+                            <div class="grid grid-2" style="gap: 20px;">
+                                <div class="form-group">
+                                    <label>Judul Artikel</label>
+                                    <input type="text" id="artTitle" class="form-input" required placeholder="Cth: 3 Tips Merawat Suede">
+                                </div>
+                                <div class="form-group">
+                                    <label>Kategori</label>
+                                    <select id="artCategory" class="form-input">
+                                        <option>Sepatu</option>
+                                        <option>Helm</option>
+                                        <option>Tas</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label>URL Gambar Thumbnail</label>
+                                    <input type="text" id="artImage" class="form-input" placeholder="https://images.unsplash.com/...">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Konten Artikel</label>
+                                <textarea id="artContent" class="form-input" rows="6" placeholder="Tulis isi artikel..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem;">Simpan Artikel <i class="fa-solid fa-save" style="margin-left: 5px;"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab: Pengaturan Web (Branding di Sini) -->
+                <div id="tab-settings" class="tab-content">
+                    <div class="dashboard-breadcrumb">
+                        <a href="#">Owner</a> / <span>Pengaturan Web</span>
+                    </div>
+                    <h2>Pengaturan Website & Branding</h2>
+                    <div class="glass-panel" style="padding: 2.5rem; margin-top: 1.5rem;">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary-sky);"><i class="fa-solid fa-display"></i> Branding & Hero Section</h3>
+                        <div class="form-group">
+                            <label>Judul Utama (Hero Title)</label>
+                            <input type="text" id="configHeroTitle" class="form-input" placeholder="Cth: Laundry Sepatu Premium">
+                        </div>
+                        <div class="form-group">
+                            <label>Sub-judul (Hero Subtitle)</label>
+                            <textarea id="configHeroSubtitle" class="form-input" rows="3" placeholder="Deskripsi singkat layanan..."></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="window.saveAllSettings()" style="width: 100%; padding: 1.2rem; margin-top: 1.5rem;">Simpan Branding <i class="fa-solid fa-save" style="margin-left: 10px;"></i></button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Status Update -->
+    <div id="progressModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(8px);">
+        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 450px; border-radius: 24px; text-align: center;">
+            <h3 style="margin-bottom: 1.5rem;">Update Progress Pesanan</h3>
+            <div class="form-group">
+                <label>Pilih Status Terbaru</label>
+                <select id="statusSelect" class="form-input">
+                    <option value="1">Diterima (Antrian)</option>
+                    <option value="2">Proses Treatment</option>
+                    <option value="3">Pengeringan</option>
+                    <option value="4">Detailing/Finishing</option>
+                    <option value="5">Siap Diambil</option>
+                    <option value="6">Selesai/Lunas</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+                <button class="btn" style="flex:1; background:#64748b; color:white;" onclick="window.closeProgressModal()">Batal</button>
+                <button class="btn btn-primary" style="flex:2;" onclick="window.DB.updateOrderStatus(window.currentUpdateId, document.getElementById('statusSelect').value).then(() => { alert('Status Berhasil Diupdate!'); window.location.reload(); })">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
