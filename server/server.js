@@ -2,6 +2,8 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -13,6 +15,45 @@ app.use(express.json());
 // Root path for static files
 const rootDir = path.resolve(__dirname, '..');
 app.use(express.static(rootDir));
+
+// Setup folder uploads (di dalam root project, bukan server)
+const uploadsDir = path.join(rootDir, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+app.use('/uploads', express.static(uploadsDir));
+
+// Multer storage config
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadsDir),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const uniqueName = `article-${Date.now()}${ext}`;
+        cb(null, uniqueName);
+    }
+});
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // max 5MB
+    fileFilter: (req, file, cb) => {
+        const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.heic', '.heif'];
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (allowed.includes(ext)) cb(null, true);
+        else cb(new Error('Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau AVIF.'));
+    }
+});
+
+// [UPLOAD IMAGE]
+app.post('/api/upload', upload.array('image', 10), (req, res) => {
+    if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'Tidak ada file yang diupload.' });
+    const imageUrls = req.files.map(file => `/uploads/${file.filename}`);
+    res.json({ success: true, urls: imageUrls, url: imageUrls[0] }); // Keep 'url' for backward compatibility
+});
+
+app.use((err, req, res, next) => {
+    if (err instanceof multer.MulterError || err.message) {
+        return res.status(400).json({ error: err.message });
+    }
+    next(err);
+});
 
 // Friendly Routes for SPA
 app.get('/', (req, res) => res.sendFile(path.join(rootDir, 'index.html')));
@@ -29,6 +70,20 @@ const pool = mysql.createPool({
     connectionLimit: 15,
     queueLimit: 0
 });
+
+// Auto-migration: Tambahkan kolom description jika belum ada
+(async () => {
+    try {
+        const [rows] = await pool.query('SHOW COLUMNS FROM articles LIKE "description"');
+        if (rows.length === 0) {
+            console.log('Migrasi: Menambahkan kolom description ke tabel articles...');
+            await pool.query('ALTER TABLE articles ADD COLUMN description TEXT');
+            console.log('Migrasi Berhasil.');
+        }
+    } catch (err) {
+        console.error('Auto-migration Error:', err.message);
+    }
+})();
 
 // --- API ENDPOINTS ---
 
@@ -171,18 +226,55 @@ app.get('/api/finance', async (req, res) => {
 
 app.get('/api/articles', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM articles ORDER BY date DESC');
+        // Kolom 'date' tidak ada di database, gunakan 'id' atau hapus order by
+        const [rows] = await pool.query('SELECT * FROM articles ORDER BY id DESC');
         res.json(rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        console.error('API Article Error:', err);
+        res.status(500).json({ error: err.message || err.toString(), code: err.code }); 
+    }
 });
 
 app.post('/api/articles', async (req, res) => {
     try {
         const a = req.body;
-        await pool.query('INSERT INTO articles (id, title, category, status, image, content) VALUES (?, ?, ?, ?, ?, ?)', [a.id, a.title, a.category, a.status, a.image, a.content]);
+        await pool.query(
+            'INSERT INTO articles (id, title, category, status, image, content, description) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [a.id, a.title, a.category, a.status || 'Publik', a.image, a.content, a.desc || '']
+        );
         res.status(201).json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        console.error('API Article Error:', err);
+        res.status(500).json({ error: err.message || err.toString(), code: err.code }); 
+    }
 });
+
+app.put('/api/articles/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const a = req.body;
+        await pool.query(
+            'UPDATE articles SET title=?, category=?, status=?, image=?, content=?, description=? WHERE id=?',
+            [a.title, a.category, a.status || 'Publik', a.image, a.content, a.desc || '', id]
+        );
+        res.json({ success: true });
+    } catch (err) { 
+        console.error('API Article Error:', err);
+        res.status(500).json({ error: err.message || err.toString(), code: err.code }); 
+    }
+});
+
+app.delete('/api/articles/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM articles WHERE id = ?', [id]);
+        res.json({ success: true });
+    } catch (err) { 
+        console.error('API Article Error:', err);
+        res.status(500).json({ error: err.message || err.toString(), code: err.code }); 
+    }
+});
+
 
 app.get('/api/testimonials', async (req, res) => {
     try {
@@ -191,11 +283,30 @@ app.get('/api/testimonials', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/testimonials', async (req, res) => {
+    try {
+        const { name, rating, content, image } = req.body;
+        await pool.query(
+            'INSERT INTO testimonials (name, rating, content, image, status) VALUES (?, ?, ?, ?, ?)',
+            [name, rating, content, image || null, 'Pending']
+        );
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.put('/api/testimonials/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
         await pool.query('UPDATE testimonials SET status = ? WHERE id = ?', [status, id]);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/testimonials/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM testimonials WHERE id = ?', [id]);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

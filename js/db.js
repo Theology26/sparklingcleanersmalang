@@ -4,8 +4,10 @@ const API_BASE = 'http://localhost:3000/api';
 
 const FALLBACKS = {
     config: {
-        heroTitle: "Spesialis Perawatan Barang Kesayangan Anda",
-        heroSubtitle: "Aesthetic, Modern, dan Clean.",
+        hero: {
+            title: "Spesialis Perawatan Barang Kesayangan Anda",
+            subtitle: "Aesthetic, Modern, dan Clean. Kami memberikan sentuhan magis untuk sepatu, tas, dan helm Anda hingga tampak seperti baru."
+        },
         pricing: {
             regular: {
                 shoes: { Small: 20000, Medium: 30000, Large: 35000, est: "3 Hari" },
@@ -44,16 +46,23 @@ const DB = {
         const options = {
             method,
             headers: { 'Content-Type': 'application/json' },
-            mode: 'cors'
+            mode: 'cors',
+            cache: 'no-store'
         };
         if (data) options.body = JSON.stringify(data);
         
         try {
             const resp = await fetch(`${API_BASE}${endpoint}`, options);
-            if (!resp.ok) throw new Error('API Error');
-            return await resp.json();
+            const result = await resp.json();
+            if (!resp.ok) {
+                // GET gagal → return null agar fallback aktif
+                // POST/PUT/DELETE gagal → return objek error agar bisa ditampilkan
+                if (method === 'GET') return null;
+                return { success: false, error: result.error || 'Terjadi kesalahan pada server.', code: result.code };
+            }
+            return result;
         } catch (err) {
-            console.warn(`API Offline (${endpoint}), using local fallback.`);
+            console.warn(`Koneksi Gagal (${endpoint}):`, err);
             return null;
         }
     },
@@ -89,6 +98,9 @@ const DB = {
     async deleteArticle(id) {
         return await this.call(`/articles/${id}`, 'DELETE');
     },
+    async updateArticle(id, article) {
+        return await this.call(`/articles/${id}`, 'PUT', article);
+    },
     async getRestockRequests() {
         return (await this.call('/restock')) || [];
     },
@@ -112,6 +124,9 @@ const DB = {
     },
     async getTestimonials() {
         return (await this.call('/testimonials')) || [];
+    },
+    async addTestimonial(testimonial) {
+        return await this.call('/testimonials', 'POST', testimonial);
     },
     async updateTestimonialStatus(id, status) {
         return await this.call(`/testimonials/${id}`, 'PUT', { status });

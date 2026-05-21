@@ -4,7 +4,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // Load pricing first to ensure it's available for all renders and options
     window.PRICING = await DB.getPricing();
-
     const qrContainer = document.getElementById('ig-qr-code');
     if (qrContainer && typeof QRCode !== 'undefined') {
         new QRCode(qrContainer, {
@@ -52,10 +51,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function renderBranding() {
     const config = await DB.getConfig();
     if (config && config.hero) {
-        const heroTitle = document.querySelector('.hero h1');
-        const heroSubtitle = document.querySelector('.hero p');
-        if (heroTitle) heroTitle.innerText = config.hero.title;
-        if (heroSubtitle) heroSubtitle.innerText = config.hero.subtitle;
+        const heroTitle = document.getElementById('heroTitle');
+        const heroSubtitle = document.getElementById('heroSubtitle');
+        if (heroTitle) heroTitle.innerText = config.hero.title || heroTitle.innerText;
+        if (heroSubtitle) heroSubtitle.innerText = config.hero.subtitle || heroSubtitle.innerText;
     }
 }
 
@@ -223,31 +222,62 @@ async function renderPricing() {
     }
 }
 
+const ARTICLE_FALLBACKS = [
+    { id:'ART-F1', title:'Cara Jitu Menghilangkan Noda Kuning di Sepatu Minimalis Putih', category:'Perawatan Sepatu', image:'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500', desc:'Noda menguning sering terjadi pada sol akibat oksidasi suhu. Inilah rahasianya...', status:'Publik' },
+    { id:'ART-F2', title:'Perhatikan 3 Hal Ini Sebelum Mencuci Tas Kulit Asli Anda!', category:'Perawatan Tas', image:'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=500', desc:'Mencuci tas kulit butuh perlakuan khusus agar permukaannya tidak retak (crack).', status:'Publik' },
+    { id:'ART-F3', title:'Bahaya Bakteri Keringat Berlebih Pada Busa Helm Kesayangan', category:'Perawatan Helm', image:'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500', desc:'Busa helm basah adalah sarang bagi ribuan bakteri yang sering memicu gatal rambut.', status:'Publik' }
+];
+
+let allPublicArticles = [];
+let articlesShown = 0;
+const ARTICLES_PER_PAGE = 3;
+
+function buildArticleCard(a) {
+    const desc = a.description || a.desc || '';
+    return `
+        <div class="glass-card" style="overflow: hidden; text-align: left;">
+            <div style="height: 200px; background: url('${a.image}') center/cover;"></div>
+            <div style="padding: 1.5rem;">
+                <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">${DB.sanitize ? DB.sanitize(a.category) : a.category}</span>
+                <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">${DB.sanitize ? DB.sanitize(a.title) : a.title}</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">${DB.sanitize ? DB.sanitize(desc) : desc}</p>
+                <a href="${a.content && a.content.startsWith('http') ? a.content : '#'}" ${a.content && a.content.startsWith('http') ? 'target="_blank"' : ''}
+                   style="color: var(--primary-navy); font-weight: 600; text-decoration: none; font-size: 0.9rem;">
+                   Baca Selengkapnya <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
+                </a>
+            </div>
+        </div>
+    `;
+}
+
 async function renderArticles() {
     const rawArticles = await DB.getArticles();
-    const articles = (rawArticles || []).filter(a => a.status === 'Publik');
+    // Pastikan selalu array — DB bisa kembalikan null, object error, atau array
+    const articlesFromDB = Array.isArray(rawArticles) ? rawArticles : [];
+    allPublicArticles = (articlesFromDB.length > 0 ? articlesFromDB : ARTICLE_FALLBACKS).filter(a => a.status === 'Publik');
     const container = document.getElementById('articles-container');
     if (!container) return;
-
+    articlesShown = 0;
     container.innerHTML = '';
-    
-    articles.forEach(a => {
-        container.innerHTML += `
-            <div class="glass-card" style="overflow: hidden; text-align: left;">
-                <div style="height: 200px; background: url('${a.image}') center/cover;"></div>
-                <div style="padding: 1.5rem;">
-                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">${DB.sanitize(a.category)}</span>
-                    <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">${DB.sanitize(a.title)}</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">${DB.sanitize(a.desc)}</p>
-                    <a href="javascript:alert('Fitur baca selengkapnya segera hadir!')" 
-                       style="color: var(--primary-navy); font-weight: 600; text-decoration: none; font-size: 0.9rem;">
-                       Baca Selengkapnya <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
-                    </a>
-                </div>
-            </div>
-        `;
-    });
+    if (allPublicArticles.length === 0) {
+        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Belum ada artikel yang dipublikasikan.</div>`;
+        return;
+    }
+    _showNextArticles(container);
 }
+
+function _showNextArticles(container) {
+    const next = allPublicArticles.slice(articlesShown, articlesShown + ARTICLES_PER_PAGE);
+    next.forEach(a => { container.innerHTML += buildArticleCard(a); });
+    articlesShown += next.length;
+    const btn = document.getElementById('loadMoreBtn');
+    if (btn) btn.style.display = articlesShown < allPublicArticles.length ? 'inline-block' : 'none';
+}
+
+window.loadMoreArticles = function() {
+    const container = document.getElementById('articles-container');
+    if (container) _showNextArticles(container);
+};
 
 // Visual Selection Handlers
 window.selectItem = function(val, el) {
@@ -500,7 +530,8 @@ window.processOrder = async function(event) {
 
 // Order Tracking Simulation
 window.simulateTracking = function() {
-    const input = document.getElementById('trackInput').value.trim();
+    const inputEl = document.getElementById('trackInput');
+    const input = inputEl ? inputEl.value.trim() : '';
     const msg = document.getElementById('trackingStatusMessage');
     const steps = document.querySelectorAll('.step');
 
@@ -516,6 +547,10 @@ window.simulateTracking = function() {
 
     setTimeout(async () => {
         const code = input.toUpperCase();
+<<<<<<< HEAD
+=======
+        if(!code) return;
+>>>>>>> origin/update-fitur-kategori
         
         const orders = await DB.getOrders();
         const found = orders.find(o => o.id === code || o.phone === code);
@@ -530,7 +565,7 @@ window.simulateTracking = function() {
 
         // Aktifkan step
         for (let i = 0; i < currentStep; i++) {
-            steps[i].classList.add('active');
+            if (steps[i]) steps[i].classList.add('active');
         }
 
         const statusLabels = [
@@ -566,6 +601,80 @@ window.openTestimoniModal = function() {
 
 window.closeTestimoniModal = function() {
     document.getElementById('testimoniModal').style.display = 'none';
+};
+
+// Fungsi masking nama anonim: "Budi Santoso" → "B***o"
+function _maskName(name) {
+    const parts = name.trim().split(' ');
+    return parts.map(p => p.length <= 1 ? p : p[0] + '***' + p[p.length - 1]).join(' ');
+}
+
+window.submitTestimoni = async function(event) {
+    event.preventDefault();
+    const nameRaw = document.getElementById('reviewerName').value.trim();
+    const isAnonim = document.getElementById('isAnonim').checked;
+    const name = isAnonim ? _maskName(nameRaw) : nameRaw;
+    const rating = parseInt(document.getElementById('ratingValue').value);
+    const content = document.getElementById('reviewerMessage').value.trim();
+    const photoInput = document.getElementById('reviewerPhoto');
+
+    if (!name || !rating || !content) {
+        alert('Harap lengkapi nama, rating, dan pesan ulasan Anda!');
+        return;
+    }
+
+    const btn = document.getElementById('submitTestimoniBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...'; }
+
+    try {
+        // Upload foto terlebih dahulu jika ada
+        let imageUrl = null;
+        if (photoInput && photoInput.files && photoInput.files.length > 0) {
+            const files = Array.from(photoInput.files);
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.avif'];
+            
+            for (let file of files) {
+                const fileName = file.name.toLowerCase();
+                const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+                if (!isAllowed) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = 'Kirim Testimoni <i class="fa-solid fa-paper-plane" style="margin-left:5px;"></i>'; }
+                    alert(`File "${file.name}" tidak valid. Foto harus dalam format (.jpg, .jpeg, .png, .webp, .avif).`);
+                    return;
+                }
+            }
+
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengupload foto...';
+            const formData = new FormData();
+            files.forEach(file => formData.append('image', file));
+            
+            const uploadResp = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+            const uploadResult = await uploadResp.json();
+            if (uploadResult.success) {
+                imageUrl = uploadResult.urls.join(',');
+            } else {
+                throw new Error(uploadResult.error || 'Gagal mengupload foto.');
+            }
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan ulasan...';
+        }
+
+        const res = await DB.addTestimonial({ name, rating, content, image: imageUrl });
+        if (res && res.success) {
+            alert('Terima kasih! ✅ Ulasan Anda berhasil dikirim dan akan ditinjau oleh tim kami sebelum ditampilkan.');
+            document.getElementById('testimoniForm').reset();
+            // Reset stars UI
+            document.querySelectorAll('#modalStarRating i').forEach(s => s.style.color = '');
+            document.getElementById('ratingValue').value = '';
+            const ratingText = document.getElementById('ratingText');
+            if (ratingText) ratingText.innerText = 'Klik untuk menilai';
+            window.closeTestimoniModal();
+        } else {
+            alert('Gagal mengirim ulasan. Pastikan koneksi server aktif.');
+        }
+    } catch (err) {
+        alert('Terjadi kesalahan: ' + err.message);
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Kirim Testimoni <i class="fa-solid fa-paper-plane" style="margin-left:5px;"></i>'; }
+    }
 };
 
 // GPS Distance Calculation
@@ -635,12 +744,38 @@ async function renderTestimonials() {
     const container = document.getElementById('testimonials-container');
     if (!container) return;
     container.innerHTML = '';
+    if (approved.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding: 2rem; grid-column:1/-1;">Belum ada ulasan yang ditampilkan.</div>`;
+        return;
+    }
     approved.forEach(t => {
+        let imagesHtml = '';
+        if (t.image) {
+            const urls = t.image.split(',');
+            imagesHtml = `
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(80px, 1fr)); gap:8px; margin-top:8px;">
+                    ${urls.map(url => `
+                        <img src="${url}" style="width:100%; height:80px; object-fit:cover; border-radius:10px; cursor:pointer;" onclick="window.open('${url}', '_blank')">
+                    `).join('')}
+                </div>
+            `;
+        }
+
         container.innerHTML += `
-            <div class="glass-panel" style="padding: 2rem; min-width: 300px; scroll-snap-align: start;">
-                <div style="color: var(--accent-yellow); margin-bottom: 1rem;">${'★'.repeat(t.rating)}${'☆'.repeat(5-t.rating)}</div>
-                <p style="font-style: italic; color: var(--text-muted); margin-bottom: 1.5rem;">"${t.content}"</p>
-                <h4 style="color: var(--primary-navy); margin: 0;">${t.name}</h4>
+            <div class="glass-card" style="padding: 1.5rem; display:flex; flex-direction:column; gap:0.75rem;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:45px; height:45px; border-radius:50%; background:rgba(52, 152, 219, 0.2); display:flex; align-items:center; justify-content:center; color: var(--primary-sky);">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin:0; font-size:1rem; color:var(--primary-navy);">${t.name}</h4>
+                        <div style="color:var(--accent-yellow); font-size:0.9rem;">
+                            ${Array(t.rating).fill('<i class="fa-solid fa-star"></i>').join('')}${Array(5-t.rating).fill('<i class="fa-regular fa-star"></i>').join('')}
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size:0.95rem; font-style:italic; color:var(--text-muted); margin:0; line-height:1.6;">&ldquo;${t.content}&rdquo;</p>
+                ${imagesHtml}
             </div>
         `;
     });
