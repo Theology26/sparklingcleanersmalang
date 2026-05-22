@@ -3,6 +3,28 @@
   "version": "1.0.0",
   "description": "Backend API for Sparkling Cleaners",
   "main": "server.js",
+  "contributors": [
+    {
+      "name": "Yosi Grace Theo",
+      "email": "yosigracetheo0@gmail.com",
+      "url": "https://github.com/Theology26"
+    },
+    {
+      "name": "Valentino Irving",
+      "email": "valentinoirving230206@gmail.com",
+      "url": "https://github.com/Xazorken"
+    },
+    {
+      "name": "Steven",
+      "email": "stevenchristm@gmail.com",
+      "url": "https://github.com/stevenchristm"
+    },
+    {
+      "name": "Christian Anthony Sucipto",
+      "email": "christian.anthony3c@gmail.com",
+      "url": "https://github.com/ChristianAnthonySucipto"
+    }
+  ],
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
