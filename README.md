@@ -93,10 +93,10 @@ sparklingcleanersmalang/
 
 ## 🔑 Akun Akses
 
-| Role | Email | Password |
+| Role | Username | Password |
 | :--- | :--- | :--- |
-| **Admin** | `admin@sparkling.com` | `admin123` |
-| **Owner** | `owner@sparkling.com` | `owner123` |
+| **Admin** | `admin` | `admin123` |
+| **Owner** | `owner` | `owner123` |
 
 ---
 
@@ -110,25 +110,6 @@ sparklingcleanersmalang/
 
 ---
 
-## 🧠 Master Prompt (Buku Manual AI)
-
-*Salin teks di bawah ini jika ingin mengembangkan project ini lebih lanjut menggunakan AI:*
-
-```markdown
-Role: Senior Full-Stack Developer (Vanilla JS, Node.js, MySQL).
-Project Context: Sparkling Cleaners Malang Management System.
-Design System: "Aesthetic Frost" (Glassmorphism, Blue Crumpled Texture, Inter Font).
-Backend Specs: Node.js Express server with mysql2/promise connection pooling.
-Core Logic Rules:
-1. Inventory ID format: 'INV-XXX' (String). 
-2. Inventory logic: Always use parseFloat() for stock amounts.
-3. Database: Ensure all write operations to 'inventory' and 'restock_requests' are synchronized.
-4. UI: Maintain high backdrop-filter (20-25px) on all panels and sidebars.
-5. Code Style: No frameworks (React/Vue/Tailwind) allowed. Use Vanilla CSS and ES6 JS only.
-```
-
----
-
 ## 📄 Kontributor & Kredit Tim
 
 Proyek **Sparkling Cleaners Malang** ini dikembangkan secara kolaboratif oleh tim pengembang berbakat:
@@ -137,6 +118,7 @@ Proyek **Sparkling Cleaners Malang** ini dikembangkan secara kolaboratif oleh ti
    - Merancang integrasi backend Node.js & Express.js.
    - Mengatur arsitektur database, sinkronisasi MySQL, dan API routing utama.
    - Menggabungkan kode dari berbagai cabang kontributor secara aman.
+   - Mengembangkan halaman landing page customer secara penuh.
 
 2. **Valentino Irving (Xazorken)** - *Dashboard Analyst & UI Designer*
    - Mengimplementasikan visualisasi data finansial interaktif menggunakan Chart.js.
