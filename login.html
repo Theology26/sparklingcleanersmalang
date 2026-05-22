@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Sistem | Sparkling Cleaners</title>
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/dashboard.css"> <!-- Mengambil efek frost -->
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .login-wrapper { width: 100%; max-width: 420px; padding: 3rem 2.5rem; text-align: center; border-radius: 32px; }
+        .login-wrapper .logo-img-wrapper { margin: 0 auto 1.5rem auto; width: 90px; height: 90px; border-radius: 50%; padding: 10px; background: rgba(255,255,255,0.5); }
+        .input-group { text-align: left; margin-bottom: 1.5rem; position: relative; }
+        .input-group label { display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--primary-navy); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .input-group i { position: absolute; margin-top: 17px; margin-left: 18px; color: var(--text-muted); font-size: 1.2rem; }
+        .form-control.with-icon { padding-left: 55px; height: 55px; border-radius: 16px; }
+        .btn-login { background: linear-gradient(135deg, #F1C40F, #F39C12); color: #fff; border-radius: 16px; font-weight: 800; font-size: 1.1rem; height: 55px; border: none; box-shadow: 0 10px 20px rgba(241, 196, 15, 0.3); }
+        .btn-login:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(241, 196, 15, 0.4); }
+    </style>
+</head>
+<body>
+    <!-- Abstract Background Elements -->
+    <div class="blob-bg blob-1"></div>
+    <div class="blob-bg blob-2"></div>
+
+    <div class="login-wrapper glass-panel">
+        <div class="logo-img-wrapper glass-panel">
+            <img src="/assets/logo.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; transform: scale(1.2);">
+        </div>
+        <h2 style="font-weight: 800; letter-spacing: -1px; margin-bottom: 5px;">Sparkling Ops</h2>
+        <p style="color: #64748b; margin-bottom: 2.5rem; font-weight: 500;">Secure Portal Authentication</p>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <label>Username</label>
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="username" class="form-control with-icon" placeholder="owner / admin" required>
+            </div>
+            <div class="input-group">
+                <label>Security Key</label>
+                <i class="fa-solid fa-fingerprint"></i>
+                <input type="password" id="password" class="form-control with-icon" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" class="btn btn-login" style="width: 100%; margin-top: 1rem;">
+                Akses Dashboard <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.querySelector('.btn-login');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem('userRole', data.role);
+                    localStorage.setItem('role', data.role);
+                    window.location.href = '/dashboard.html';
+                } else {
+                    alert('Akses Ditolak: ' + (data.error || 'Username atau password salah.'));
+                    btn.innerHTML = 'Akses Dashboard <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan koneksi ke server.');
+                btn.innerHTML = 'Akses Dashboard <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>';
+            }
+        }
+    </script>
+</body>
+</html>

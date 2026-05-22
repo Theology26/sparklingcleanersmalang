@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Dashboard | Sparkling Cleaners</title>
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="blob-bg blob-1"></div>
+    <div class="blob-bg blob-2"></div>
+    <div class="blob-bg blob-3"></div>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-img-wrapper"><img src="/assets/logo.png" alt="Logo" class="logo-img"></div>
+                <h3>Sparkling Ops</h3>
+                <div id="activeRoleText">Admin</div>
+            </div>
+
+            <div class="sidebar-profile">
+                <div class="profile-avatar-circle"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="profile-details">
+                    <h4 id="sidebarProfileName">Loading...</h4>
+                    <span class="status-indicator"><span class="status-dot"></span> Online</span>
+                </div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-label">FITUR UTAMA</li>
+                <li class="menu-item active" data-target="tab-summary"><i class="fa-solid fa-chart-pie"></i>
+                    <span>Ringkasan Kinerja</span></li>
+                <li class="menu-item" data-target="tab-orders"><i class="fa-solid fa-box"></i> <span>Pesanan
+                        Masuk</span></li>
+                <li class="menu-item" data-target="tab-new-order"><i class="fa-solid fa-circle-plus"></i> <span>Order
+                        Baru</span></li>
+                <li class="menu-item" data-target="tab-admin-restock"><i class="fa-solid fa-cart-shopping"></i>
+                    <span>Restok Gudang</span></li>
+                <li class="menu-item" data-target="tab-stock"><i class="fa-solid fa-flask"></i> <span>Stok Bahan</span>
+                </li>
+
+                <div id="ownerMenuSection"
+                    style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 10px; display: none;">
+                    <li class="menu-label">FITUR OWNER</li>
+                    <li class="menu-item" data-target="tab-revenue"><i class="fa-solid fa-chart-line"></i>
+                        <span>Keuangan</span></li>
+                    <li class="menu-item" data-target="tab-catalog"><i class="fa-solid fa-tags"></i> <span>Katalog &
+                            Harga</span></li>
+                    <li class="menu-item" data-target="tab-testimonials"><i class="fa-solid fa-star"></i>
+                        <span>Testimoni</span></li>
+                    <li class="menu-item" data-target="tab-galeri"><i class="fa-solid fa-images"></i> <span>Galeri
+                            Instagram</span></li>
+                    <li class="menu-item" data-target="tab-settings"><i class="fa-solid fa-gear"></i> <span>Pengaturan
+                            Web</span></li>
+                </div>
+
+                <li class="menu-label" style="margin-top:15px;">SISTEM KELUAR</li>
+                <li class="menu-item" onclick="window.logout()" style="color:#e74c3c; margin-bottom: 2rem;"><i
+                        class="fa-solid fa-right-from-bracket"></i> <span>Keluar Ops</span></li>
+            </ul>
+        </aside>
+
+        <div class="main-wrapper">
+            <header class="top-nav">
+                <div class="nav-left">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Cari data..." id="globalSearch"
+                            oninput="window.handleGlobalSearch(this.value)">
+                    </div>
+                </div>
+                <div class="nav-right">
+                    <div class="theme-toggle-btn" onclick="window.toggleTheme()"><i class="fa-regular fa-moon"
+                            id="themeIcon"></i></div>
+                    <div class="nav-user">
+                        <span class="user-greeting">Hai, <strong id="navUsername">Loading...</strong></span>
+                        <div class="user-avatar-wrapper"></div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-content">
+
+                <div id="tab-summary" class="tab-content active">
+                    <div class="dashboard-header flex-header">
+                        <div class="header-title-block">
+                            <h2>Ringkasan Kinerja</h2>
+                            <p class="subtitle-text">Pantau statistik operasional dan performa Sparkling Cleaners secara
+                                live.</p>
+                        </div>
+                    </div>
+                    <div class="kpi-grid">
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content"><span class="kpi-value"
+                                    id="kpi-completion-rate">0%</span><span class="kpi-label">Penyelesaian Order</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content"><span class="kpi-value" id="kpi-visitors">0</span><span
+                                    class="kpi-label">Total Antrian Order</span></div>
+                        </div>
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content"><span class="kpi-value" id="kpi-revenue">Rp 0</span><span
+                                    class="kpi-label">Pendapatan Bersih</span></div>
+                        </div>
+                    </div>
+                    <div class="charts-row-4">
+                        <div class="chart-card glass-card">
+                            <div class="chart-canvas-wrapper"><canvas id="chartLayananLaris"></canvas></div>
+                        </div>
+                        <div class="chart-card glass-card">
+                            <div class="chart-canvas-wrapper"><canvas id="chartMetodePesan"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-orders" class="tab-content">
+                    <div class="glass-panel">
+                        <div class="dashboard-header">
+                            <h2>Manajemen Pesanan Masuk</h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID ORDER</th>
+                                        <th>TANGGAL</th>
+                                        <th>PELANGGAN</th>
+                                        <th>LAYANAN</th>
+                                        <th>STATUS</th>
+                                        <th>AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-new-order" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Input Pesanan Baru</h2>
+                        <form onsubmit="window.processAdminOrder(event)" style="margin-top: 1.5rem;">
+                            <div class="grid grid-2">
+                                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="admName"
+                                        class="form-input" required></div>
+                                <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="admPhone"
+                                        class="form-input" required></div>
+                                <div class="form-group"><label>Jenis Barang</label><select id="admItem"
+                                        class="form-input">
+                                        <option>Sepatu</option>
+                                        <option>Helm</option>
+                                        <option>Tas</option>
+                                    </select></div>
+                                <div class="form-group"><label>Layanan</label><select id="admService"
+                                        class="form-input">
+                                        <option>Deep Clean</option>
+                                        <option>Reguler</option>
+                                        <option>Express</option>
+                                    </select></div>
+                                <div class="form-group"><label>Jumlah</label><input type="number" id="admQty"
+                                        class="form-input" value="1"></div>
+                                <div class="form-group"><label>Harga (Total)</label><input type="number" id="admPrice"
+                                        class="form-input" required></div>
+                            </div>
+                            <div class="form-group"><label>Catatan Khusus</label><textarea id="admNotes"
+                                    class="form-input" rows="3"></textarea></div>
+                            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan & Cetak
+                                Pesanan</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="tab-admin-restock" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Manajemen Restok Gudang</h2>
+                        <div class="grid grid-2" style="margin-top: 1.5rem;">
+                            <div class="glass-card" style="padding: 2rem;">
+                                <h3>Buat Request Restok</h3>
+                                <form onsubmit="window.processAdminRestockRequest(event)">
+                                    <div class="form-group"><label>Pilih Item Baku</label><select id="restockItem"
+                                            class="form-input" required></select></div>
+                                    <div class="form-group"><label>Jumlah Kebutuhan</label><input type="number"
+                                            id="restockQty" class="form-input" required></div>
+                                    <div class="form-group"><label>Catatan</label><input type="text" id="restockNotes"
+                                            class="form-input"></div>
+                                    <button class="btn btn-primary" style="width:100%;">Kirim Pengajuan</button>
+                                </form>
+                            </div>
+                            <div class="glass-card" style="padding: 2rem;" id="restockStatusContainer">
+                                <h3>Status Request Log</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-stock" class="tab-content">
+                    <div class="glass-panel">
+                        <div class="dashboard-header" style="display: flex; justify-content: space-between;">
+                            <h2>Manajemen Stok Bahan</h2>
+                            <button class="btn btn-primary owner-only" id="addStockItemBtn"
+                                onclick="window.openStockModal()">+ Item Baru</button>
+                        </div>
+                        <div class="table-container" style="margin-top: 1.5rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>NAMA BAHAN</th>
+                                        <th>STOK</th>
+                                        <th>HARGA/UNIT</th>
+                                        <th class="action-column">AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-revenue" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Laporan Keuangan & Performa</h2>
+                        <div class="grid grid-2" style="margin-top: 1.5rem;">
+                            <div class="stat-card glass-card" style="padding: 2rem;">
+                                <h3>Total Pemasukan</h3>
+                                <h2 id="rev-total">Rp 0</h2>
+                            </div>
+                            <div class="stat-card glass-card" style="padding: 2rem;">
+                                <h3>Total Pesanan</h3>
+                                <h2 id="rev-orders">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-catalog" class="tab-content">
+                    <div class="glass-panel">
+                        <div class="dashboard-header" style="display:flex; justify-content:space-between;">
+                            <div>
+                                <h2>Katalog & Paket Layanan</h2>
+                                <h4 id="stat-active-services" style="margin-top: 10px; color: var(--text-muted);">0
+                                    Layanan Aktif</h4>
+                            </div>
+                            <button class="btn btn-primary owner-only" onclick="window.openServiceModal()">+ Tambah
+                                Layanan Baru</button>
+                        </div>
+                        <div class="table-container" style="margin-top: 2rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>FOTO</th>
+                                        <th>NAMA LAYANAN</th>
+                                        <th>KATEGORI</th>
+                                        <th>TREATMENT</th>
+                                        <th>HARGA</th>
+                                        <th>ESTIMASI</th>
+                                        <th>AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="servicesListBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-testimonials" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Moderasi Testimoni Pelanggan</h2>
+                        <div class="table-container" style="margin-top: 1.5rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>PELANGGAN</th>
+                                        <th>RATING</th>
+                                        <th>KOMENTAR</th>
+                                        <th>FOTO BUKTI</th>
+                                        <th>STATUS</th>
+                                        <th>AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-galeri" class="tab-content">
+                    <div class="glass-panel">
+                        <div class="dashboard-header" style="display:flex; justify-content:space-between;">
+                            <h2>Manajemen Galeri Portofolio</h2>
+                            <button class="btn btn-primary" onclick="window.openGaleriModal()">+ Upload Foto</button>
+                        </div>
+                        <div class="table-container" style="margin-top: 1.5rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>PREVIEW</th>
+                                        <th>LINK INSTAGRAM</th>
+                                        <th>AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="galeriTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-settings" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Pengaturan Konten Website & Web Builder</h2>
+                        <div class="grid grid-2" style="margin-top: 2rem;">
+                            <div class="glass-card" style="padding: 2rem;">
+                                <h3>Hero Branding</h3>
+                                <div class="form-group"><label>Judul Utama (Hero Title)</label><input type="text"
+                                        id="configHeroTitle" class="form-input"></div>
+                                <div class="form-group"><label>Sub-judul (Hero Subtitle)</label><textarea
+                                        id="configHeroSubtitle" class="form-input" rows="3"></textarea></div>
+                                <div class="form-group"><label>Warna Teks Hero</label><input type="color"
+                                        id="configHeroColor" class="form-input"></div>
+                            </div>
+                            <div class="glass-card" style="padding: 2rem;">
+                                <h3>Kontak & Sosial Media</h3>
+                                <div class="form-group"><label>WhatsApp Admin</label><input type="text"
+                                        id="configWhatsApp" class="form-input"></div>
+                                <div class="form-group"><label>Instagram URL</label><input type="text"
+                                        id="configInstagramUrl" class="form-input"></div>
+                                <div class="form-group"><label>Alamat Workshop</label><textarea
+                                        id="configBusinessAddress" class="form-input" rows="2"></textarea></div>
+                                <div class="form-group"><label>Google Maps Embed iFrame</label><input type="text"
+                                        id="configGmapsUrl" class="form-input"></div>
+                                <div class="form-group" style="display:flex; align-items:center; gap:10px;"><input
+                                        type="checkbox" id="configWorkshopDropoff" style="width:20px; height:20px;">
+                                    <label for="configWorkshopDropoff" style="margin:0;">Aktifkan Drop-off</label></div>
+                            </div>
+                        </div>
+                        <div class="glass-card" style="padding: 2rem; margin-top: 2rem;">
+                            <h3>Slideshow Latar Belakang Hero</h3>
+                            <div style="display: flex; gap: 15px; margin-bottom: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
+                                <div class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 0;">
+                                    <label>URL Gambar Baru</label>
+                                    <input type="text" id="newSlideshowUrl" class="form-input" placeholder="Masukkan URL Gambar atau Upload">
+                                </div>
+                                <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+                                    <label>Upload File</label>
+                                    <input type="file" id="slideshowUploadFile" class="form-input" accept="image/*" onchange="window.previewSlideshowUpload(this)">
+                                </div>
+                                <button class="btn btn-primary" onclick="window.addSlideshowImage()" style="height: 46px;">+ Tambah Slide</button>
+                            </div>
+                            <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>PREVIEW</th>
+                                            <th>URL GAMBAR</th>
+                                            <th style="width: 100px;">AKSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="slideshowTableBody">
+                                        <!-- Dinamis dari JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="glass-card" style="padding: 2rem; margin-top: 2rem;">
+                            <h3>Blok Teks Konten Dinamis (About Us)</h3>
+                            <div class="form-group">
+                                <label>Motto Perusahaan (about_motto)</label>
+                                <input type="text" id="configAboutMotto" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Deskripsi Semantis (about_semantics)</label>
+                                <textarea id="configAboutSemantics" class="form-input" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Visi Perusahaan (about_vision)</label>
+                                <textarea id="configAboutVision" class="form-input" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Misi Perusahaan (about_mission)</label>
+                                <textarea id="configAboutMission" class="form-input" rows="5"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Foto Tentang Kami (URL)</label>
+                                <input type="text" id="configAboutImage" class="form-input" placeholder="Masukkan URL Foto atau Upload File" style="margin-bottom: 10px;">
+                                <input type="file" id="configAboutImageFile" class="form-input" accept="image/*" onchange="window.previewAboutImageUpload(this)">
+                            </div>
+                        </div>
+                        <button onclick="window.saveAllSettings()" class="btn btn-primary"
+                            style="width: 100%; margin-top: 2rem; padding: 1.2rem;">Simpan Perubahan Konten CMS</button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <div id="progressModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="glass-panel"
+            style="background:white; padding: 2.5rem; width: 450px; border-radius: 24px; text-align: center;">
+            <h3 style="margin-bottom: 1.5rem; color: #0f172a;">Update Progress Pesanan</h3>
+            <div class="form-group">
+                <select id="statusSelect" class="form-input">
+                    <option value="1">1. Penjemputan</option>
+                    <option value="2">2. Diterima (Antrian)</option>
+                    <option value="3">3. Proses Treatment</option>
+                    <option value="4">4. Pengeringan & Detailing</option>
+                    <option value="5">5. Menunggu Pembayaran</option>
+                    <option value="6">6. Pengantaran</option>
+                    <option value="7">7. Selesai (Lunas)</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+                <button class="btn" style="flex:1; background:#64748b; color:white;"
+                    onclick="document.getElementById('progressModal').style.display='none'">Batal</button>
+                <button class="btn btn-primary" style="flex:2;" onclick="window.saveStatusUpdate()">Simpan
+                    Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="galeriModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 500px; border-radius: 24px;">
+            <h3 id="galeriModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Foto Galeri</h3>
+            <input type="hidden" id="galeriId">
+            <div class="form-group">
+                <label>Upload Foto</label>
+                <input type="text" id="galeriImageUrl" class="form-input" placeholder="Masukkan URL Foto atau Upload"
+                    style="margin-bottom: 10px;">
+                <input type="file" id="galeriImageFile" class="form-input" accept="image/*"
+                    onchange="window.previewGaleriUpload(this)">
+            </div>
+            <div class="form-group"><label>Link Instagram</label><input type="text" id="galeriIgLink" class="form-input"
+                    placeholder="https://instagram.com/p/..."></div>
+            <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+                <button class="btn" style="flex:1; background:#64748b; color:white;"
+                    onclick="document.getElementById('galeriModal').style.display='none'">Batal</button>
+                <button class="btn btn-primary" style="flex:2;" onclick="window.saveGaleri()">Simpan Foto</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="serviceModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="glass-panel"
+            style="background:white; padding: 2.5rem; width: 600px; max-height: 90vh; overflow-y: auto; border-radius: 24px;">
+            <h3 id="serviceModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Layanan Baru</h3>
+            <form id="serviceForm" onsubmit="window.saveServiceItem(event)">
+                <input type="hidden" id="serviceFormId">
+                <div class="grid grid-2" style="gap:15px;">
+                    <div class="form-group"><label>Nama Layanan</label><input type="text" id="serviceFormName"
+                            class="form-input" required></div>
+                    <div class="form-group"><label>Kategori</label><select id="serviceFormCategory" class="form-input"
+                            required>
+                            <option>Sepatu</option>
+                            <option>Bags</option>
+                            <option>Helmets</option>
+                            <option>Repaints</option>
+                        </select></div>
+                </div>
+                <div class="grid grid-2" style="gap:15px;">
+                    <div class="form-group"><label>Jenis Treatment</label><input type="text" id="serviceFormTreatment"
+                            class="form-input" required></div>
+                    <div class="form-group"><label>Harga (Rp)</label><input type="number" id="serviceFormPrice"
+                            class="form-input" required></div>
+                </div>
+                <div class="form-group"><label>Estimasi Waktu</label><input type="text" id="serviceFormEstimation"
+                        class="form-input" required></div>
+                <div class="form-group"><label>Deskripsi</label><textarea id="serviceFormDescription" class="form-input"
+                        rows="2"></textarea></div>
+                <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+                    <button type="button" class="btn" style="flex:1; background:#64748b; color:white;"
+                        onclick="document.getElementById('serviceModal').style.display='none'">Batal</button>
+                    <button type="submit" class="btn btn-primary owner-only" style="flex:2;">Simpan Layanan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="stockModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 500px; border-radius: 24px;">
+            <h3 id="stockModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Item Stok Baru</h3>
+            <form onsubmit="window.saveStockItem(event)">
+                <input type="hidden" id="stockId">
+                <div class="form-group"><label>Nama Bahan</label><input type="text" id="stockName" class="form-input"
+                        required></div>
+                <div class="grid grid-2" style="gap:15px;">
+                    <div class="form-group"><label>Kategori</label><input type="text" id="stockCategory"
+                            class="form-input" required></div>
+                    <div class="form-group"><label>Satuan (Unit)</label><input type="text" id="stockUnit"
+                            class="form-input" required></div>
+                </div>
+                <div class="grid grid-2" style="gap:15px;">
+                    <div class="form-group"><label>Harga per Unit</label><input type="number" id="stockPrice"
+                            class="form-input" required></div>
+                    <div class="form-group"><label>Stok Awal</label><input type="number" step="0.1" id="stockQty"
+                            class="form-input" required></div>
+                </div>
+                <input type="hidden" id="stockMin" value="2">
+                <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+                    <button type="button" class="btn" style="flex:1; background:#64748b; color:white;"
+                        onclick="document.getElementById('stockModal').style.display='none'">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="flex:2;">Simpan Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Image Slider Modal -->
+    <div id="imageSliderModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; justify-content:center; align-items:center;">
+        <span onclick="window.closeImageSlider()" style="position:absolute; top:20px; right:30px; font-size:40px; color:white; cursor:pointer; font-weight:bold; z-index:10001;">&times;</span>
+        <button onclick="window.slideImage(-1)" style="position:absolute; left:20px; font-size:40px; color:white; background:transparent; border:none; cursor:pointer; padding:20px; z-index:10001;">&#10094;</button>
+        <img id="sliderImage" src="" style="max-width:80%; max-height:80%; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); object-fit:contain; transition: opacity 0.3s;">
+        <button onclick="window.slideImage(1)" style="position:absolute; right:20px; font-size:40px; color:white; background:transparent; border:none; cursor:pointer; padding:20px; z-index:10001;">&#10095;</button>
+        <div id="sliderIndicator" style="position:absolute; bottom:30px; color:white; font-size:18px; font-weight:bold; z-index:10001;">1 / 1</div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>

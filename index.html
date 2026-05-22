@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkling Cleaners Malang | Laundry Sepatu & Helm Premium</title>
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <meta name="description" content="Layanan cuci spesialis Sepatu, Tas, Helm premium di Malang. Aesthetic, terpercaya, dan profesional.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="styles/main.css?v=4">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar glass-panel">
+        <a href="index.html" class="logo-container">
+            <div class="logo-img-wrapper">
+                <img src="assets/logo.png" alt="Logo Sparkling" class="logo-img">
+            </div>
+            <span class="logo-text">SPARKLING<small>CLEANERS</small></span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">Beranda</a></li>
+            <li><a href="layanan.html">Layanan & Pesan</a></li>
+            <li><a href="lacak.html">Lacak Pesanan</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section: Full 100vh Slideshow -->
+    <section class="hero-fullscreen" id="heroSection">
+        <div class="hero-slideshow-container" id="heroSlideshow"></div>
+        <div class="hero-overlay-fade" id="heroOverlay"></div>
+        <div class="hero-content-center">
+            <div class="hero-text-box glass-panel" style="padding: 2rem; border-radius: 16px; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px);">
+                <h1 id="heroTitle" style="color: #ffffff; text-shadow: 1px 1px 4px rgba(0,0,0,0.8);">Laundry Sepatu & Helm Premium di Malang</h1>
+                <p id="heroSubtitle" style="color: #f8fafc; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">Kembalikan kilau sepatu kesayanganmu dengan teknologi deep clean terbaru kami.</p>
+                <a href="layanan.html" class="btn btn-primary" style="margin-top: 1rem;">Pesan Sekarang <i class="fa-solid fa-arrow-right" style="margin-left:8px;"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us -->
+    <section id="about" class="section container">
+        <div class="text-center mb-2">
+            <h2>Tentang Kami</h2>
+            <p>Kenali lebih dekat siapa di balik Sparkling Cleaners.</p>
+        </div>
+        <div class="about-layout" id="aboutContainer" style="display:flex; flex-direction:column; gap:2rem; align-items:center; text-align:center;">
+            <!-- Rendered dynamically from tabel_about -->
+        </div>
+    </section>
+
+    <!-- Instagram Gallery -->
+    <section id="galeri" class="section container">
+        <div class="text-center mb-2">
+            <h2>Galeri Instagram</h2>
+            <p>Lihat hasil kerja kami langsung dari feed resmi.</p>
+        </div>
+        <div class="gallery-grid" id="galleryContainer">
+            <!-- Rendered dynamically from tabel_galeri -->
+        </div>
+    </section>
+
+    <!-- Testimoni Slider -->
+    <section id="testimoni" class="section container">
+        <div class="text-center mb-2">
+            <h2>Kata Mereka</h2>
+            <p>Ribuan pelanggan telah mempercayakan perawatannya pada kami.</p>
+        </div>
+        <div class="testimonial-slider-wrapper">
+            <div class="testimonial-slider" id="testimonialSlider">
+                <!-- Single card rendered dynamically -->
+            </div>
+        </div>
+        <div class="text-center mt-2">
+            <button class="btn btn-secondary" onclick="window.openTestimoniModal()">Tulis Ulasan Anda <i class="fa-solid fa-pen-nib" style="margin-left:8px;"></i></button>
+        </div>
+    </section>
+
+    <!-- Removed Artikel Section -->
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="logo-container" style="margin-bottom: 1.5rem;">
+                    <div class="logo-img-wrapper">
+                        <img src="assets/logo.png" alt="Logo Sparkling" class="logo-img">
+                    </div>
+                    <span class="logo-text" style="color: white;">SPARKLING<small style="color:rgba(255,255,255,0.7);">CLEANERS</small></span>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); max-width: 300px;">Merawat dengan hati, membersihkan dengan dengan presisi. Solusi utama untuk kebersihan barang mewah maupun keseharian Anda.</p>
+
+                <h4 style="color:white; margin-top: 2rem;">Kontak Kami</h4>
+                <div style="display:flex; flex-direction:column; gap: 8px; margin-top: 0.5rem;">
+                    <a id="footerWaLink" href="https://wa.me/6285965957290" target="_blank" style="color:var(--accent-yellow); text-decoration: none; font-weight:600;"><i class="fa-brands fa-whatsapp" style="margin-right:6px;"></i> WhatsApp Admin</a>
+                    <a id="footerEmailLink" href="mailto:sparklingcleaners.mlg@gmail.com" style="color:rgba(255,255,255,0.7); text-decoration: none;"><i class="fa-solid fa-envelope" style="margin-right:6px;"></i> sparklingcleaners.mlg@gmail.com</a>
+                    <a id="footerIgLink" href="https://instagram.com/sparklingcleaners_mlg" target="_blank" style="color:rgba(255,255,255,0.7); text-decoration: none;"><i class="fa-brands fa-instagram" style="margin-right:6px;"></i> @sparklingcleaners_mlg</a>
+                </div>
+
+                <div class="qr-container mt-2" style="margin-top: 2rem; background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 16px; max-width: 200px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
+                    <div id="ig-qr-code"></div>
+                    <p style="margin-top:10px; font-size:0.8rem; text-align:center; color:rgba(255,255,255,0.8); margin-bottom:0;">Scan untuk ikuti kami</p>
+                </div>
+            </div>
+            <div class="footer-location">
+                <h3 style="color:white;">Lokasi Kami</h3>
+                <div class="footer-maps">
+                    <iframe id="footerMapsIframe"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15802.215570059379!2d112.5855026601438!3d-8.044810756779491!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7882afb4455555%3A0xe6bf4dc34ac8c406!2sWagir%2C%20Malang%20Regency%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid"
+                        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+                <p class="footer-address" id="footerAddress">
+                    <strong style="color: var(--accent-yellow);">Workshop Wagir:</strong><br>
+                    Jl. Jamuran Rt.06 Rw. 02 Dusun Jamuran,<br>
+                    Desa Sukodadi, Kecamatan Wagir,<br>
+                    Kabupaten Malang, Jawa Timur, Indonesia.
+                </p>
+                <a id="footerMapsLink" href="https://maps.google.com/?q=-8.0261,112.5855" target="_blank" style="color: var(--primary-sky); text-decoration: none; font-size: 0.9rem; margin-top: 5px; display: inline-block;">
+                    <i class="fa-solid fa-map-location-dot"></i> Buka via Google Maps
+                </a>
+            </div>
+        </div>
+        <div class="container copyright">
+            &copy; 2026 Sparkling Cleaners Malang. All rights reserved. Designed with Glassmorphism. | <a href="login.html" style="color: inherit; text-decoration: none;">Admin</a>
+        </div>
+    </footer>
+
+    <!-- Modal Testimoni -->
+    <div id="testimoniModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+        <div class="glass-panel" style="background:rgba(255,255,255,0.9); padding: 2.5rem; width: 500px; max-width: 90%; border-radius: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h3 style="margin:0;">Tulis Ulasan</h3>
+                <button onclick="window.closeTestimoniModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+            </div>
+            <form id="testimoniForm" onsubmit="window.submitTestimoni(event)">
+                <div class="input-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="reviewerName" class="form-control" placeholder="Cth: Budi Santoso" required>
+                    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="isAnonim" style="width: 16px; height: 16px; cursor: pointer;">
+                        <label for="isAnonim" style="margin: 0; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">Tampilkan nama secara anonim</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Penilaian (Rating Bintang)</label>
+                    <div style="display:flex; align-items:center;">
+                        <div class="star-rating" id="modalStarRating">
+                            <i class="fa-solid fa-star" data-rating="1"></i>
+                            <i class="fa-solid fa-star" data-rating="2"></i>
+                            <i class="fa-solid fa-star" data-rating="3"></i>
+                            <i class="fa-solid fa-star" data-rating="4"></i>
+                            <i class="fa-solid fa-star" data-rating="5"></i>
+                        </div>
+                        <span id="ratingText" style="font-size: 0.85rem; color: var(--text-muted); margin-left:15px; font-weight: 600;">Klik untuk menilai</span>
+                    </div>
+                    <input type="number" id="ratingValue" style="opacity:0; position:absolute; z-index:-1;" required>
+                </div>
+                <div class="input-group">
+                    <label>Pesan / Cerita</label>
+                    <textarea id="reviewerMessage" class="form-control" rows="3" placeholder="Ceritakan pengalaman Anda..." required></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Bukti Foto Barang (Opsional)</label>
+                    <input type="file" id="reviewerPhoto" accept=".jpg,.jpeg,.png,.webp,.avif" class="form-control" style="padding: 0.6rem; background: var(--white);" multiple>
+                </div>
+                <button type="submit" id="submitTestimoniBtn" class="btn btn-primary" style="width:100%; margin-top:1rem;">Kirim Testimoni <i class="fa-solid fa-paper-plane" style="margin-left: 5px;"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gallery Preview Modal -->
+    <div id="galleryPreviewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:11000; justify-content:center; align-items:center; backdrop-filter:blur(10px); cursor:pointer;" onclick="this.style.display='none'">
+        <img id="galleryPreviewImg" src="" alt="Preview" style="max-width:90%; max-height:90%; object-fit:contain; border-radius:16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    </div>
+
+    <script src="js/db.js?v=4"></script>
+    <script src="js/beranda.js?v=4"></script>
+</body>
+
+</html>

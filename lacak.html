@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lacak Pesanan | Sparkling Cleaners Malang</title>
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <meta name="description" content="Lacak status pengerjaan cuci sepatu, tas, helm Anda secara real-time di Sparkling Cleaners Malang.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="styles/main.css?v=4">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar glass-panel">
+        <a href="index.html" class="logo-container">
+            <div class="logo-img-wrapper">
+                <img src="assets/logo.png" alt="Logo Sparkling" class="logo-img">
+            </div>
+            <span class="logo-text">SPARKLING<small>CLEANERS</small></span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="layanan.html">Layanan & Pesan</a></li>
+            <li><a href="lacak.html" class="active">Lacak Pesanan</a></li>
+        </ul>
+    </nav>
+
+    <!-- Header Section -->
+    <section class="section container" style="padding-top: 3rem; padding-bottom: 0;">
+        <div class="text-center">
+            <h1 style="font-size:2.5rem; background: linear-gradient(135deg, var(--primary-navy), var(--primary-sky)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Lacak Pesanan Anda</h1>
+            <p style="max-width:600px; margin:0 auto; color:var(--text-muted);">Masukkan Kode Order atau Nomor WhatsApp Anda untuk melihat status pengerjaan secara real-time.</p>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section class="section container" style="padding-top: 2rem; padding-bottom: 4rem;">
+        <div class="glass-panel" style="max-width: 600px; margin: 0 auto; padding: 2.5rem;">
+            <form id="trackerForm" onsubmit="window.trackOrder(event)">
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <label for="trackInput" style="font-size: 1.05rem;">Kode Order / No. WhatsApp</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="trackInput" class="form-control" placeholder="Cth: SPK-20260521-123 atau 0812..." required style="flex: 1;">
+                        <button type="submit" id="btnTrack" class="btn btn-primary" style="padding: 0 2rem;"><i class="fa-solid fa-magnifying-glass"></i> Cari</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Result / Status Section -->
+    <section id="trackingResultSection" class="section container" style="padding-top: 0; display: none;">
+        <div class="glass-panel" style="max-width: 800px; margin: 0 auto; padding: 2.5rem;">
+            <!-- Order Details Overview -->
+            <div id="orderOverview" class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem; background: rgba(255,255,255,0.8); border: 1px solid rgba(52, 152, 219, 0.25);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Nomor Order</span>
+                        <strong id="resOrderId" style="font-size: 1.2rem; color: var(--primary-navy);">-</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Nama Pelanggan</span>
+                        <strong id="resCustName" style="font-size: 1.1rem; color: var(--primary-navy);">-</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Metode Order</span>
+                        <span id="resServiceType" class="badge badge-regular">-</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Status Pembayaran</span>
+                        <span id="resPaymentStatus" class="status-badge">-</span>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.05); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Layanan</span>
+                        <span id="resServicesList" style="font-weight: 600; color: var(--primary-navy);">-</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Tanggal Pesan</span>
+                        <span id="resOrderDate" style="font-weight: 600; color: var(--primary-navy);">-</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Opsi Pengantaran</span>
+                        <span id="resDelivery" style="font-weight: 600; color: var(--primary-navy);">-</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Total Biaya</span>
+                        <strong id="resTotal" style="color: var(--primary-sky); font-size: 1.1rem;">-</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7-Stage Stepper -->
+            <h3 style="margin-bottom: 1.5rem; color: var(--primary-navy);"><i class="fa-solid fa-road-circle-check" style="margin-right:8px; color:var(--primary-sky);"></i> Timeline Pengerjaan</h3>
+            
+            <div class="tracking-stepper" id="trackingStepper">
+                <div class="tracking-step" id="step-1">
+                    <div class="step-icon-container">
+                        <div class="step-icon"><i class="fa-solid fa-truck"></i></div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-details">
+                        <h4 class="step-title">1. Penjemputan / Drop-off</h4>
+                        <p class="step-desc">Driver sedang menuju lokasi penjemputan atau menunggu serah terima di workshop.</p>
+                    </div>
+                </div>
+                
+                <div class="tracking-step" id="step-2">
+                    <div class="step-icon-container">
+                        <div class="step-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-details">
+                        <h4 class="step-title">2. Antrian Workshop</h4>
+                        <p class="step-desc">Barang telah masuk antrian di workshop kami untuk pemeriksaan material awal.</p>
+                    </div>
+                </div>
+                
+                <div class="tracking-step" id="step-3">
+                    <div class="step-icon-container">
+                        <div class="step-icon"><i class="fa-solid fa-spray-can-sparkles"></i></div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-details">
+                        <h4 class="step-title">3. Proses Treatment</h4>
+                        <p class="step-desc">Pencucian mendalam (deep clean) / treatment khusus sedang dikerjakan secara presisi.</p>
+                    </div>
+                </div>
+                
+                <div class="tracking-step" id="step-4">
+                    <div class="step-icon-container">
+                        <div class="step-icon"><i class="fa-solid fa-wind"></i></div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-details">
+                        <h4 class="step-title">4. Pengeringan & Detailing</h4>
+                        <p class="step-desc">Tahap pengeringan alami (anti-heat), detailing noda membandel, serta QC kelayakan akhir.</p>
+                    </div>
+                </div>
+                
+                <div class="tracking-step" id="step-5">
+                    <div class="step-icon-container">
+                        <div class="step-icon"><i class="fa-solid fa-credit-card"></i></div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-details">
+                        <h4 class="step-title">5. Menunggu Pembayaran</h4>
+                        <p class="step-desc">Pekerjaan selesai. Menunggu konfirmasi pembayaran oleh pelanggan agar bisa dikirim/diambil.</p>
+                    </div>
+                </div>
+                
+                <div class="tracking-step" id="step-6">
+                    <div class="step-icon-container">
+                        <div class="step-icon"><i class="fa-solid fa-shipping-fast"></i></div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-details">
+                        <h4 class="step-title">6. Pengantaran / Siap Diambil</h4>
+                        <p class="step-desc">Kurir sedang mengirim pesanan ke alamat Anda atau barang siap Anda ambil di workshop.</p>
+                    </div>
+                </div>
+                
+                <div class="tracking-step" id="step-7">
+                    <div class="step-icon-container">
+                        <div class="step-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-details">
+                        <h4 class="step-title">7. Selesai</h4>
+                        <p class="step-desc">Pesanan telah diterima. Terima kasih telah mempercayakan perawatan premium Anda pada kami!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="logo-container" style="margin-bottom: 1.5rem;">
+                    <div class="logo-img-wrapper">
+                        <img src="assets/logo.png" alt="Logo Sparkling" class="logo-img">
+                    </div>
+                    <span class="logo-text" style="color: white;">SPARKLING<small style="color:rgba(255,255,255,0.7);">CLEANERS</small></span>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); max-width: 300px;">Merawat dengan hati, membersihkan dengan dengan presisi. Solusi utama untuk kebersihan barang mewah maupun keseharian Anda.</p>
+
+                <h4 style="color:white; margin-top: 2rem;">Kontak Kami</h4>
+                <div style="display:flex; flex-direction:column; gap: 8px; margin-top: 0.5rem;">
+                    <a id="footerWaLink" href="https://wa.me/6285965957290" target="_blank" style="color:var(--accent-yellow); text-decoration: none; font-weight:600;"><i class="fa-brands fa-whatsapp" style="margin-right:6px;"></i> WhatsApp Admin</a>
+                    <a id="footerEmailLink" href="mailto:sparklingcleaners.mlg@gmail.com" style="color:rgba(255,255,255,0.7); text-decoration: none;"><i class="fa-solid fa-envelope" style="margin-right:6px;"></i> sparklingcleaners.mlg@gmail.com</a>
+                    <a id="footerIgLink" href="https://instagram.com/sparklingcleaners_mlg" target="_blank" style="color:rgba(255,255,255,0.7); text-decoration: none;"><i class="fa-brands fa-instagram" style="margin-right:6px;"></i> @sparklingcleaners_mlg</a>
+                </div>
+
+                <div class="qr-container mt-2" style="margin-top: 2rem; background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 16px; max-width: 200px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
+                    <div id="ig-qr-code"></div>
+                    <p style="margin-top:10px; font-size:0.8rem; text-align:center; color:rgba(255,255,255,0.8); margin-bottom:0;">Scan untuk ikuti kami</p>
+                </div>
+            </div>
+            <div class="footer-location">
+                <h3 style="color:white;">Lokasi Kami</h3>
+                <div class="footer-maps">
+                    <iframe id="footerMapsIframe"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15802.215570059379!2d112.5855026601438!3d-8.044810756779491!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7882afb4455555%3A0xe6bf4dc34ac8c406!2sWagir%2C%20Malang%20Regency%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid"
+                        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+                <p class="footer-address" id="footerAddress">
+                    <strong style="color: var(--accent-yellow);">Workshop Wagir:</strong><br>
+                    Jl. Jamuran Rt.06 Rw. 02 Dusun Jamuran,<br>
+                    Desa Sukodadi, Kecamatan Wagir,<br>
+                    Kabupaten Malang, Jawa Timur, Indonesia.
+                </p>
+                <a id="footerMapsLink" href="https://maps.google.com/?q=-8.0261,112.5855" target="_blank" style="color: var(--primary-sky); text-decoration: none; font-size: 0.9rem; margin-top: 5px; display: inline-block;">
+                    <i class="fa-solid fa-map-location-dot"></i> Buka via Google Maps
+                </a>
+            </div>
+        </div>
+        <div class="container copyright">
+            &copy; 2026 Sparkling Cleaners Malang. All rights reserved. Designed with Glassmorphism. | <a href="login.html" style="color: inherit; text-decoration: none;">Admin</a>
+        </div>
+    </footer>
+
+    <script src="js/db.js?v=4"></script>
+    <script src="js/lacak.js?v=4"></script>
+</body>
+
+</html>

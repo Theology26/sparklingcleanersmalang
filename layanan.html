@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layanan & Pemesanan | Sparkling Cleaners Malang</title>
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <meta name="description" content="Pesan layanan cuci sepatu, tas, helm premium di Sparkling Cleaners Malang. Pilih layanan, checkout, dan lacak pesanan Anda.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/main.css?v=4">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar glass-panel">
+        <a href="index.html" class="logo-container">
+            <div class="logo-img-wrapper">
+                <img src="assets/logo.png" alt="Logo Sparkling" class="logo-img">
+            </div>
+            <span class="logo-text">SPARKLING<small>CLEANERS</small></span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="layanan.html" class="active">Layanan & Pesan</a></li>
+            <li><a href="lacak.html">Lacak Pesanan</a></li>
+        </ul>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="section container" style="padding-top: 2rem; padding-bottom: 0;">
+        <div class="text-center">
+            <h1 style="font-size:2.5rem; background: linear-gradient(135deg, var(--primary-navy), var(--primary-sky)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Katalog Layanan Kami</h1>
+            <p style="max-width:600px; margin:0 auto; color:var(--text-muted);">Pilih layanan yang Anda butuhkan. Setiap item memiliki harga dan estimasi pengerjaan yang jelas.</p>
+        </div>
+    </section>
+
+    <!-- Dynamic Catalog Grid -->
+    <section id="katalog" class="section container">
+        <div id="services-grid" class="grid grid-3">
+            <div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
+                <p style="margin-top:1rem;">Memuat katalog layanan...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Repaint Shoes Service Color Preview -->
+    <section id="colors" class="section container">
+        <div class="text-center mb-2">
+            <h2>Pilihan Warna - Repaint Shoes Service</h2>
+            <p>Pilih katalog warna premium untuk pengerjaan repaint sepatu canvas, leather, dan suede.</p>
+        </div>
+        <div class="color-tabs" style="display:flex; justify-content:center; gap:10px; margin-bottom:1.5rem;">
+            <button class="btn btn-primary" onclick="window.filterColors('Kode P')" id="tabKodeP">Kode P</button>
+            <button class="btn btn-secondary" onclick="window.filterColors('Kode S')" id="tabKodeS">Kode S</button>
+            <button class="btn btn-secondary" onclick="window.filterColors('Suede')" id="tabSuede">Suede</button>
+        </div>
+        <div class="glass-panel" style="padding:2rem;">
+            <div class="color-grid" id="colorContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:15px; text-align:center;">
+                <!-- Dynamically rendered -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Delivery Info -->
+    <section id="delivery-info" class="section container">
+        <div class="text-center mb-2">
+            <h2>Informasi Antar Jemput</h2>
+            <p>Kami menyediakan layanan pickup & delivery untuk kenyamanan Anda.</p>
+        </div>
+        <div class="grid grid-2">
+            <div class="glass-card" style="padding: 2rem;">
+                <h3 style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-truck-fast" style="color:var(--primary-sky);"></i> Ketentuan Ongkir</h3>
+                <ul style="list-style:none; margin-top:1rem; line-height:2;">
+                    <li><i class="fa-solid fa-check" style="color:#2ecc71; margin-right:10px;"></i> <strong>0 KM - 10 KM:</strong> <span class="badge badge-regular">FREE ONGKIR</span></li>
+                    <li><i class="fa-solid fa-triangle-exclamation" style="color:var(--accent-yellow); margin-right:10px;"></i> <strong>Lebih dari 10 KM:</strong> Dikenakan +Rp 2.000 / KM</li>
+                    <li><i class="fa-solid fa-location-dot" style="color:var(--text-muted); margin-right:10px;"></i> Titik awal (START) dari: Dusun Jamuran, Sukodadi Wagir</li>
+                </ul>
+            </div>
+            <div class="glass-card" style="padding: 2rem;">
+                <h3 style="display:flex; align-items:center; gap:10px;"><i class="fa-regular fa-calendar" style="color:var(--primary-sky);"></i> Jadwal Pickup</h3>
+                <div style="margin-top:1rem;">
+                    <strong style="color:var(--primary-navy);">Senin - Jumat:</strong>
+                    <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                        <span class="badge badge-regular">Sesi 1: 07.00 - 09.00</span>
+                        <span class="badge badge-regular">Sesi 2: 11.00 - 13.00</span>
+                        <span class="badge badge-regular">Sesi 3: 17.00 - 19.00</span>
+                    </div>
+                    <div style="margin-top:1.5rem; color:#e74c3c; font-weight:600;">
+                        <i class="fa-solid fa-calendar-xmark" style="margin-right:5px;"></i> Sabtu - Minggu: LIBUR
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking / Checkout -->
+    <section id="booking" class="section container" style="display: none;">
+        <div class="glass-panel" style="padding: 0;">
+            <button type="button" class="booking-modal-close" onclick="window.closeCheckout()" aria-label="Tutup Form Pemesanan">&times;</button>
+            <div class="checkout-layout">
+                <div style="padding: 2.5rem;">
+                    <h2>Form Order & Booking</h2>
+                    <p>Silakan lengkapi data pesanan Anda di bawah ini.</p>
+                    <div class="info-card mt-2">
+                        <h4>Catatan Penting:</h4>
+                        <ul>
+                            <li><i class="fa-solid fa-shield-halved"></i> Garansi cuci ulang 1x berlaku 1 hari setelah barang diambil (kondisi belum dipakai).</li>
+                            <li><i class="fa-solid fa-clock"></i> Estimasi waktu bisa berubah tergantung kondisi antrean / cuaca.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="margin: 0 2rem 2rem; padding: 2rem;">
+                    <form id="orderForm" onsubmit="window.processOrder(event)">
+                        <div class="input-group">
+                            <label>Nama Lengkap</label>
+                            <input type="text" id="orderName" class="form-control" required placeholder="Cth: Budi Santoso">
+                        </div>
+                        <div class="input-group">
+                            <label>Nomor WhatsApp</label>
+                            <input type="tel" id="orderPhone" class="form-control" required placeholder="Cth: 08123456789">
+                        </div>
+
+                        <input type="hidden" id="orderItemType" value="Multi-Item">
+                        <input type="hidden" id="orderQty" value="1">
+                        <input type="hidden" id="orderTreatmentType" value="Multi-Item">
+
+                        <div class="input-group">
+                            <label>Layanan yang Dipilih</label>
+                            <div id="checkoutCartList" style="background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1.2rem; display: flex; flex-direction: column; gap: 8px;">
+                                <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin: 0;">Keranjang kosong. Pilih layanan di atas.</p>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Layanan Express (Opsional)</label>
+                            <select id="orderExpress" class="form-control" onchange="window.calculateTotal()">
+                                <option value="none">Tidak Pakai (Normal)</option>
+                                <option value="8 Jam">Super Express (8 Jam) +Rp 20.000 / item</option>
+                                <option value="18 Jam">Express (18 Jam) +Rp 15.000 / item</option>
+                                <option value="24 Jam">Sameday (24 Jam) +Rp 10.000 / item</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group" style="margin-bottom: 1.5rem;">
+                            <label>Opsi Pengiriman</label>
+                            <select id="orderDelivery" class="form-control" required onchange="window.toggleDeliveryOptions(this.value)">
+                                <option value="Ya">Jemput / Antar ke Alamat (Antar-Jemput)</option>
+                            </select>
+                        </div>
+
+                        <div id="deliveryDetails" style="display: block; background: rgba(52, 152, 219, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(52, 152, 219, 0.2);">
+                            <div class="input-group">
+                                <label>Alamat Lengkap</label>
+                                <textarea id="orderAddress" class="form-control" rows="2" placeholder="Nama Jalan, RT/RW, Kecamatan, Patokan..." required onchange="window.calculateTotal()"></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label>Jarak (KM dari Wagir)</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" id="orderDistance" class="form-control" min="0" value="0" onchange="window.calculateTotal()" style="flex: 1;">
+                                    <button type="button" class="btn btn-secondary" onclick="window.calculateDistanceGPS()" id="btnGps" style="padding: 0 1rem;"><i class="fa-solid fa-location-crosshairs"></i> GPS</button>
+                                </div>
+                                <small style="color:var(--text-muted);" id="gpsStatus">Isi manual atau klik GPS untuk hitung otomatis.</small>
+                            </div>
+                            <div class="input-group" style="margin-bottom:0;">
+                                <label>Jadwal Penjemputan</label>
+                                <select id="orderSchedule" class="form-control">
+                                    <option value="Sesi 1 (07.00 - 09.00)">Sesi 1 (07.00 - 09.00)</option>
+                                    <option value="Sesi 2 (11.00 - 13.00)">Sesi 2 (11.00 - 13.00)</option>
+                                    <option value="Sesi 3 (17.00 - 19.00)">Sesi 3 (17.00 - 19.00)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Catatan Tambahan</label>
+                            <textarea id="orderNotes" class="form-control" rows="2" placeholder="Sebutkan keluhan: noda tinta, warna pudar, dll..."></textarea>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Foto Kondisi Awal Barang (Opsional tapi Disarankan)</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="orderPhoto" class="file-upload-input" accept="image/*" onchange="window.previewPhoto(this)">
+                                <div class="file-upload-btn">
+                                    <i class="fa-solid fa-camera"></i> Pilih Foto Barang
+                                </div>
+                                <img id="photoPreview" class="preview-image" src="" alt="Preview">
+                            </div>
+                        </div>
+
+                        <!-- Summary Box -->
+                        <div class="order-summary" id="orderSummaryBox">
+                            <h3>Ringkasan Pesanan</h3>
+                            <div class="summary-row"><span>Layanan Utama</span><span id="sumService">Rp 0</span></div>
+                            <div class="summary-row"><span>Biaya Tambahan (Express)</span><span id="sumExpress">Rp 0</span></div>
+                            <div class="summary-row"><span>Ongkos Kirim</span><span id="sumOngkir">Rp 0</span></div>
+                            <div class="summary-row"><span>Estimasi Selesai</span><span id="sumEst" style="color:var(--primary-sky); font-weight:600;">-</span></div>
+                            <div class="summary-row total"><span>Total Biaya</span><span id="sumTotal">Rp 0</span></div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem; display: flex; gap: 10px; align-items: flex-start;">
+                            <input type="checkbox" id="orderTerms" required style="margin-top:5px; width: 18px; height: 18px; cursor: pointer;">
+                            <label for="orderTerms" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; line-height:1.4;">Saya telah membaca dan menyetujui syarat & ketentuan, serta memahami bahwa garansi hanya berlaku maksimal 1 hari setelah barang diambil.</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1.2rem;">Konfirmasi & Kirim Pesanan <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="logo-container" style="margin-bottom: 1.5rem;">
+                    <div class="logo-img-wrapper">
+                        <img src="assets/logo.png" alt="Logo Sparkling" class="logo-img">
+                    </div>
+                    <span class="logo-text" style="color: white;">SPARKLING<small style="color:rgba(255,255,255,0.7);">CLEANERS</small></span>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); max-width: 300px;">Merawat dengan hati, membersihkan dengan dengan presisi. Solusi utama untuk kebersihan barang mewah maupun keseharian Anda.</p>
+
+                <h4 style="color:white; margin-top: 2rem;">Kontak Kami</h4>
+                <div style="display:flex; flex-direction:column; gap: 8px; margin-top: 0.5rem;">
+                    <a id="footerWaLink" href="https://wa.me/6285965957290" target="_blank" style="color:var(--accent-yellow); text-decoration: none; font-weight:600;"><i class="fa-brands fa-whatsapp" style="margin-right:6px;"></i> WhatsApp Admin</a>
+                    <a id="footerEmailLink" href="mailto:sparklingcleaners.mlg@gmail.com" style="color:rgba(255,255,255,0.7); text-decoration: none;"><i class="fa-solid fa-envelope" style="margin-right:6px;"></i> sparklingcleaners.mlg@gmail.com</a>
+                    <a id="footerIgLink" href="https://instagram.com/sparklingcleaners_mlg" target="_blank" style="color:rgba(255,255,255,0.7); text-decoration: none;"><i class="fa-brands fa-instagram" style="margin-right:6px;"></i> @sparklingcleaners_mlg</a>
+                </div>
+
+                <div class="qr-container mt-2" style="margin-top: 2rem; background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 16px; max-width: 200px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
+                    <div id="ig-qr-code"></div>
+                    <p style="margin-top:10px; font-size:0.8rem; text-align:center; color:rgba(255,255,255,0.8); margin-bottom:0;">Scan untuk ikuti kami</p>
+                </div>
+            </div>
+            <div class="footer-location">
+                <h3 style="color:white;">Lokasi Kami</h3>
+                <div class="footer-maps">
+                    <iframe id="footerMapsIframe"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15802.215570059379!2d112.5855026601438!3d-8.044810756779491!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7882afb4455555%3A0xe6bf4dc34ac8c406!2sWagir%2C%20Malang%20Regency%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid"
+                        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+                <p class="footer-address" id="footerAddress">
+                    <strong style="color: var(--accent-yellow);">Workshop Wagir:</strong><br>
+                    Jl. Jamuran Rt.06 Rw. 02 Dusun Jamuran,<br>
+                    Desa Sukodadi, Kecamatan Wagir,<br>
+                    Kabupaten Malang, Jawa Timur, Indonesia.
+                </p>
+                <a id="footerMapsLink" href="https://maps.google.com/?q=-8.0261,112.5855" target="_blank" style="color: var(--primary-sky); text-decoration: none; font-size: 0.9rem; margin-top: 5px; display: inline-block;">
+                    <i class="fa-solid fa-map-location-dot"></i> Buka via Google Maps
+                </a>
+            </div>
+        </div>
+        <div class="container copyright">
+            &copy; 2026 Sparkling Cleaners Malang. All rights reserved. Designed with Glassmorphism. | <a href="login.html" style="color: inherit; text-decoration: none;">Admin</a>
+        </div>
+    </footer>
+
+    <!-- Floating Cart Button -->
+    <div class="floating-cart-btn" id="floatingCartBtn" style="display: none;" onclick="window.toggleCartDrawer(true)">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <div class="floating-cart-badge" id="floatingCartBadge">0</div>
+    </div>
+
+    <!-- Cart Drawer -->
+    <div class="cart-drawer" id="cartDrawer">
+        <div class="cart-drawer-header">
+            <h3>Keranjang Layanan</h3>
+            <button class="cart-drawer-close" onclick="window.toggleCartDrawer(false)">&times;</button>
+        </div>
+        <div class="cart-items-list" id="cartDrawerList"></div>
+        <div class="cart-drawer-footer">
+            <div class="cart-subtotal">
+                <span>Subtotal</span>
+                <span id="cartDrawerSubtotal">Rp 0</span>
+            </div>
+            <button type="button" class="btn btn-primary" style="width: 100%; text-align: center; display: block; border: none;" onclick="window.toggleCartDrawer(false); window.revealCheckout();">Lanjut ke Pemesanan <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></button>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox-modal" id="lightboxModal">
+        <button class="lightbox-close" onclick="window.closeLightbox()">&times;</button>
+        <button class="lightbox-btn lightbox-prev" onclick="window.prevLightboxSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="lightbox-btn lightbox-next" onclick="window.nextLightboxSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+        <div class="lightbox-content">
+            <div class="lightbox-slider-wrapper">
+                <div class="lightbox-slider" id="lightboxSlider"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js?v=4"></script>
+    <script src="js/layanan.js?v=4"></script>
+</body>
+
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+.env
+FULL_CODE_BACKUP.txt
+*.log
+.DS_Store
+git_diff_dashboard.txt
+git_diff_dashboard_utf8.txt
