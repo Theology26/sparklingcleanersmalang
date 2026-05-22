@@ -114,21 +114,21 @@ sparklingcleanersmalang/
 
 Proyek **Sparkling Cleaners Malang** ini dikembangkan secara kolaboratif oleh tim pengembang berbakat:
 
-1. **Yosi Grace Theo (Theology26)** - *Project Leader & Backend Integrator*
+1. **YOSIA GRACETHEO BOIMAU (Theology26)** - *Project Leader & Backend Integrator*
    - Merancang integrasi backend Node.js & Express.js.
    - Mengatur arsitektur database, sinkronisasi MySQL, dan API routing utama.
    - Menggabungkan kode dari berbagai cabang kontributor secara aman.
    - Mengembangkan halaman landing page customer secara penuh.
 
-2. **Valentino Irving (Xazorken)** - *Dashboard Analyst & UI Designer*
+2. **VALENTINO IRVING CHRISTOPHER DARMOJUWONO (Xazorken)** - *Dashboard Analyst & UI Designer*
    - Mengimplementasikan visualisasi data finansial interaktif menggunakan Chart.js.
    - Merancang antarmuka Dashboard Owner dengan dukungan Dark Mode yang premium.
 
-3. **Steven (stevenchristm)** - *Feature Engineer*
+3. **STEVEN CHRISTOPHER MARTIN (stevenchristm)** - *Feature Engineer*
    - Mengembangkan fitur manajemen kategori layanan dinamis.
    - Mengoptimalkan data binding dan perbaikan alur database untuk operasional toko.
 
-4. **Christian Anthony Sucipto (ChristianAnthonySucipto)** - *Catalog & Pricing Specialist*
+4. **CHRISTIAN ANTHONY SUCIPTO (ChristianAnthonySucipto)** - *Catalog & Pricing Specialist*
    - Merancang katalog harga layanan interaktif.
    - Melakukan penyesuaian visual layout halaman utama agar lebih estetis.
 
