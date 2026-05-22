@@ -1,43 +1,20 @@
-// db.js - Backend API Wrapper with Robust Fallbacks
+// db.js - Backend API Wrapper with Robust Fallbacks and Global Sync
 
 const API_BASE = 'http://localhost:3000/api';
 
 const FALLBACKS = {
     config: {
-        hero: {
-            title: "Spesialis Perawatan Barang Kesayangan Anda",
-            subtitle: "Aesthetic, Modern, dan Clean. Kami memberikan sentuhan magis untuk sepatu, tas, dan helm Anda hingga tampak seperti baru."
-        },
-        pricing: {
-            regular: {
-                shoes: { Small: 20000, Medium: 30000, Large: 35000, est: "3 Hari" },
-                helmet: { "Half Face": 22000, "Full Face": 30000, est: "24 Jam" },
-                bag_leather: { Small: 25000, Medium: 30000, Large: 35000, est: "24 Jam" },
-                bag_fabric: { Small: 20000, Medium: 25000, Large: 30000, est: "2 Hari" }
-            },
-            special: {
-                boots: { Small: 59000, Medium: 65000, Large: 80000, est: "3 Hari" },
-                suede: { Small: 50000, Medium: 60000, Large: 70000, est: "5 Hari" },
-                dress_shoes: { Small: 55000, Medium: 60000, Large: 65000, est: "3 Hari" },
-                repaint_p: { Upper: 80000, Midsole: 50000, Outsole: 40000, Insole: 30000, est: "10 Hari" },
-                repaint_s: { Upper: 100000, Midsole: 63000, Outsole: 50000, Insole: 38000, est: "10 Hari" },
-                repaint_suede: { Upper: 120000, Midsole: 75000, Outsole: 60000, Insole: 45000, est: "10 Hari" },
-                extra: {
-                    "Liquid Remover Sepatu": 15000,
-                    "Liquid Remover Tas": 5000,
-                    "Unyellowing": 20000,
-                    "Canvas Cleaner": 20000,
-                    "Leather Filler": 25000
-                }
-            },
-            express: { "8 Jam": 20000, "18 Jam": 15000, "24 Jam": 10000 }
-        }
+        hero_welcome_title: "Laundry Sepatu & Helm Premium di Malang",
+        hero_welcome_subtitle: "Kembalikan kilau sepatu kesayanganmu dengan teknologi deep clean terbaru kami.",
+        hero_font_color: "#ffffff",
+        whatsapp_admin_number: "6285965957290",
+        instagram_url: "https://instagram.com/sparklingcleaners_mlg",
+        business_address: "Jl. Jamuran Rt.06 Rw. 02 Dusun Jamoran, Desa Sukodadi, Kecamatan Wagir, Kabupaten Malang, Jawa Timur, Indonesia.",
+        gmaps_iframe_url: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15802.215570059379!2d112.5855026601438!3d-8.044810756779491!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7882afb4455555%3A0xe6bf4dc34ac8c406!2sWagir%2C%20Malang%20Regency%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid",
+        workshop_dropoff_allowed: "false"
     },
     inventory: [
-        { id: 'INV-1', name: 'Sabun Upper', category: 'Cair', unit: 'Liter', price: 50000, stock: 5, minStock: 2 }
-    ],
-    articles: [
-        { id: 'ART-1', title: 'Cara Jitu Menghilangkan Noda', category: 'Sepatu', status: 'Publik', desc: 'Noda menguning sering terjadi...', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500' }
+        { id: 'INV-001', name: 'Sabun Upper Cleaner', category: 'Soap', unit: 'Liter', price: 50000, stock: 5, min_stock: 2 }
     ]
 };
 
@@ -45,7 +22,10 @@ const DB = {
     async call(endpoint, method = 'GET', data = null) {
         const options = {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-User-Role': localStorage.getItem('role') || 'guest'
+            },
             mode: 'cors',
             cache: 'no-store'
         };
@@ -55,8 +35,6 @@ const DB = {
             const resp = await fetch(`${API_BASE}${endpoint}`, options);
             const result = await resp.json();
             if (!resp.ok) {
-                // GET gagal → return null agar fallback aktif
-                // POST/PUT/DELETE gagal → return objek error agar bisa ditampilkan
                 if (method === 'GET') return null;
                 return { success: false, error: result.error || 'Terjadi kesalahan pada server.', code: result.code };
             }
@@ -67,40 +45,118 @@ const DB = {
         }
     },
 
+    // [SERVICES CRUD] - Mapped to /api/layanan
+    async getServices() {
+        return (await this.call('/layanan')) || [];
+    },
+    async addService(service) {
+        return await this.call('/layanan', 'POST', {
+            id: service.id,
+            name: service.name,
+            category: service.category,
+            treatment: service.treatment,
+            price: service.price,
+            estimation: service.estimation,
+            description: service.description
+        });
+    },
+    async updateService(id, service) {
+        return await this.call(`/layanan/${id}`, 'PUT', {
+            name: service.name,
+            category: service.category,
+            treatment: service.treatment,
+            price: service.price,
+            estimation: service.estimation,
+            description: service.description
+        });
+    },
+    async deleteService(id) {
+        return await this.call(`/layanan/${id}`, 'DELETE');
+    },
+
+    // [GALERI CRUD] - Mapped to /api/galeri
+    async getGaleri() {
+        return (await this.call('/galeri')) || [];
+    },
+    async addGaleri(item) {
+        return await this.call('/galeri', 'POST', item);
+    },
+    async updateGaleri(id, item) {
+        return await this.call(`/galeri/${id}`, 'PUT', item);
+    },
+    async deleteGaleri(id) {
+        return await this.call(`/galeri/${id}`, 'DELETE');
+    },
+
+    // [ABOUT CRUD] - Mapped to /api/about
+    async getAbout() {
+        return (await this.call('/about')) || [];
+    },
+    async updateAbout(id, item) {
+        return await this.call(`/about/${id}`, 'PUT', item);
+    },
+
+    // [SYSTEM CONFIG - Mapped to /api/konfigurasi-sistem]
+    async getSystemConfig() {
+        return (await this.call('/konfigurasi-sistem')) || FALLBACKS.config;
+    },
+    async updateSystemConfig(key_name, value_text) {
+        return await this.call('/konfigurasi-sistem', 'PUT', { key_name, value_text });
+    },
+    async updateSystemConfigs(payload) {
+        return await this.call('/konfigurasi-sistem', 'PUT', payload);
+    },
+
+    // Backward compat layer for legacy config calls
     async getConfig() {
         return (await this.call('/config')) || FALLBACKS.config;
     },
     async getPricing() {
         const cfg = await this.getConfig();
-        return cfg.pricing || FALLBACKS.config.pricing;
+        return cfg.pricing || { express: { "8 Jam": 20000, "18 Jam": 15000, "24 Jam": 10000 } };
     },
+    async getWhatsAppNumber() {
+        const cfg = await this.getSystemConfig();
+        return cfg.whatsapp_admin_number || FALLBACKS.config.whatsapp_admin_number;
+    },
+
+    // [ORDERS] - Mapped to /api/pesanan
     async getOrders() {
-        return (await this.call('/orders')) || [];
+        return (await this.call('/pesanan')) || [];
     },
     async addOrder(order) {
-        return await this.call('/orders', 'POST', order);
+        return await this.call('/pesanan', 'POST', order);
     },
     async updateOrderStatus(id, status) {
-        return await this.call(`/orders/${id}/status`, 'PUT', { status });
+        return await this.call(`/pesanan/${id}/status_proses`, 'PUT', { status });
     },
+    async updateOrderPaymentStatus(id, lunas) {
+        return await this.call(`/pesanan/${id}/status_pembayaran`, 'PUT', { lunas });
+    },
+
+    // [INVENTORY] - Mapped to /api/inventory (stored in konfigurasi_sistem as JSON)
     async getInventory() {
         return (await this.call('/inventory')) || FALLBACKS.inventory;
     },
+    async addInventory(item) {
+        return await this.call('/inventory', 'POST', item);
+    },
+    async updateInventoryDetails(id, item) {
+        return await this.call(`/inventory/${id}/details`, 'PUT', item);
+    },
+    async updateInventory(id, amount, action) {
+        return await this.call(`/inventory/${id}`, 'PUT', { amount, action });
+    },
+    async deleteInventory(id) {
+        return await this.call(`/inventory/${id}`, 'DELETE');
+    },
+
+    // [FINANCE] - Mapped to /api/finance
     async getFinance() {
         return (await this.call('/finance')) || [];
     },
-    async getArticles() {
-        return (await this.call('/articles')) || FALLBACKS.articles;
-    },
-    async addArticle(article) {
-        return await this.call('/articles', 'POST', article);
-    },
-    async deleteArticle(id) {
-        return await this.call(`/articles/${id}`, 'DELETE');
-    },
-    async updateArticle(id, article) {
-        return await this.call(`/articles/${id}`, 'PUT', article);
-    },
+
+    // [RESTOCK] - Mapped to /api/restock (stored in konfigurasi_sistem as JSON)
     async getRestockRequests() {
         return (await this.call('/restock')) || [];
     },
@@ -110,29 +166,51 @@ const DB = {
     async updateRestockStatus(id, status) {
         return await this.call(`/restock/${id}`, 'PUT', { status });
     },
-    async updateInventory(id, amount, action) {
-        return await this.call(`/inventory/${id}`, 'PUT', { amount, action });
-    },
-    async addInventory(item) {
-        return await this.call('/inventory', 'POST', item);
-    },
-    async updateInventoryDetails(id, item) {
-        return await this.call(`/inventory/${id}/details`, 'PUT', item);
-    },
-    async deleteInventory(id) {
-        return await this.call(`/inventory/${id}`, 'DELETE');
-    },
+
+    // [TESTIMONIALS] - Mapped to /api/testimoni
     async getTestimonials() {
-        return (await this.call('/testimonials')) || [];
+        return (await this.call('/testimoni')) || [];
     },
     async addTestimonial(testimonial) {
-        return await this.call('/testimonials', 'POST', testimonial);
+        return await this.call('/testimoni', 'POST', testimonial);
     },
     async updateTestimonialStatus(id, status) {
-        return await this.call(`/testimonials/${id}`, 'PUT', { status });
+        return await this.call(`/testimoni/${id}`, 'PUT', { status });
     },
-    async saveConfig(config) {
-        return await this.call('/config', 'POST', config);
+    async deleteTestimonial(id) {
+        return await this.call(`/testimoni/${id}`, 'DELETE');
+    },
+
+    // [REPAINT COLORS] - Mapped to /api/warna-repaint
+    async getColors() {
+        return (await this.call('/warna-repaint')) || [];
+    },
+
+    // [USERS] - Mapped to /api/users
+    async getUsers() {
+        return (await this.call('/users')) || [];
+    },
+    async updateUser(id, userData) {
+        return await this.call(`/users/${id}`, 'PUT', userData);
+    },
+
+    // [GALERI] - Stored in konfigurasi_sistem
+    async getGaleri() {
+        const config = await this.getSystemConfig();
+        if (config && config.instagram_gallery_images) {
+            try { return JSON.parse(config.instagram_gallery_images); } catch(e){}
+        }
+        return [];
+    },
+    async addGaleri(item) {
+        let items = await this.getGaleri();
+        items.push(item);
+        return await this.call('/system-config', 'PUT', { instagram_gallery_images: items });
+    },
+    async deleteGaleri(id) {
+        let items = await this.getGaleri();
+        items = items.filter(x => x.id != id);
+        return await this.call('/system-config', 'PUT', { instagram_gallery_images: items });
     },
 
     // UI Helpers
@@ -152,7 +230,62 @@ const DB = {
         const date = new Date();
         const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
         return `SPK-${dateStr}-${Math.floor(Math.random() * 900) + 100}`;
+    },
+
+    // Global Metadata Synchronizer
+    async renderFooterMeta() {
+        const cfg = await this.getSystemConfig();
+        if (!cfg) return;
+
+        const whatsappNumber = cfg.whatsapp_admin_number || '6285965957290';
+        const instagramUrl = cfg.instagram_url || 'https://instagram.com/sparklingcleaners_mlg';
+        const businessAddress = cfg.business_address || 'Jl. Jamuran Rt.06 Rw. 02 Dusun Jamoran, Desa Sukodadi, Kecamatan Wagir, Kabupaten Malang, Jawa Timur, Indonesia.';
+        const gmapsIframeUrl = cfg.gmaps_iframe_url || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15802.215570059379!2d112.5855026601438!3d-8.044810756779491!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7882afb4455555%3A0xe6bf4dc34ac8c406!2sWagir%2C%20Malang%20Regency%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid';
+
+        // 1. WhatsApp link
+        const waLink = document.getElementById('footerWaLink');
+        if (waLink) {
+            waLink.href = `https://wa.me/${whatsappNumber}`;
+        }
+
+        // 2. Instagram link
+        const igLink = document.getElementById('footerIgLink');
+        if (igLink) {
+            igLink.href = instagramUrl;
+            const handle = instagramUrl.split('/').filter(Boolean).pop() || 'sparklingcleaners_mlg';
+            igLink.innerHTML = `<i class="fa-brands fa-instagram" style="margin-right:6px;"></i> @${handle}`;
+        }
+
+        // 3. Business Address
+        const addressEl = document.getElementById('footerAddress');
+        if (addressEl) {
+            addressEl.innerHTML = `<strong style="color: var(--accent-yellow);">Workshop Wagir:</strong><br>${businessAddress}`;
+        }
+
+        // 4. Google Maps Iframe
+        const iframeEl = document.getElementById('footerMapsIframe');
+        if (iframeEl) {
+            iframeEl.src = gmapsIframeUrl;
+        }
+
+        // 5. Generate Instagram QR Code using QRCode library
+        const qrContainer = document.getElementById('ig-qr-code');
+        if (qrContainer && typeof QRCode !== 'undefined') {
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: instagramUrl,
+                width: 128,
+                height: 128,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
     }
 };
 
 window.DB = DB;
+
+document.addEventListener('DOMContentLoaded', () => {
+    DB.renderFooterMeta();
+});

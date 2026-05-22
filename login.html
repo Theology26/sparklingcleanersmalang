@@ -33,9 +33,9 @@
 
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="input-group">
-                <label>Email Address</label>
-                <i class="fa-solid fa-at"></i>
-                <input type="email" id="email" class="form-control with-icon" placeholder="owner@sparkling.com" required>
+                <label>Username</label>
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="username" class="form-control with-icon" placeholder="owner / admin" required>
             </div>
             <div class="input-group">
                 <label>Security Key</label>
@@ -50,16 +50,32 @@
     </div>
 
     <script>
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value.toLowerCase();
-            let role = email.includes('owner') ? 'owner' : (email.includes('admin') ? 'admin' : '');
-            if (role) {
-                localStorage.setItem('userRole', role);
-                document.querySelector('.btn-login').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...';
-                setTimeout(() => { window.location.href = '/dashboard.html'; }, 1000);
-            } else {
-                alert('Akses Ditolak: Email tidak terdaftar di sistem Ops.');
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.querySelector('.btn-login');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem('userRole', data.role);
+                    localStorage.setItem('role', data.role);
+                    window.location.href = '/dashboard.html';
+                } else {
+                    alert('Akses Ditolak: ' + (data.error || 'Username atau password salah.'));
+                    btn.innerHTML = 'Akses Dashboard <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan koneksi ke server.');
+                btn.innerHTML = 'Akses Dashboard <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>';
             }
         }
     </script>

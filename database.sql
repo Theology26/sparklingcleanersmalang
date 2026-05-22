@@ -1,123 +1,71 @@
--- DATABASE SPARKLING CLEANERS (Production Ready Schema)
+-- DATABASE SPARKLING CLEANERS (Production Ready Schema - Indonesian Refactor)
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS orders, inventory, finance, articles, config, restock_requests, testimonials;
+DROP TABLE IF EXISTS konfigurasi_sistem, layanan, tabel_repaint_warna, pesanan, testimoni;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 1. Tabel Pesanan (Orders)
-CREATE TABLE orders (
-    id VARCHAR(50) PRIMARY KEY,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    name VARCHAR(100),
-    phone VARCHAR(20),
-    item_type VARCHAR(50),
-    qty INT DEFAULT 1,
-    treatment VARCHAR(50),
-    service VARCHAR(50),
-    express VARCHAR(20),
-    delivery VARCHAR(20),
-    address TEXT,
-    distance VARCHAR(20),
-    schedule VARCHAR(50),
-    notes TEXT,
-    price DECIMAL(15,2),
-    express_price DECIMAL(15,2),
-    ongkir DECIMAL(15,2),
-    total DECIMAL(15,2),
-    status INT DEFAULT 1 -- 1:Diterima, 2:Treatment, 3:Kering, 4:Finishing, 5:Siap Ambil, 6:Selesai
+-- 1. Tabel Konfigurasi Sistem
+CREATE TABLE konfigurasi_sistem (
+    nama_kunci VARCHAR(50) PRIMARY KEY,
+    teks_nilai TEXT NOT NULL
 );
 
--- 2. Tabel Inventaris (Stok Bahan)
-CREATE TABLE inventory (
-    id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(100),
-    category VARCHAR(50),
-    unit VARCHAR(20),
-    price DECIMAL(15,2),
-    stock DECIMAL(10,2) DEFAULT 0,
-    min_stock DECIMAL(10,2) DEFAULT 2 -- Threshold Warning
+-- 2. Tabel Layanan
+CREATE TABLE layanan (
+    id VARCHAR(30) PRIMARY KEY,
+    nama_layanan VARCHAR(100) NOT NULL,
+    kategori VARCHAR(50) NOT NULL,
+    tipe_treatment VARCHAR(50) NOT NULL, -- 'regular' or 'special'
+    harga DECIMAL(10,2) NOT NULL,
+    estimasi_waktu VARCHAR(30) NOT NULL,
+    deskripsi TEXT
 );
 
--- 3. Tabel Keuangan (Finance)
-CREATE TABLE finance (
-    id VARCHAR(50) PRIMARY KEY,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    order_id VARCHAR(50),
-    customer_name VARCHAR(100),
-    phone VARCHAR(20),
-    item_type VARCHAR(50),
-    qty INT,
-    service VARCHAR(50),
-    treatment VARCHAR(50),
-    price DECIMAL(15,2),
-    ongkir DECIMAL(15,2),
-    total DECIMAL(15,2),
-    status VARCHAR(20) DEFAULT 'Lunas'
-);
-
--- 4. Tabel Artikel
-CREATE TABLE articles (
-    id VARCHAR(50) PRIMARY KEY,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    title VARCHAR(255),
-    category VARCHAR(50),
-    status VARCHAR(20) DEFAULT 'Publik',
-    image TEXT,
-    content TEXT,
-    `desc` TEXT
-);
-
--- 5. Tabel Konfigurasi (Landing Page & Harga)
-CREATE TABLE config (
-    cfg_key VARCHAR(50) PRIMARY KEY,
-    cfg_value TEXT
-);
-
--- 6. Tabel Request Restok
-CREATE TABLE restock_requests (
-    id VARCHAR(50) PRIMARY KEY,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    itemId VARCHAR(50),
-    qty DECIMAL(10,2),
-    notes TEXT,
-    role VARCHAR(20),
-    status VARCHAR(20) DEFAULT 'Pending' -- Pending, Approved, Completed
-);
-
--- 7. Tabel Testimoni
-CREATE TABLE testimonials (
+-- 3. Tabel Repaint Warna (Premium Color Series)
+CREATE TABLE tabel_repaint_warna (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    rating INT,
-    content TEXT,
-    status VARCHAR(20) DEFAULT 'Pending' -- Pending, Approved
+    kode_warna VARCHAR(20) NOT NULL,
+    nama_warna VARCHAR(50) NOT NULL,
+    hex_warna_fallback VARCHAR(10) NOT NULL,
+    tipe_treatment VARCHAR(20) NOT NULL
 );
 
--- --- POPULASI DATA DUMMY (BIAR LANGSUNG JALAN) ---
+-- 4. Tabel Pesanan (Orders)
+CREATE TABLE pesanan (
+    id VARCHAR(50) PRIMARY KEY,
+    nama_pelanggan VARCHAR(100) NOT NULL,
+    nomor_whatsapp VARCHAR(20) NOT NULL,
+    total_harga DECIMAL(10,2) NOT NULL,
+    status_proses INT DEFAULT 1, -- 1: Diterima, 2: Antrian, 3: Treatment, 4: Pengeringan, 5: Menunggu Pembayaran, 6: Pengantaran, 7: Selesai
+    status_pembayaran TINYINT DEFAULT 0, -- 0: Belum Lunas, 1: Lunas
+    estimasi_selesai VARCHAR(50),
+    rincian_item TEXT, -- JSON serialization of items selected
+    tanggal_dibuat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Additional fields to support frontend logic
+    tipe_item VARCHAR(50),
+    jumlah INT DEFAULT 1,
+    treatment VARCHAR(50),
+    layanan_pilihan VARCHAR(100),
+    express VARCHAR(20),
+    pengiriman VARCHAR(20),
+    alamat TEXT,
+    jarak VARCHAR(20),
+    jadwal VARCHAR(50),
+    catatan TEXT,
+    harga_dasar DECIMAL(15,2),
+    harga_express DECIMAL(15,2),
+    ongkir DECIMAL(15,2),
+    foto_barang TEXT
+);
 
--- Dummy Inventory
-INSERT INTO inventory (id, name, category, unit, price, stock, min_stock) VALUES
-('INV-001', 'Sabun Upper Cleaner', 'Soap', 'Liter', 50000, 5.00, 2.00),
-('INV-002', 'Parfum Sepatu Lemon', 'Scent', 'Liter', 75000, 1.50, 2.00), -- Ini bakal warna Merah (Low)
-('INV-003', 'Solvent Leather', 'Chemical', 'Liter', 120000, 3.00, 1.00); -- Ini bakal warna Kuning (Warning)
-
--- Dummy Config (Hero & Harga)
-INSERT INTO config (cfg_key, cfg_value) VALUES
-('hero', '{"title":"Laundry Sepatu & Helm Premium di Malang","subtitle":"Kembalikan kilau sepatu kesayanganmu dengan teknologi deep clean terbaru kami."}'),
-('pricing', '{"regular":{"shoes":{"Small":20000,"Medium":30000,"Large":35000,"est":"3 Hari"},"helmet":{"Half Face":22000,"Full Face":30000,"est":"24 Jam"},"bag_leather":{"Small":25000,"Medium":30000,"Large":35000,"est":"24 Jam"},"bag_fabric":{"Small":20000,"Medium":25000,"Large":30000,"est":"2 Hari"}},"special":{"boots":{"Small":60000,"Medium":65000,"Large":80000,"est":"3 Hari"},"suede":{"Small":50000,"Medium":60000,"Large":70000,"est":"5 Hari"},"dress_shoes":{"Small":55000,"Medium":60000,"Large":65000,"est":"3 Hari"},"repaint_p":{"Upper":80000,"Midsole":50000,"Outsole":40000,"Insole":30000,"est":"10 Hari"},"repaint_s":{"Upper":100000,"Midsole":63000,"Outsole":50000,"Insole":38000,"est":"10 Hari"},"repaint_suede":{"Upper":120000,"Midsole":75000,"Outsole":60000,"Insole":45000,"est":"10 Hari"},"extra":{"Liquid Remover Sepatu":15000,"Liquid Remover Tas":5000,"Unyellowing":20000,"Canvas Cleaner":20000,"Leather Filler":25000}},"express":{"8 Jam":20000,"18 Jam":15000,"24 Jam":10000}}');
-
--- Dummy Testimonials
-INSERT INTO testimonials (name, rating, content, status) VALUES
-('Budi Santoso', 5, 'Hasil cuci sepatu putihnya luar biasa, kayak baru lagi!', 'Approved'),
-('Siska Amelia', 4, 'Cuci helm wangi banget, prosesnya cepat.', 'Approved'),
-('Andi Wijaya', 5, 'Pelayanan ramah dan bisa pickup delivery. Recommended!', 'Pending');
-
--- Dummy Articles
-INSERT INTO articles (id, title, category, status, image, content) VALUES
-('ART-001', 'Cara Merawat Sepatu Suede', 'Tips', 'Published', 'https://images.unsplash.com/photo-1542291026-7eec264c27ff', 'Konten tips merawat sepatu suede agar tidak jamuran...'),
-('ART-002', 'Bahaya Helm Kotor bagi Kulit', 'Health', 'Published', 'https://images.unsplash.com/photo-1558981403-c5f91cbba527', 'Penjelasan mengenai kuman yang bersarang di busa helm...');
-
--- Dummy Orders (Riwayat)
-INSERT INTO orders (id, name, phone, item_type, qty, treatment, service, status, total) VALUES
-('ORD-12345', 'John Doe', '0812345678', 'Sepatu', 1, 'Deep Clean', 'Regular', 6, 35000),
-('ORD-67890', 'Jane Smith', '0898765432', 'Helm', 1, 'Cuci Helm', 'Express', 2, 45000);
+-- 5. Tabel Testimoni
+CREATE TABLE testimoni (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_pelanggan VARCHAR(100) NOT NULL,
+    skor_rating INT NOT NULL,
+    teks_ulasan TEXT NOT NULL,
+    status_moderasi VARCHAR(20) DEFAULT 'tertunda', -- 'tertunda', 'disetujui'
+    tanggal_dibuat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    foto_bukti TEXT
+);

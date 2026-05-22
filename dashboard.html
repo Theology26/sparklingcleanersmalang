@@ -1,905 +1,519 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Internal Dashboard | Sparkling Cleaners</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <div class="blob-bg blob-1"></div>
     <div class="blob-bg blob-2"></div>
     <div class="blob-bg blob-3"></div>
 
     <div class="dashboard-layout">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="logo-img-wrapper">
-                    <img src="/assets/logo.png" alt="Logo" class="logo-img">
-                </div>
+                <div class="logo-img-wrapper"><img src="/assets/logo.png" alt="Logo" class="logo-img"></div>
                 <h3>Sparkling Ops</h3>
                 <div id="activeRoleText">Admin</div>
             </div>
 
-            <ul class="sidebar-menu">
-                <li class="menu-item active" data-target="tab-orders">
-                    <i class="fa-solid fa-box"></i> <span>Pesanan Masuk</span>
-                </li>
-                <li class="menu-item" data-target="tab-new-order">
-                    <i class="fa-solid fa-circle-plus"></i> <span>Order Baru</span>
-                </li>
-                <li class="menu-item" data-target="tab-admin-restock">
-                    <i class="fa-solid fa-cart-shopping"></i> <span>Restok Gudang</span>
-                </li>
-                <div id="ownerMenuSection" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 10px;">
-                    <li class="menu-item" data-target="tab-revenue">
-                        <i class="fa-solid fa-chart-line"></i> <span>Keuangan</span>
-                    </li>
-                    <li class="menu-item" data-target="tab-stock">
-                        <i class="fa-solid fa-flask"></i> <span>Stok Bahan</span>
-                    </li>
-                    <li class="menu-item" data-target="tab-catalog">
-                        <i class="fa-solid fa-tags"></i> <span>Katalog & Harga</span>
-                    </li>
-                    <li class="menu-item" data-target="tab-testimonials">
-                        <i class="fa-solid fa-star"></i> <span>Testimoni</span>
-                    </li>
-                    <li class="menu-item" data-target="tab-articles">
-                        <i class="fa-solid fa-pen-to-square"></i> <span>Editor Artikel</span>
-                    </li>
-                    <li class="menu-item" data-target="tab-settings">
-                        <i class="fa-solid fa-gear"></i> <span>Pengaturan Web</span>
-                    </li>
+            <div class="sidebar-profile">
+                <div class="profile-avatar-circle"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="profile-details">
+                    <h4 id="sidebarProfileName">Loading...</h4>
+                    <span class="status-indicator"><span class="status-dot"></span> Online</span>
                 </div>
-            </ul>
-
-            <div class="sidebar-footer">
-                <a href="/" class="menu-item" style="color:#ff4d4d;">
-                    <i class="fa-solid fa-right-from-bracket"></i> <span>Keluar</span>
-                </a>
             </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-label">FITUR UTAMA</li>
+                <li class="menu-item active" data-target="tab-summary"><i class="fa-solid fa-chart-pie"></i>
+                    <span>Ringkasan Kinerja</span></li>
+                <li class="menu-item" data-target="tab-orders"><i class="fa-solid fa-box"></i> <span>Pesanan
+                        Masuk</span></li>
+                <li class="menu-item" data-target="tab-new-order"><i class="fa-solid fa-circle-plus"></i> <span>Order
+                        Baru</span></li>
+                <li class="menu-item" data-target="tab-admin-restock"><i class="fa-solid fa-cart-shopping"></i>
+                    <span>Restok Gudang</span></li>
+                <li class="menu-item" data-target="tab-stock"><i class="fa-solid fa-flask"></i> <span>Stok Bahan</span>
+                </li>
+
+                <div id="ownerMenuSection"
+                    style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 10px; display: none;">
+                    <li class="menu-label">FITUR OWNER</li>
+                    <li class="menu-item" data-target="tab-revenue"><i class="fa-solid fa-chart-line"></i>
+                        <span>Keuangan</span></li>
+                    <li class="menu-item" data-target="tab-catalog"><i class="fa-solid fa-tags"></i> <span>Katalog &
+                            Harga</span></li>
+                    <li class="menu-item" data-target="tab-testimonials"><i class="fa-solid fa-star"></i>
+                        <span>Testimoni</span></li>
+                    <li class="menu-item" data-target="tab-galeri"><i class="fa-solid fa-images"></i> <span>Galeri
+                            Instagram</span></li>
+                    <li class="menu-item" data-target="tab-settings"><i class="fa-solid fa-gear"></i> <span>Pengaturan
+                            Web</span></li>
+                </div>
+
+                <li class="menu-label" style="margin-top:15px;">SISTEM KELUAR</li>
+                <li class="menu-item" onclick="window.logout()" style="color:#e74c3c; margin-bottom: 2rem;"><i
+                        class="fa-solid fa-right-from-bracket"></i> <span>Keluar Ops</span></li>
+            </ul>
         </aside>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            
-            <!-- Tab: Pesanan Masuk -->
-            <div id="tab-orders" class="tab-content active">
-                <div class="dashboard-header">
-                    <h2>Manajemen Pesanan Masuk</h2>
-                    <button class="btn btn-primary" onclick="document.querySelector('[data-target=\'tab-new-order\']').click()">+ Order Baru</button>
+        <div class="main-wrapper">
+            <header class="top-nav">
+                <div class="nav-left">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Cari data..." id="globalSearch"
+                            oninput="window.handleGlobalSearch(this.value)">
+                    </div>
                 </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr><th>ID ORDER</th><th>TANGGAL</th><th>PELANGGAN</th><th>LAYANAN</th><th>STATUS</th><th>AKSI</th></tr></thead>
-                        <tbody><!-- Loaded via JS --></tbody>
-                    </table>
+                <div class="nav-right">
+                    <div class="theme-toggle-btn" onclick="window.toggleTheme()"><i class="fa-regular fa-moon"
+                            id="themeIcon"></i></div>
+                    <div class="nav-user">
+                        <span class="user-greeting">Hai, <strong id="navUsername">Loading...</strong></span>
+                        <div class="user-avatar-wrapper"></div>
+                    </div>
                 </div>
-            </div>
+            </header>
 
-            <!-- Tab: Order Baru (Input Manual) -->
-            <div id="tab-new-order" class="tab-content">
-                <h2>Input Pesanan Baru</h2>
-                <div class="glass-panel" style="padding: 2.5rem; margin-top: 1.5rem;">
-                    <form onsubmit="window.processAdminOrder(event)">
-                        <div class="grid grid-2" style="gap: 20px;">
-                            <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="admName" class="form-input" required></div>
-                            <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="admPhone" class="form-input" required></div>
-                            <div class="form-group"><label>Jenis Barang</label><select id="admItem" class="form-input"><option>Sepatu</option><option>Helm</option><option>Tas</option></select></div>
-                            <div class="form-group"><label>Layanan</label><select id="admService" class="form-input"><option>Deep Clean</option><option>Reguler</option><option>Express</option></select></div>
-                            <div class="form-group"><label>Jumlah</label><input type="number" id="admQty" class="form-input" value="1"></div>
-                            <div class="form-group"><label>Harga (Total)</label><input type="number" id="admPrice" class="form-input" required></div>
+            <main class="main-content">
+
+                <div id="tab-summary" class="tab-content active">
+                    <div class="dashboard-header flex-header">
+                        <div class="header-title-block">
+                            <h2>Ringkasan Kinerja</h2>
+                            <p class="subtitle-text">Pantau statistik operasional dan performa Sparkling Cleaners secara
+                                live.</p>
                         </div>
-                        <div class="form-group"><label>Catatan Khusus</label><textarea id="admNotes" class="form-input" rows="3"></textarea></div>
-                        <button type="submit" class="btn btn-primary" style="width:100%; padding: 1.2rem; font-size: 1rem;">Simpan & Cetak Pesanan</button>
-                    </form>
+                    </div>
+                    <div class="kpi-grid">
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content"><span class="kpi-value"
+                                    id="kpi-completion-rate">0%</span><span class="kpi-label">Penyelesaian Order</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content"><span class="kpi-value" id="kpi-visitors">0</span><span
+                                    class="kpi-label">Total Antrian Order</span></div>
+                        </div>
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-card-content"><span class="kpi-value" id="kpi-revenue">Rp 0</span><span
+                                    class="kpi-label">Pendapatan Bersih</span></div>
+                        </div>
+                    </div>
+                    <div class="charts-row-4">
+                        <div class="chart-card glass-card">
+                            <div class="chart-canvas-wrapper"><canvas id="chartLayananLaris"></canvas></div>
+                        </div>
+                        <div class="chart-card glass-card">
+                            <div class="chart-canvas-wrapper"><canvas id="chartMetodePesan"></canvas></div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Tab: Restok Gudang -->
-            <div id="tab-admin-restock" class="tab-content">
-                <h2>Manajemen Restok Gudang</h2>
-                <div class="grid grid-2" style="gap: 2rem; margin-top: 1.5rem;">
-                    <div class="glass-panel" style="padding: 2rem;">
-                        <h3><i class="fa-solid fa-paper-plane" style="color:var(--primary-sky);"></i> Buat Request Restok</h3>
-                        <form onsubmit="event.preventDefault(); window.DB.addRestockRequest(document.getElementById('restockItem').value, document.getElementById('restockQty').value, document.getElementById('restockNotes').value, 'admin').then(() => { alert('Request terkirim!'); renderRestock(); });">
-                            <div class="form-group"><label>Pilih Item Habis</label><select id="restockItem" class="form-input" required></select></div>
-                            <div class="form-group"><label>Jumlah Kebutuhan</label><input type="number" id="restockQty" class="form-input" required></div>
-                            <div class="form-group"><label>Catatan</label><input type="text" id="restockNotes" class="form-input"></div>
-                            <button class="btn btn-primary" style="width:100%;">Kirim Pengajuan</button>
+                <div id="tab-orders" class="tab-content">
+                    <div class="glass-panel">
+                        <div class="dashboard-header">
+                            <h2>Manajemen Pesanan Masuk</h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID ORDER</th>
+                                        <th>TANGGAL</th>
+                                        <th>PELANGGAN</th>
+                                        <th>LAYANAN</th>
+                                        <th>STATUS</th>
+                                        <th>AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-new-order" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Input Pesanan Baru</h2>
+                        <form onsubmit="window.processAdminOrder(event)" style="margin-top: 1.5rem;">
+                            <div class="grid grid-2">
+                                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="admName"
+                                        class="form-input" required></div>
+                                <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="admPhone"
+                                        class="form-input" required></div>
+                                <div class="form-group"><label>Jenis Barang</label><select id="admItem"
+                                        class="form-input">
+                                        <option>Sepatu</option>
+                                        <option>Helm</option>
+                                        <option>Tas</option>
+                                    </select></div>
+                                <div class="form-group"><label>Layanan</label><select id="admService"
+                                        class="form-input">
+                                        <option>Deep Clean</option>
+                                        <option>Reguler</option>
+                                        <option>Express</option>
+                                    </select></div>
+                                <div class="form-group"><label>Jumlah</label><input type="number" id="admQty"
+                                        class="form-input" value="1"></div>
+                                <div class="form-group"><label>Harga (Total)</label><input type="number" id="admPrice"
+                                        class="form-input" required></div>
+                            </div>
+                            <div class="form-group"><label>Catatan Khusus</label><textarea id="admNotes"
+                                    class="form-input" rows="3"></textarea></div>
+                            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan & Cetak
+                                Pesanan</button>
                         </form>
                     </div>
-                    <div class="glass-panel" style="padding: 2rem;">
-                        <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent-yellow);"></i> Status Request</h3>
-                        <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 10px;">
-                            <!-- JS will render here -->
-                        </div>
-                    </div>
                 </div>
-            </div>
 
-            <!-- Tab: Keuangan -->
-            <div id="tab-revenue" class="tab-content">
-                <h2>Laporan Keuangan & Performa</h2>
-                <div class="grid grid-2" style="gap: 1.5rem; margin-top: 1.5rem;">
-                    <div class="stat-card glass-panel" style="padding: 2rem;"><h3>Total Pemasukan</h3><h2 id="rev-total">Rp 0</h2></div>
-                    <div class="stat-card glass-panel" style="padding: 2rem;"><h3>Total Pesanan</h3><h2 id="rev-orders">0</h2></div>
-                </div>
-                <div class="revenue-chart glass-panel" style="margin-top:1.5rem; height: 350px; padding: 2rem;">
-                    <div class="revenue-chart-bars" style="display:flex; height:100%; gap:15px; align-items:flex-end;"></div>
-                </div>
-            </div>
-
-            <!-- Tab: Stok Bahan -->
-            <div id="tab-stock" class="tab-content">
-                <div class="dashboard-header">
-                    <h2>Manajemen Stok Bahan</h2>
-                    <button class="btn btn-primary" onclick="window.openStockModal()">+ Item Baru</button>
-                </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr><th>ID</th><th>NAMA BAHAN</th><th>STOK</th><th>HARGA/UNIT</th><th>AKSI</th></tr></thead>
-                        <tbody id="inventoryList"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tab: Katalog & Harga (Editor Harga di Sini) -->
-            <div id="tab-catalog" class="tab-content">
-                <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
-                    <div>
-                        <h2 style="font-size: 2.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(135deg, var(--primary-navy), #475569); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Katalog & Paket Layanan</h2>
-                        <p style="color: var(--text-muted); margin-top: 5px; font-weight: 600; font-size: 0.95rem;">Kelola daftar harga dan paket perawatan yang tampil di website utama secara dinamis.</p>
-                    </div>
-                    <div class="sync-pulse-badge">
-                        <span class="pulse-green"></span>
-                        Live Sync Database
-                    </div>
-                </div>
-                
-                <!-- Overview Stats Grid -->
-                <div class="overview-grid">
-                    <div class="overview-card" style="--accent-color: var(--primary-sky); --bg-alpha: rgba(56, 189, 248, 0.08); --accent-glow: rgba(56, 189, 248, 0.15);">
-                        <div class="overview-icon-box">
-                            <i class="fa-solid fa-shoe-prints"></i>
-                        </div>
-                        <div>
-                            <h4 id="stat-active-services" style="font-weight: 850; margin: 0 0 5px; font-size: 1.15rem; color: var(--primary-navy);">34 Layanan Aktif</h4>
-                            <p style="color:var(--text-muted); margin: 0; font-size: 0.8rem; line-height: 1.4; font-weight: 600;">Semua kategori terhubung ke form order pelanggan.</p>
-                        </div>
-                    </div>
-                    <div class="overview-card" style="--accent-color: var(--accent-yellow); --bg-alpha: rgba(241, 196, 15, 0.08); --accent-glow: rgba(241, 196, 15, 0.15);">
-                        <div class="overview-icon-box">
-                            <i class="fa-solid fa-fire-flame-simple"></i>
-                        </div>
-                        <div>
-                            <h4 style="font-weight: 850; margin: 0 0 5px; font-size: 1.15rem; color: var(--primary-navy);">Deep Clean & Repaint</h4>
-                            <p style="color:var(--text-muted); margin: 0; font-size: 0.8rem; line-height: 1.4; font-weight: 600;">Perawatan terpopuler bulan ini berdasarkan pesanan masuk.</p>
-                        </div>
-                    </div>
-                    <div class="overview-card" style="--accent-color: #2ecc71; --bg-alpha: rgba(46, 204, 113, 0.08); --accent-glow: rgba(46, 204, 113, 0.15);">
-                        <div class="overview-icon-box">
-                            <i class="fa-solid fa-circle-check"></i>
-                        </div>
-                        <div>
-                            <h4 style="font-weight: 850; margin: 0 0 5px; font-size: 1.15rem; color: var(--primary-navy);">Fully Synced</h4>
-                            <p style="color:var(--text-muted); margin: 0; font-size: 0.8rem; line-height: 1.4; font-weight: 600;">Harga terintegrasi langsung dengan Landing Page secara real-time.</p>
+                <div id="tab-admin-restock" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Manajemen Restok Gudang</h2>
+                        <div class="grid grid-2" style="margin-top: 1.5rem;">
+                            <div class="glass-card" style="padding: 2rem;">
+                                <h3>Buat Request Restok</h3>
+                                <form onsubmit="window.processAdminRestockRequest(event)">
+                                    <div class="form-group"><label>Pilih Item Baku</label><select id="restockItem"
+                                            class="form-input" required></select></div>
+                                    <div class="form-group"><label>Jumlah Kebutuhan</label><input type="number"
+                                            id="restockQty" class="form-input" required></div>
+                                    <div class="form-group"><label>Catatan</label><input type="text" id="restockNotes"
+                                            class="form-input"></div>
+                                    <button class="btn btn-primary" style="width:100%;">Kirim Pengajuan</button>
+                                </form>
+                            </div>
+                            <div class="glass-card" style="padding: 2rem;" id="restockStatusContainer">
+                                <h3>Status Request Log</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-panel" style="padding: 3rem; background: rgba(255, 255, 255, 0.45) !important;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 1.5rem; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 1.5rem;">
-                        <div style="background: rgba(30, 41, 59, 0.06); width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--primary-navy); font-size: 1.3rem;">
-                            <i class="fa-solid fa-sliders"></i>
+                <div id="tab-stock" class="tab-content">
+                    <div class="glass-panel">
+                        <div class="dashboard-header" style="display: flex; justify-content: space-between;">
+                            <h2>Manajemen Stok Bahan</h2>
+                            <button class="btn btn-primary owner-only" id="addStockItemBtn"
+                                onclick="window.openStockModal()">+ Item Baru</button>
                         </div>
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; color: var(--primary-navy);">Edit Harga Layanan Live</h3>
-                            <p style="margin: 3px 0 0; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Sesuaikan tarif masing-masing opsi layanan. Klik Simpan di bawah jika sudah selesai.</p>
-                        </div>
-                    </div>
-                    
-                    <!-- 1. Cuci Reguler (Regular Wash) -->
-                    <div style="margin-bottom: 3.5rem;">
-                        <div class="catalog-section-header" style="--accent-color: var(--primary-sky); --focus-shadow: rgba(56, 189, 248, 0.12);">
-                            <h4><i class="fa-solid fa-circle-nodes"></i> Cuci Reguler (Regular Wash)</h4>
-                            <span class="catalog-section-badge">Regular Service</span>
-                        </div>
-                        
-                        <div class="pricing-grid">
-                            <!-- Sepatu Card -->
-                            <div class="pricing-group-card" style="--accent-color: var(--primary-sky); --accent-gradient: linear-gradient(to bottom, var(--primary-sky), #60a5fa); --focus-color: var(--primary-sky); --focus-shadow: rgba(56, 189, 248, 0.12);">
-                                <h5><i class="fa-solid fa-shoe-prints"></i> Sepatu</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Sepatu Small</span>
-                                        <span class="price-item-desc">Ukuran &lt; 36 / Anak</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-shoes-Small" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Sepatu Medium</span>
-                                        <span class="price-item-desc">Ukuran 36 - 40 / Standar</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-shoes-Medium" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Sepatu Large</span>
-                                        <span class="price-item-desc">Ukuran &gt; 40 / Boot</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-shoes-Large" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Helm Card -->
-                            <div class="pricing-group-card" style="--accent-color: #38bdf8; --accent-gradient: linear-gradient(to bottom, #38bdf8, #0ea5e9); --focus-color: #38bdf8; --focus-shadow: rgba(56, 189, 248, 0.12);">
-                                <h5><i class="fa-solid fa-helmet-safety"></i> Helm</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Half Face</span>
-                                        <span class="price-item-desc">Helm Standar / Bogo</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-helmet-HalfFace" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Full Face</span>
-                                        <span class="price-item-desc">Helm Balap / Offroad</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-helmet-FullFace" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tas Leather Card -->
-                            <div class="pricing-group-card" style="--accent-color: #0284c7; --accent-gradient: linear-gradient(to bottom, #0284c7, #0369a1); --focus-color: #0284c7; --focus-shadow: rgba(2, 132, 199, 0.12);">
-                                <h5><i class="fa-solid fa-bag-shopping"></i> Tas Leather</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Leather Small</span>
-                                        <span class="price-item-desc">Clutch / Dompet</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-bag_leather-Small" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Leather Medium</span>
-                                        <span class="price-item-desc">Sling Bag / Ransel Kecil</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-bag_leather-Medium" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Leather Large</span>
-                                        <span class="price-item-desc">Duffel / Ransel Besar</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-bag_leather-Large" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tas Fabric Card -->
-                            <div class="pricing-group-card" style="--accent-color: #0ea5e9; --accent-gradient: linear-gradient(to bottom, #0ea5e9, #0284c7); --focus-color: #0ea5e9; --focus-shadow: rgba(14, 165, 233, 0.12);">
-                                <h5><i class="fa-solid fa-bag-shopping"></i> Tas Fabric</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Fabric Small</span>
-                                        <span class="price-item-desc">Canvas Mini / Pouch</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-bag_fabric-Small" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Fabric Medium</span>
-                                        <span class="price-item-desc">Ransel Sekolah / Tote</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-bag_fabric-Medium" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Fabric Large</span>
-                                        <span class="price-item-desc">Ransel Hiking / Travel</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-reg-bag_fabric-Large" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="table-container" style="margin-top: 1.5rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>NAMA BAHAN</th>
+                                        <th>STOK</th>
+                                        <th>HARGA/UNIT</th>
+                                        <th class="action-column">AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryList"></tbody>
+                            </table>
                         </div>
                     </div>
-
-                    <!-- 2. Special Treatment -->
-                    <div style="margin-bottom: 3.5rem; border-top: 1.5px solid rgba(0,0,0,0.05); padding-top: 2rem;">
-                        <div class="catalog-section-header" style="--accent-color: var(--accent-yellow); --focus-shadow: rgba(241, 196, 15, 0.12);">
-                            <h4><i class="fa-solid fa-gem"></i> Special Treatment</h4>
-                            <span class="catalog-section-badge" style="background: rgba(241, 196, 15, 0.08); color: var(--accent-yellow); border-color: rgba(241, 196, 15, 0.15);">Premium Care</span>
-                        </div>
-                        
-                        <div class="pricing-grid">
-                            <!-- Boots Card -->
-                            <div class="pricing-group-card" style="--accent-color: var(--accent-yellow); --accent-gradient: linear-gradient(to bottom, var(--accent-yellow), #f39c12); --focus-color: var(--accent-yellow); --focus-shadow: rgba(241, 196, 15, 0.12);">
-                                <h5><i class="fa-solid fa-boot"></i> Boots</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Boots Small</span>
-                                        <span class="price-item-desc">Ankle Boots / Low Heel</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-boots-Small" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Boots Medium</span>
-                                        <span class="price-item-desc">Combat Boots / Mid Heel</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-boots-Medium" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Boots Large</span>
-                                        <span class="price-item-desc">Thigh-high / Safety Boots</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-boots-Large" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Suede Card -->
-                            <div class="pricing-group-card" style="--accent-color: #e67e22; --accent-gradient: linear-gradient(to bottom, #e67e22, #d35400); --focus-color: #e67e22; --focus-shadow: rgba(230, 126, 34, 0.12);">
-                                <h5><i class="fa-solid fa-circle"></i> Suede</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Suede Small</span>
-                                        <span class="price-item-desc">Loafers / Flat Suede</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-suede-Small" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Suede Medium</span>
-                                        <span class="price-item-desc">Sneakers / Casual Suede</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-suede-Medium" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Suede Large</span>
-                                        <span class="price-item-desc">High-top / Boot Suede</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-suede-Large" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Dress Shoes Card -->
-                            <div class="pricing-group-card" style="--accent-color: #f39c12; --accent-gradient: linear-gradient(to bottom, #f1c40f, #e67e22); --focus-color: #f39c12; --focus-shadow: rgba(243, 156, 18, 0.12);">
-                                <h5><i class="fa-solid fa-shoe-prints"></i> Dress Shoes</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Dress Shoes Small</span>
-                                        <span class="price-item-desc">Flat Shoes / Pantofel Wanita</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-dress_shoes-Small" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Dress Shoes Medium</span>
-                                        <span class="price-item-desc">Oxford / Derby Standar</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-dress_shoes-Medium" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Dress Shoes Large</span>
-                                        <span class="price-item-desc">Brogues / Premium Leather</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-dress_shoes-Large" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. Special Treatment - Repaint -->
-                    <div style="margin-bottom: 3.5rem; border-top: 1.5px solid rgba(0,0,0,0.05); padding-top: 2rem;">
-                        <div class="catalog-section-header" style="--accent-color: #a78bfa; --focus-shadow: rgba(167, 139, 250, 0.12);">
-                            <h4><i class="fa-solid fa-palette"></i> Special Treatment - Repaint</h4>
-                            <span class="catalog-section-badge" style="background: rgba(167, 139, 250, 0.08); color: #a78bfa; border-color: rgba(167, 139, 250, 0.15);">Recolor & Restore</span>
-                        </div>
-                        
-                        <div class="pricing-grid">
-                            <!-- Repaint Leather Card -->
-                            <div class="pricing-group-card" style="--accent-color: #a78bfa; --accent-gradient: linear-gradient(to bottom, #a78bfa, #8b5cf6); --focus-color: #a78bfa; --focus-shadow: rgba(167, 139, 250, 0.12);">
-                                <h5><i class="fa-solid fa-palette"></i> Repaint Leather (P)</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Upper</span>
-                                        <span class="price-item-desc">Atas Sepatu Kulit</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_p-Upper" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Midsole</span>
-                                        <span class="price-item-desc">Sol Tengah Sepatu Kulit</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_p-Midsole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Outsole</span>
-                                        <span class="price-item-desc">Sol Bawah Sepatu Kulit</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_p-Outsole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Insole</span>
-                                        <span class="price-item-desc">Sol Dalam Sepatu Kulit</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_p-Insole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Repaint Canvas Card -->
-                            <div class="pricing-group-card" style="--accent-color: #8b5cf6; --accent-gradient: linear-gradient(to bottom, #8b5cf6, #7c3aed); --focus-color: #8b5cf6; --focus-shadow: rgba(139, 92, 246, 0.12);">
-                                <h5><i class="fa-solid fa-palette"></i> Repaint Canvas (S)</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Upper</span>
-                                        <span class="price-item-desc">Bagian Atas Kanvas</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_s-Upper" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Midsole</span>
-                                        <span class="price-item-desc">Sol Tengah Kanvas</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_s-Midsole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Outsole</span>
-                                        <span class="price-item-desc">Sol Bawah Kanvas</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_s-Outsole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Insole</span>
-                                        <span class="price-item-desc">Sol Dalam Kanvas</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_s-Insole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Repaint Suede Card -->
-                            <div class="pricing-group-card" style="--accent-color: #6366f1; --accent-gradient: linear-gradient(to bottom, #8b5cf6, #6366f1); --focus-color: #6366f1; --focus-shadow: rgba(99, 102, 241, 0.12);">
-                                <h5><i class="fa-solid fa-palette"></i> Repaint Suede</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Upper</span>
-                                        <span class="price-item-desc">Bagian Atas Suede</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_suede-Upper" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Midsole</span>
-                                        <span class="price-item-desc">Sol Tengah Suede</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_suede-Midsole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Outsole</span>
-                                        <span class="price-item-desc">Sol Bawah Suede</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_suede-Outsole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Insole</span>
-                                        <span class="price-item-desc">Sol Dalam Suede</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-repaint_suede-Insole" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Extra Treatments & Express Service -->
-                    <div style="margin-bottom: 2.5rem; border-top: 1.5px solid rgba(0,0,0,0.05); padding-top: 2rem;">
-                        <div class="catalog-section-header" style="--accent-color: #10b981; --focus-shadow: rgba(16, 185, 129, 0.12);">
-                            <h4><i class="fa-solid fa-puzzle-piece"></i> Layanan Tambahan & Express</h4>
-                            <span class="catalog-section-badge" style="background: rgba(16, 185, 129, 0.08); color: #10b981; border-color: rgba(16, 185, 129, 0.15);">Add-ons & Speed</span>
-                        </div>
-                        <div class="pricing-grid">
-                            <!-- Extra Treatment Card -->
-                            <div class="pricing-group-card" style="--accent-color: #2ecc71; --accent-gradient: linear-gradient(to bottom, #2ecc71, #27ae60); --focus-color: #2ecc71; --focus-shadow: rgba(46, 204, 113, 0.12);">
-                                <h5><i class="fa-solid fa-circle-plus"></i> Extra Treatment Add-on</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Liquid Remover Sepatu</span>
-                                        <span class="price-item-desc">Pelepasan Cat Sepatu</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-extra-LiquidRemoverSepatu" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Liquid Remover Tas</span>
-                                        <span class="price-item-desc">Pelepasan Cat Tas</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-extra-LiquidRemoverTas" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Unyellowing</span>
-                                        <span class="price-item-desc">Hilangkan Noda Kuning Sol</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-extra-Unyellowing" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Canvas Cleaner & Whitener</span>
-                                        <span class="price-item-desc">Kanvas Cleaner / Pemutih</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-extra-CanvasCleaner" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Leather Filler</span>
-                                        <span class="price-item-desc">Dempul / Repair Kulit Retak</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-spec-extra-LeatherFiller" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Express Service Card -->
-                            <div class="pricing-group-card" style="--accent-color: #e74c3c; --accent-gradient: linear-gradient(to bottom, #e74c3c, #c0392b); --focus-color: #e74c3c; --focus-shadow: rgba(231, 76, 60, 0.12);">
-                                <h5><i class="fa-solid fa-bolt"></i> Express Service Add-on</h5>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Express 8 Jam (+)</span>
-                                        <span class="price-item-desc">Layanan Kilat Super Cepat</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-exp-8" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Express 18 Jam (+)</span>
-                                        <span class="price-item-desc">Layanan Kilat Sedang</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-exp-18" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <div class="price-item-label">
-                                        <span class="price-item-name">Express 24 Jam (+)</span>
-                                        <span class="price-item-desc">Layanan Kilat Standar</span>
-                                    </div>
-                                    <div class="price-input-wrapper">
-                                        <span class="price-input-prefix">Rp</span>
-                                        <input type="number" id="price-exp-24" class="form-input" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button class="glow-btn-primary" onclick="window.saveAllSettings()" style="width: 100%; padding: 1.35rem; margin-top: 2rem;">
-                        Simpan Semua Harga Baru <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </button>
                 </div>
-            </div>
 
-            <!-- Tab: Testimoni -->
-            <div id="tab-testimonials" class="tab-content">
-                <h2>Moderasi Testimoni</h2>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr><th>PELANGGAN</th><th>RATING</th><th>KOMENTAR</th><th>FOTO</th><th>STATUS</th><th>AKSI</th></tr></thead>
-                        <tbody><!-- JS Render --></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tab: Editor Artikel -->
-            <div id="tab-articles" class="tab-content">
-                <div class="dashboard-header">
-                    <h2>Editor Artikel Edukasi</h2>
-                    <button class="btn btn-primary" onclick="window.openArticleModal()"><i class="fa-solid fa-circle-plus"></i> Artikel Baru</button>
-                </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr><th>JUDUL</th><th>KATEGORI</th><th>STATUS</th><th>AKSI</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <input type="hidden" id="articleId">
-            </div>
-
-            <!-- Tab: Pengaturan Web (Branding di Sini) -->
-            <div id="tab-settings" class="tab-content">
-                <h2>Pengaturan Website & Branding</h2>
-                <div class="glass-panel" style="padding: 2.5rem; margin-top: 1.5rem;">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-sky);"><i class="fa-solid fa-display"></i> Branding & Hero Section</h3>
-                    <div class="form-group">
-                        <label>Judul Utama (Hero Title)</label>
-                        <input type="text" id="configHeroTitle" class="form-input" placeholder="Cth: Laundry Sepatu Premium">
+                <div id="tab-revenue" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Laporan Keuangan & Performa</h2>
+                        <div class="grid grid-2" style="margin-top: 1.5rem;">
+                            <div class="stat-card glass-card" style="padding: 2rem;">
+                                <h3>Total Pemasukan</h3>
+                                <h2 id="rev-total">Rp 0</h2>
+                            </div>
+                            <div class="stat-card glass-card" style="padding: 2rem;">
+                                <h3>Total Pesanan</h3>
+                                <h2 id="rev-orders">0</h2>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Sub-judul (Hero Subtitle)</label>
-                        <textarea id="configHeroSubtitle" class="form-input" rows="3" placeholder="Deskripsi singkat layanan..."></textarea>
-                    </div>
-                    <button class="btn btn-primary" onclick="window.saveAllSettings()" style="width: 100%; padding: 1.2rem; margin-top: 1.5rem;">Simpan Branding <i class="fa-solid fa-save" style="margin-left: 10px;"></i></button>
                 </div>
-            </div>
 
-        </main>
+                <div id="tab-catalog" class="tab-content">
+                    <div class="glass-panel">
+                        <div class="dashboard-header" style="display:flex; justify-content:space-between;">
+                            <div>
+                                <h2>Katalog & Paket Layanan</h2>
+                                <h4 id="stat-active-services" style="margin-top: 10px; color: var(--text-muted);">0
+                                    Layanan Aktif</h4>
+                            </div>
+                            <button class="btn btn-primary owner-only" onclick="window.openServiceModal()">+ Tambah
+                                Layanan Baru</button>
+                        </div>
+                        <div class="table-container" style="margin-top: 2rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>FOTO</th>
+                                        <th>NAMA LAYANAN</th>
+                                        <th>KATEGORI</th>
+                                        <th>TREATMENT</th>
+                                        <th>HARGA</th>
+                                        <th>ESTIMASI</th>
+                                        <th>AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="servicesListBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-testimonials" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Moderasi Testimoni Pelanggan</h2>
+                        <div class="table-container" style="margin-top: 1.5rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>PELANGGAN</th>
+                                        <th>RATING</th>
+                                        <th>KOMENTAR</th>
+                                        <th>STATUS</th>
+                                        <th>AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-galeri" class="tab-content">
+                    <div class="glass-panel">
+                        <div class="dashboard-header" style="display:flex; justify-content:space-between;">
+                            <h2>Manajemen Galeri Portofolio</h2>
+                            <button class="btn btn-primary" onclick="window.openGaleriModal()">+ Upload Foto</button>
+                        </div>
+                        <div class="table-container" style="margin-top: 1.5rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>PREVIEW</th>
+                                        <th>LINK INSTAGRAM</th>
+                                        <th>AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="galeriTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-settings" class="tab-content">
+                    <div class="glass-panel">
+                        <h2>Pengaturan Konten Website & Web Builder</h2>
+                        <div class="grid grid-2" style="margin-top: 2rem;">
+                            <div class="glass-card" style="padding: 2rem;">
+                                <h3>Hero Branding</h3>
+                                <div class="form-group"><label>Judul Utama (Hero Title)</label><input type="text"
+                                        id="configHeroTitle" class="form-input"></div>
+                                <div class="form-group"><label>Sub-judul (Hero Subtitle)</label><textarea
+                                        id="configHeroSubtitle" class="form-input" rows="3"></textarea></div>
+                                <div class="form-group"><label>Warna Teks Hero</label><input type="color"
+                                        id="configHeroColor" class="form-input"></div>
+                            </div>
+                            <div class="glass-card" style="padding: 2rem;">
+                                <h3>Kontak & Sosial Media</h3>
+                                <div class="form-group"><label>WhatsApp Admin</label><input type="text"
+                                        id="configWhatsApp" class="form-input"></div>
+                                <div class="form-group"><label>Instagram URL</label><input type="text"
+                                        id="configInstagramUrl" class="form-input"></div>
+                                <div class="form-group"><label>Alamat Workshop</label><textarea
+                                        id="configBusinessAddress" class="form-input" rows="2"></textarea></div>
+                                <div class="form-group"><label>Google Maps Embed iFrame</label><input type="text"
+                                        id="configGmapsUrl" class="form-input"></div>
+                                <div class="form-group" style="display:flex; align-items:center; gap:10px;"><input
+                                        type="checkbox" id="configWorkshopDropoff" style="width:20px; height:20px;">
+                                    <label for="configWorkshopDropoff" style="margin:0;">Aktifkan Drop-off</label></div>
+                            </div>
+                        </div>
+                        <div class="glass-card" style="padding: 2rem; margin-top: 2rem;">
+                            <h3>Slideshow Latar Belakang Hero</h3>
+                            <div style="display: flex; gap: 15px; margin-bottom: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
+                                <div class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 0;">
+                                    <label>URL Gambar Baru</label>
+                                    <input type="text" id="newSlideshowUrl" class="form-input" placeholder="Masukkan URL Gambar atau Upload">
+                                </div>
+                                <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+                                    <label>Upload File</label>
+                                    <input type="file" id="slideshowUploadFile" class="form-input" accept="image/*" onchange="window.previewSlideshowUpload(this)">
+                                </div>
+                                <button class="btn btn-primary" onclick="window.addSlideshowImage()" style="height: 46px;">+ Tambah Slide</button>
+                            </div>
+                            <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>PREVIEW</th>
+                                            <th>URL GAMBAR</th>
+                                            <th style="width: 100px;">AKSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="slideshowTableBody">
+                                        <!-- Dinamis dari JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="glass-card" style="padding: 2rem; margin-top: 2rem;">
+                            <h3>Blok Teks Konten Dinamis (About Us)</h3>
+                            <div class="form-group">
+                                <label>Motto Perusahaan (about_motto)</label>
+                                <input type="text" id="configAboutMotto" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Deskripsi Semantis (about_semantics)</label>
+                                <textarea id="configAboutSemantics" class="form-input" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Visi Perusahaan (about_vision)</label>
+                                <textarea id="configAboutVision" class="form-input" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Misi Perusahaan (about_mission)</label>
+                                <textarea id="configAboutMission" class="form-input" rows="5"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Foto Tentang Kami (URL)</label>
+                                <input type="text" id="configAboutImage" class="form-input" placeholder="Masukkan URL Foto atau Upload File" style="margin-bottom: 10px;">
+                                <input type="file" id="configAboutImageFile" class="form-input" accept="image/*" onchange="window.previewAboutImageUpload(this)">
+                            </div>
+                        </div>
+                        <button onclick="window.saveAllSettings()" class="btn btn-primary"
+                            style="width: 100%; margin-top: 2rem; padding: 1.2rem;">Simpan Perubahan Konten CMS</button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
     </div>
 
-    <!-- Modal Status Update -->
-    <div id="progressModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(8px);">
-        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 450px; border-radius: 24px; text-align: center;">
-            <h3 style="margin-bottom: 1.5rem;">Update Progress Pesanan</h3>
+    <div id="progressModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="glass-panel"
+            style="background:white; padding: 2.5rem; width: 450px; border-radius: 24px; text-align: center;">
+            <h3 style="margin-bottom: 1.5rem; color: #0f172a;">Update Progress Pesanan</h3>
             <div class="form-group">
-                <label>Pilih Status Terbaru</label>
                 <select id="statusSelect" class="form-input">
-                    <option value="1">Diterima (Antrian)</option>
-                    <option value="2">Proses Treatment</option>
-                    <option value="3">Pengeringan</option>
-                    <option value="4">Detailing/Finishing</option>
-                    <option value="5">Siap Diambil</option>
-                    <option value="6">Selesai/Lunas</option>
+                    <option value="1">1. Penjemputan</option>
+                    <option value="2">2. Diterima (Antrian)</option>
+                    <option value="3">3. Proses Treatment</option>
+                    <option value="4">4. Pengeringan & Detailing</option>
+                    <option value="5">5. Menunggu Pembayaran</option>
+                    <option value="6">6. Pengantaran</option>
+                    <option value="7">7. Selesai (Lunas)</option>
                 </select>
             </div>
             <div style="display:flex; gap:10px; margin-top: 1.5rem;">
-                <button class="btn" style="flex:1; background:#64748b; color:white;" onclick="window.closeProgressModal()">Batal</button>
-                <button class="btn btn-primary" style="flex:2;" onclick="window.DB.updateOrderStatus(window.currentUpdateId, document.getElementById('statusSelect').value).then(() => { alert('Status Berhasil Diupdate!'); window.location.reload(); })">Simpan Perubahan</button>
+                <button class="btn" style="flex:1; background:#64748b; color:white;"
+                    onclick="document.getElementById('progressModal').style.display='none'">Batal</button>
+                <button class="btn btn-primary" style="flex:2;" onclick="window.saveStatusUpdate()">Simpan
+                    Perubahan</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal CRUD Stok Bahan -->
-    <div id="stockModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(8px);">
-        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 500px; border-radius: 24px; text-align: left; max-height: 90vh; overflow-y: auto;">
-            <h3 id="stockModalTitle" style="margin-bottom: 1.5rem; text-align: center; color: var(--primary-navy); font-weight: 900;">Tambah Item Stok Baru</h3>
-            <form onsubmit="window.saveStockItem(event)">
-                <input type="hidden" id="stockId">
-                <div class="form-group">
-                    <label>Nama Bahan</label>
-                    <input type="text" id="stockName" class="form-input" required placeholder="Cth: Sabun Suede">
+    <div id="galeriModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 500px; border-radius: 24px;">
+            <h3 id="galeriModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Foto Galeri</h3>
+            <input type="hidden" id="galeriId">
+            <div class="form-group">
+                <label>Upload Foto</label>
+                <input type="text" id="galeriImageUrl" class="form-input" placeholder="Masukkan URL Foto atau Upload"
+                    style="margin-bottom: 10px;">
+                <input type="file" id="galeriImageFile" class="form-input" accept="image/*"
+                    onchange="window.previewGaleriUpload(this)">
+            </div>
+            <div class="form-group"><label>Link Instagram</label><input type="text" id="galeriIgLink" class="form-input"
+                    placeholder="https://instagram.com/p/..."></div>
+            <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+                <button class="btn" style="flex:1; background:#64748b; color:white;"
+                    onclick="document.getElementById('galeriModal').style.display='none'">Batal</button>
+                <button class="btn btn-primary" style="flex:2;" onclick="window.saveGaleri()">Simpan Foto</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="serviceModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="glass-panel"
+            style="background:white; padding: 2.5rem; width: 600px; max-height: 90vh; overflow-y: auto; border-radius: 24px;">
+            <h3 id="serviceModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Layanan Baru</h3>
+            <form id="serviceForm" onsubmit="window.saveServiceItem(event)">
+                <input type="hidden" id="serviceFormId">
+                <div class="grid grid-2" style="gap:15px;">
+                    <div class="form-group"><label>Nama Layanan</label><input type="text" id="serviceFormName"
+                            class="form-input" required></div>
+                    <div class="form-group"><label>Kategori</label><select id="serviceFormCategory" class="form-input"
+                            required>
+                            <option>Sepatu</option>
+                            <option>Bags</option>
+                            <option>Helmets</option>
+                            <option>Repaints</option>
+                        </select></div>
                 </div>
-                <div class="form-group">
-                    <label>Kategori</label>
-                    <input type="text" id="stockCategory" class="form-input" required placeholder="Cth: Soap, Chemical, Scent, etc.">
+                <div class="grid grid-2" style="gap:15px;">
+                    <div class="form-group"><label>Jenis Treatment</label><input type="text" id="serviceFormTreatment"
+                            class="form-input" required></div>
+                    <div class="form-group"><label>Harga (Rp)</label><input type="number" id="serviceFormPrice"
+                            class="form-input" required></div>
                 </div>
-                <div class="grid grid-2" style="gap: 15px;">
-                    <div class="form-group">
-                        <label>Satuan (Unit)</label>
-                        <input type="text" id="stockUnit" class="form-input" required placeholder="Cth: Liter / Pcs">
-                    </div>
-                    <div class="form-group">
-                        <label>Harga per Unit (Rp)</label>
-                        <input type="number" id="stockPrice" class="form-input" required placeholder="Cth: 50000">
-                    </div>
-                </div>
-                <div class="grid grid-2" style="gap: 15px;">
-                    <div class="form-group">
-                        <label>Jumlah Stok Awal</label>
-                        <input type="number" step="0.01" id="stockQty" class="form-input" required placeholder="Cth: 10">
-                    </div>
-                    <div class="form-group">
-                        <label>Minimal Stok (Warning)</label>
-                        <input type="number" step="0.01" id="stockMin" class="form-input" required placeholder="Cth: 2">
-                    </div>
-                </div>
+                <div class="form-group"><label>Estimasi Waktu</label><input type="text" id="serviceFormEstimation"
+                        class="form-input" required></div>
+                <div class="form-group"><label>Deskripsi</label><textarea id="serviceFormDescription" class="form-input"
+                        rows="2"></textarea></div>
                 <div style="display:flex; gap:10px; margin-top: 1.5rem;">
-                    <button type="button" class="btn" style="flex:1; background:#64748b; color:white;" onclick="window.closeStockModal()">Batal</button>
-                    <button type="submit" class="btn btn-primary" style="flex:2;" id="btnSubmitStock">Simpan Item</button>
+                    <button type="button" class="btn" style="flex:1; background:#64748b; color:white;"
+                        onclick="document.getElementById('serviceModal').style.display='none'">Batal</button>
+                    <button type="submit" class="btn btn-primary owner-only" style="flex:2;">Simpan Layanan</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal: Artikel Baru / Edit Artikel -->
-    <div id="articleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; backdrop-filter:blur(8px); overflow-y:auto; padding: 2rem 0;">
-        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 600px; max-width:90%; border-radius: 24px; margin: 2rem auto; position:relative;">
-            <button onclick="window.closeArticleModal()" style="position:absolute; top:1rem; right:1.2rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b;">&#x2715;</button>
-            <h3 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary-sky);"></i> <span id="articleModalTitle">Tambah Artikel Baru</span></h3>
-
-            <div class="form-group">
-                <label>Judul Artikel <span style="color:red;">*</span></label>
-                <input type="text" id="artTitle" class="form-input" placeholder="Cth: Cara Merawat Sepatu Suede">
-            </div>
-            <div class="form-group">
-                <label>Kategori <span style="color:red;">*</span></label>
-                <select id="artCategory" class="form-input">
-                    <option value="Perawatan Sepatu">Perawatan Sepatu</option>
-                    <option value="Perawatan Tas">Perawatan Tas</option>
-                    <option value="Perawatan Helm">Perawatan Helm</option>
-                    <option value="Tips & Trik">Tips & Trik</option>
-                    <option value="Promo">Promo</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Gambar Artikel <span style="color:red;">*</span></label>
-
-                <!-- Upload Zone -->
-                <div id="artImageDropZone" onclick="document.getElementById('artImageFile').click()"
-                    style="border: 2px dashed #94a3b8; border-radius: 16px; padding: 2rem; text-align:center; cursor:pointer; transition: all 0.3s; background: rgba(148,163,184,0.05); position:relative;"
-                    ondragover="event.preventDefault(); this.style.borderColor='var(--primary-sky)'; this.style.background='rgba(52,152,219,0.07)';"
-                    ondragleave="this.style.borderColor='#94a3b8'; this.style.background='rgba(148,163,184,0.05)';"
-                    ondrop="window.handleImageDrop(event)">
-                    <!-- Preview -->
-                    <img id="artImagePreview" src="" alt="Preview"
-                        style="display:none; max-height:180px; max-width:100%; border-radius:12px; margin-bottom:1rem; object-fit:cover;" />
-                    <!-- Placeholder Icon -->
-                    <div id="artImagePlaceholder">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size:2.5rem; color:#94a3b8; margin-bottom:0.75rem; display:block;"></i>
-                        <p style="margin:0; font-weight:600; color:#475569;">Klik atau Drag & Drop gambar di sini</p>
-                        <p style="margin:0.25rem 0 0; font-size:0.8rem; color:#94a3b8;">JPG, PNG, WEBP — Maks. 5MB</p>
-                    </div>
-                    <!-- Upload progress label -->
-                    <div id="artImageStatus" style="display:none; margin-top:0.75rem; font-size:0.85rem; color:var(--primary-sky); font-weight:600;"></div>
-                    <input type="file" id="artImageFile" accept="image/jpeg,image/png,image/webp,image/gif"
-                        style="display:none;" onchange="window.handleImageFileSelect(this)">
+    <div id="stockModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="glass-panel" style="background:white; padding: 2.5rem; width: 500px; border-radius: 24px;">
+            <h3 id="stockModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Item Stok Baru</h3>
+            <form onsubmit="window.saveStockItem(event)">
+                <input type="hidden" id="stockId">
+                <div class="form-group"><label>Nama Bahan</label><input type="text" id="stockName" class="form-input"
+                        required></div>
+                <div class="grid grid-2" style="gap:15px;">
+                    <div class="form-group"><label>Kategori</label><input type="text" id="stockCategory"
+                            class="form-input" required></div>
+                    <div class="form-group"><label>Satuan (Unit)</label><input type="text" id="stockUnit"
+                            class="form-input" required></div>
                 </div>
-
-                <!-- Atau gunakan URL -->
-                <details style="margin-top:0.75rem;">
-                    <summary style="cursor:pointer; font-size:0.85rem; color:#64748b; user-select:none;">
-                        <i class="fa-solid fa-link" style="margin-right:5px;"></i>Atau masukkan URL gambar langsung
-                    </summary>
-                    <div style="margin-top:0.5rem; display:flex; gap:8px; align-items:center;">
-                        <input type="text" id="artImage" class="form-input" placeholder="https://images.unsplash.com/..."
-                            style="flex:1;" oninput="window.previewFromUrl(this.value)">
-                        <button type="button" class="btn" onclick="window.previewFromUrl(document.getElementById('artImage').value)"
-                            style="padding:10px 14px; background:#e2e8f0; color:#334155; white-space:nowrap; border-radius:10px;">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                    </div>
-                </details>
-            </div>
-            <div class="form-group">
-                <label>Deskripsi Singkat <span style="color:red;">*</span></label>
-                <textarea id="artExcerpt" class="form-input" rows="2" placeholder="Ringkasan artikel (tampil di kartu artikel customer)..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>Konten Lengkap Artikel</label>
-                <textarea id="artContent" class="form-input" rows="5" placeholder="Tulis isi artikel selengkapnya di sini..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>Status Publikasi</label>
-                <select id="artStatus" class="form-input">
-                    <option value="Publik">Publik (Tampil ke Customer)</option>
-                    <option value="Draft">Draft (Tidak Tampil)</option>
-                </select>
-            </div>
-            <input type="hidden" id="articleId">
-
-            <div style="display:flex; gap:10px; margin-top: 1.5rem;">
-                <button class="btn" style="flex:1; background:#64748b; color:white;" onclick="window.closeArticleModal()">Batal</button>
-                <button class="btn btn-primary" style="flex:2;" onclick="window.saveArticle()"><i class="fa-solid fa-save"></i> Simpan & Publikasikan</button>
-            </div>
+                <div class="grid grid-2" style="gap:15px;">
+                    <div class="form-group"><label>Harga per Unit</label><input type="number" id="stockPrice"
+                            class="form-input" required></div>
+                    <div class="form-group"><label>Stok Awal</label><input type="number" step="0.1" id="stockQty"
+                            class="form-input" required></div>
+                </div>
+                <input type="hidden" id="stockMin" value="2">
+                <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+                    <button type="button" class="btn" style="flex:1; background:#64748b; color:white;"
+                        onclick="document.getElementById('stockModal').style.display='none'">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="flex:2;">Simpan Item</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script src="js/db.js?v=3"></script>
-    <script src="js/dashboard.js?v=3"></script>
+    <script src="js/dashboard.js"></script>
 </body>
+
 </html>

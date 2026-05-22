@@ -1,9 +1,12 @@
-// landing.js
+// landing.js - Sparkling Cleaners Landing Customer Flow
 
-// Generate QR Code
+let lightboxSlides = [];
+let currentLightboxIndex = 0;
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Load pricing first to ensure it's available for all renders and options
     window.PRICING = await DB.getPricing();
+    
     const qrContainer = document.getElementById('ig-qr-code');
     if (qrContainer && typeof QRCode !== 'undefined') {
         new QRCode(qrContainer, {
@@ -41,6 +44,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Initialize New Features
+    await initHeroSlideshow();
+    await initFulfillmentToggle();
+    window.updateCartUI();
+
     // Dynamic Content Rendering
     await renderBranding();
     await renderPricing();
@@ -48,6 +56,313 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderTestimonials();
 });
 
+// 1. Hero Slideshow Logic
+async function initHeroSlideshow() {
+    const slideshowContainer = document.getElementById('heroSlideshow');
+    if (!slideshowContainer) return;
+    
+    const config = await DB.getConfig();
+    let slides = config.hero_slides;
+    if (!slides || !Array.isArray(slides) || slides.length === 0) {
+        slides = [
+            'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=1200',
+            'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200',
+            'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1200'
+        ];
+    }
+    
+    slideshowContainer.innerHTML = slides.map((img, idx) => `
+        <div class="hero-slide ${idx === 0 ? 'active' : ''}" style="background-image: url('${img}');"></div>
+    `).join('');
+    
+    let currentIndex = 0;
+    setInterval(() => {
+        const slidesElements = slideshowContainer.querySelectorAll('.hero-slide');
+        if (slidesElements.length <= 1) return;
+        
+        slidesElements[currentIndex].classList.remove('active');
+        currentIndex = (currentIndex + 1) % slidesElements.length;
+        slidesElements[currentIndex].classList.add('active');
+    }, 2000);
+}
+
+// Scroll Parallax Fade-Out
+window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    const heroSlideshow = document.getElementById('heroSlideshow');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSubtitle = document.getElementById('heroSubtitle');
+    const heroBtn = document.querySelector('.hero .btn-primary');
+    
+    const opacity = Math.max(0, 1 - scrollY / 350);
+    if (heroSlideshow) heroSlideshow.style.opacity = opacity;
+    if (heroTitle) heroTitle.style.opacity = opacity;
+    if (heroSubtitle) heroSubtitle.style.opacity = opacity;
+    if (heroBtn) heroBtn.style.opacity = opacity;
+});
+
+// 2. Fulfillment Mode Toggle
+async function initFulfillmentToggle() {
+    const config = await DB.getConfig();
+    const dropoffAllowed = config.workshop_dropoff_allowed === true;
+    const deliverySelect = document.getElementById('orderDelivery');
+    const details = document.getElementById('deliveryDetails');
+    const addr = document.getElementById('orderAddress');
+    
+    if (deliverySelect) {
+        if (!dropoffAllowed) {
+            deliverySelect.innerHTML = `<option value="Ya">Jemput / Antar ke Alamat (Ya)</option>`;
+            deliverySelect.value = 'Ya';
+            deliverySelect.disabled = true;
+            if (details) {
+                details.style.display = 'block';
+                if (addr) addr.required = true;
+            }
+        } else {
+            deliverySelect.innerHTML = `
+                <option value="Tidak">Antar Sendiri ke Workshop (Tidak)</option>
+                <option value="Ya">Jemput / Antar ke Alamat (Ya)</option>
+            `;
+            deliverySelect.disabled = false;
+            window.toggleDeliveryOptions(deliverySelect.value);
+        }
+    }
+}
+
+// 3. Dynamic Catalog Grid Rendering
+async function renderServicesGrid() {
+    const grid = document.getElementById('services-grid');
+    if (!grid) return;
+    
+    const services = await DB.getServices();
+    if (!services || services.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Belum ada layanan yang tersedia.</div>';
+        return;
+    }
+    
+    grid.innerHTML = '';
+    services.forEach(s => {
+        const inCart = window.cart.find(item => item.id === s.id);
+        const imageUrl = s.image || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500';
+        
+        let actionHtml = '';
+        if (inCart) {
+            actionHtml = `
+                <div class="service-qty-control">
+                    <button type="button" class="qty-btn-large" onclick="window.updateCartQty('${s.id}', -1)">&minus;</button>
+                    <span class="service-qty-val">${inCart.qty}</span>
+                    <button type="button" class="qty-btn-large" onclick="window.updateCartQty('${s.id}', 1)">&plus;</button>
+                </div>
+            `;
+        } else {
+            actionHtml = `
+                <button type="button" class="btn btn-primary" onclick="window.addToCart('${s.id}')" style="width: 100%;">Tambah ke Keranjang <i class="fa-solid fa-cart-plus" style="margin-left:8px;"></i></button>
+            `;
+        }
+
+        grid.innerHTML += `
+            <div class="glass-card service-card" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="service-card-img-wrapper" onclick="window.openLightbox('${s.id}')">
+                        <img src="${imageUrl}" alt="${s.name}" class="service-card-img">
+                    </div>
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky); text-transform: uppercase;">${s.category} - ${s.treatment}</span>
+                    <h3 style="margin: 0.5rem 0; font-size: 1.2rem;">${s.name}</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">${s.description || 'Pembersihan mendalam untuk menjaga kualitas bahan.'}</p>
+                </div>
+                <div>
+                    <div class="service-price" style="font-size:1.25rem; font-weight:700; color:var(--primary-navy); margin-bottom:0.25rem;">${DB.formatCurrency(s.price)}</div>
+                    <span class="service-time" style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:1rem;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i> Estimasi: ${s.estimation}</span>
+                    <div class="service-card-action">
+                        ${actionHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// 4. Shopping Cart State Engine
+window.cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+window.addToCart = async function(serviceId) {
+    const services = await DB.getServices();
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
+    
+    const existing = window.cart.find(item => item.id === serviceId);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        window.cart.push({
+            id: service.id,
+            name: service.name,
+            price: service.price,
+            qty: 1,
+            image: service.image || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500',
+            additional_images: service.additional_images || ''
+        });
+    }
+    
+    window.saveCart();
+    window.updateCartUI();
+    window.toggleCartDrawer(true);
+};
+
+window.updateCartQty = function(serviceId, delta) {
+    const existing = window.cart.find(item => item.id === serviceId);
+    if (!existing) return;
+    
+    existing.qty += delta;
+    if (existing.qty <= 0) {
+        window.cart = window.cart.filter(item => item.id !== serviceId);
+    }
+    
+    window.saveCart();
+    window.updateCartUI();
+};
+
+window.saveCart = function() {
+    localStorage.setItem('cart', JSON.stringify(window.cart));
+};
+
+window.toggleCartDrawer = function(open) {
+    const drawer = document.getElementById('cartDrawer');
+    if (open) {
+        drawer.classList.add('open');
+    } else {
+        drawer.classList.remove('open');
+    }
+};
+
+window.updateCartUI = function() {
+    const badge = document.getElementById('floatingCartBadge');
+    const floatBtn = document.getElementById('floatingCartBtn');
+    
+    const totalQty = window.cart.reduce((sum, item) => sum + item.qty, 0);
+    const subtotal = window.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    
+    if (totalQty > 0) {
+        if (badge) badge.innerText = totalQty;
+        if (floatBtn) floatBtn.style.display = 'flex';
+    } else {
+        if (floatBtn) floatBtn.style.display = 'none';
+        window.toggleCartDrawer(false);
+    }
+    
+    const drawerList = document.getElementById('cartDrawerList');
+    if (drawerList) {
+        if (window.cart.length === 0) {
+            drawerList.innerHTML = '<p style="color: var(--text-muted); font-size:0.9rem; text-align:center; margin-top:2rem;">Keranjang belanja kosong.</p>';
+        } else {
+            drawerList.innerHTML = window.cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                    <div class="cart-item-details">
+                        <div class="cart-item-title">${item.name}</div>
+                        <div class="cart-item-price">${DB.formatCurrency(item.price)}</div>
+                    </div>
+                    <div class="cart-item-actions">
+                        <button type="button" class="qty-btn" onclick="window.updateCartQty('${item.id}', -1)">&minus;</button>
+                        <span class="cart-item-qty">${item.qty}</span>
+                        <button type="button" class="qty-btn" onclick="window.updateCartQty('${item.id}', 1)">&plus;</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+    
+    const drawerSubtotal = document.getElementById('cartDrawerSubtotal');
+    if (drawerSubtotal) {
+        drawerSubtotal.innerText = DB.formatCurrency(subtotal);
+    }
+    
+    const checkoutList = document.getElementById('checkoutCartList');
+    if (checkoutList) {
+        if (window.cart.length === 0) {
+            checkoutList.innerHTML = '<p style="color: var(--text-muted); font-size:0.9rem; text-align:center; margin:0;">Keranjang belanja kosong. Silakan pilih layanan di atas.</p>';
+        } else {
+            checkoutList.innerHTML = window.cart.map(item => `
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:8px; margin-bottom:8px;">
+                    <div style="text-align: left;">
+                        <div style="font-weight:600; font-size:0.95rem; color:var(--primary-navy);">${item.name}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">${item.qty} x ${DB.formatCurrency(item.price)}</div>
+                    </div>
+                    <div style="font-weight:700; color:var(--primary-sky); font-size:0.95rem;">${DB.formatCurrency(item.price * item.qty)}</div>
+                </div>
+            `).join('');
+        }
+    }
+    
+    renderServicesGrid();
+    window.calculateTotal();
+};
+
+// 5. 1:1 Lightbox Image Slider
+window.openLightbox = async function(serviceId) {
+    const services = await DB.getServices();
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
+    
+    lightboxSlides = [];
+    if (service.image) lightboxSlides.push(service.image);
+    if (service.additional_images) {
+        service.additional_images.split(',').forEach(img => {
+            const trimmed = img.trim();
+            if (trimmed && !lightboxSlides.includes(trimmed)) {
+                lightboxSlides.push(trimmed);
+            }
+        });
+    }
+    
+    if (lightboxSlides.length === 0) {
+        lightboxSlides.push('https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500');
+    }
+    
+    currentLightboxIndex = 0;
+    const slider = document.getElementById('lightboxSlider');
+    slider.innerHTML = lightboxSlides.map(img => `
+        <div class="lightbox-slide">
+            <img src="${img}" alt="Detail Image">
+        </div>
+    `).join('');
+    
+    const prevBtn = document.querySelector('.lightbox-prev');
+    const nextBtn = document.querySelector('.lightbox-next');
+    if (lightboxSlides.length <= 1) {
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+    } else {
+        if (prevBtn) prevBtn.style.display = 'flex';
+        if (nextBtn) nextBtn.style.display = 'flex';
+    }
+    
+    window.updateLightboxSlider();
+    document.getElementById('lightboxModal').style.display = 'flex';
+};
+
+window.closeLightbox = function() {
+    document.getElementById('lightboxModal').style.display = 'none';
+};
+
+window.prevLightboxSlide = function() {
+    if (lightboxSlides.length <= 1) return;
+    currentLightboxIndex = (currentLightboxIndex - 1 + lightboxSlides.length) % lightboxSlides.length;
+    window.updateLightboxSlider();
+};
+
+window.nextLightboxSlide = function() {
+    if (lightboxSlides.length <= 1) return;
+    currentLightboxIndex = (currentLightboxIndex + 1) % lightboxSlides.length;
+    window.updateLightboxSlider();
+};
+
+window.updateLightboxSlider = function() {
+    const slider = document.getElementById('lightboxSlider');
+    slider.style.transform = `translateX(-${currentLightboxIndex * 100}%)`;
+};
+
+// 6. Old Pricing Table & Layout fallbacks
 async function renderBranding() {
     const config = await DB.getConfig();
     if (config && config.hero) {
@@ -61,10 +376,7 @@ async function renderBranding() {
 async function renderPricing() {
     const p = window.PRICING || await DB.getPricing();
     if (!p) return;
-    
     const kFormat = (num) => (num >= 1000 ? Math.round(num / 1000) + 'K' : num);
-
-    // 1. Regular Wash
     if (p.regular) {
         if (p.regular.shoes) {
             if (document.getElementById('tbl-reg-shoes-est')) document.getElementById('tbl-reg-shoes-est').innerText = p.regular.shoes.est || '';
@@ -77,330 +389,46 @@ async function renderPricing() {
             if (document.getElementById('tbl-reg-helmet-HalfFace')) document.getElementById('tbl-reg-helmet-HalfFace').innerText = kFormat(p.regular.helmet["Half Face"]) + ' (Half Face)';
             if (document.getElementById('tbl-reg-helmet-FullFace')) document.getElementById('tbl-reg-helmet-FullFace').innerText = kFormat(p.regular.helmet["Full Face"]) + ' (Full Face)';
         }
-        if (p.regular.bag_leather) {
-            if (document.getElementById('tbl-reg-bag_leather-est')) document.getElementById('tbl-reg-bag_leather-est').innerText = p.regular.bag_leather.est || '';
-            if (document.getElementById('tbl-reg-bag_leather-Small')) document.getElementById('tbl-reg-bag_leather-Small').innerText = kFormat(p.regular.bag_leather.Small);
-            if (document.getElementById('tbl-reg-bag_leather-Medium')) document.getElementById('tbl-reg-bag_leather-Medium').innerText = kFormat(p.regular.bag_leather.Medium);
-            if (document.getElementById('tbl-reg-bag_leather-Large')) document.getElementById('tbl-reg-bag_leather-Large').innerText = kFormat(p.regular.bag_leather.Large);
-        }
-        if (p.regular.bag_fabric) {
-            if (document.getElementById('tbl-reg-bag_fabric-est')) document.getElementById('tbl-reg-bag_fabric-est').innerText = p.regular.bag_fabric.est || '';
-            if (document.getElementById('tbl-reg-bag_fabric-Small')) document.getElementById('tbl-reg-bag_fabric-Small').innerText = kFormat(p.regular.bag_fabric.Small);
-            if (document.getElementById('tbl-reg-bag_fabric-Medium')) document.getElementById('tbl-reg-bag_fabric-Medium').innerText = kFormat(p.regular.bag_fabric.Medium);
-            if (document.getElementById('tbl-reg-bag_fabric-Large')) document.getElementById('tbl-reg-bag_fabric-Large').innerText = kFormat(p.regular.bag_fabric.Large);
-        }
-    }
-
-    // 2. Special Treatment
-    if (p.special) {
-        if (p.special.boots) {
-            if (document.getElementById('tbl-spec-boots-est')) document.getElementById('tbl-spec-boots-est').innerText = p.special.boots.est || '';
-            if (document.getElementById('tbl-spec-boots-price')) {
-                document.getElementById('tbl-spec-boots-price').innerText = `S: ${kFormat(p.special.boots.Small)} | M: ${kFormat(p.special.boots.Medium)} | L: ${kFormat(p.special.boots.Large)}`;
-            }
-        }
-        if (p.special.suede) {
-            if (document.getElementById('tbl-spec-suede-est')) document.getElementById('tbl-spec-suede-est').innerText = p.special.suede.est || '';
-            if (document.getElementById('tbl-spec-suede-price')) {
-                document.getElementById('tbl-spec-suede-price').innerText = `S: ${kFormat(p.special.suede.Small)} | M: ${kFormat(p.special.suede.Medium)} | L: ${kFormat(p.special.suede.Large)}`;
-            }
-        }
-        if (p.special.dress_shoes) {
-            if (document.getElementById('tbl-spec-dress_shoes-est')) document.getElementById('tbl-spec-dress_shoes-est').innerText = p.special.dress_shoes.est || '';
-            if (document.getElementById('tbl-spec-dress_shoes-price')) {
-                document.getElementById('tbl-spec-dress_shoes-price').innerText = `S: ${kFormat(p.special.dress_shoes.Small)} | M: ${kFormat(p.special.dress_shoes.Medium)} | L: ${kFormat(p.special.dress_shoes.Large)}`;
-            }
-        }
-        if (p.special.repaint_p) {
-            if (document.getElementById('tbl-spec-repaint_p-est')) document.getElementById('tbl-spec-repaint_p-est').innerText = p.special.repaint_p.est || '';
-            if (document.getElementById('tbl-spec-repaint_p-price')) {
-                document.getElementById('tbl-spec-repaint_p-price').innerText = `Upper ${kFormat(p.special.repaint_p.Upper)} | Midsole ${kFormat(p.special.repaint_p.Midsole)} | Outsole ${kFormat(p.special.repaint_p.Outsole)} | Insole ${kFormat(p.special.repaint_p.Insole)}`;
-            }
-        }
-        if (p.special.repaint_s) {
-            if (document.getElementById('tbl-spec-repaint_s-est')) document.getElementById('tbl-spec-repaint_s-est').innerText = p.special.repaint_s.est || '';
-            if (document.getElementById('tbl-spec-repaint_s-price')) {
-                document.getElementById('tbl-spec-repaint_s-price').innerText = `Upper ${kFormat(p.special.repaint_s.Upper)} | Midsole ${kFormat(p.special.repaint_s.Midsole)} | Outsole ${kFormat(p.special.repaint_s.Outsole)} | Insole ${kFormat(p.special.repaint_s.Insole)}`;
-            }
-        }
-        if (p.special.repaint_suede) {
-            if (document.getElementById('tbl-spec-repaint_suede-est')) document.getElementById('tbl-spec-repaint_suede-est').innerText = p.special.repaint_suede.est || '';
-            if (document.getElementById('tbl-spec-repaint_suede-price')) {
-                document.getElementById('tbl-spec-repaint_suede-price').innerText = `Upper ${kFormat(p.special.repaint_suede.Upper)} | Midsole ${kFormat(p.special.repaint_suede.Midsole)} | Outsole ${kFormat(p.special.repaint_suede.Outsole)} | Insole ${kFormat(p.special.repaint_suede.Insole)}`;
-            }
-        }
-        if (p.special.extra) {
-            if (document.getElementById('tbl-spec-extra-est')) document.getElementById('tbl-spec-extra-est').innerText = p.special.extra.est || '10 Hari';
-            if (document.getElementById('tbl-spec-extra-price')) {
-                document.getElementById('tbl-spec-extra-price').innerText = 'Mulai 5K - 25K';
-            }
-            if (document.getElementById('tbl-spec-extra-desc')) {
-                document.getElementById('tbl-spec-extra-desc').innerText = `Liquid Remover (+${kFormat(p.special.extra["Liquid Remover Sepatu"] || 15000).toString().toLowerCase()} Sepatu / +${kFormat(p.special.extra["Liquid Remover Tas"] || 5000).toString().toLowerCase()} Tas) | Unyellowing (+${kFormat(p.special.extra["Unyellowing"] || 20000).toString().toLowerCase()}) | Canvas Cleaner & Whitener (+${kFormat(p.special.extra["Canvas Cleaner"] || 20000).toString().toLowerCase()}) | Leather Filler (+${kFormat(p.special.extra["Leather Filler"] || 25000).toString().toLowerCase()})`;
-            }
-        }
-    }
-
-    // 3. Express Service Add-on
-    if (p.express && document.getElementById('tbl-exp-service-desc')) {
-        document.getElementById('tbl-exp-service-desc').innerText = `8 Jam (+${kFormat(p.express["8 Jam"] || 20000)}) | 18 Jam (+${kFormat(p.express["18 Jam"] || 15000)}) | 24 Jam (+${kFormat(p.express["24 Jam"] || 10000)})`;
-    }
-
-    // 4. Dynamic Service Cards (Mulai Dari & Estimasi)
-    // - Cuci Sepatu
-    if (p.regular?.shoes) {
-        const shoesPrices = [
-            p.regular.shoes.Small,
-            p.regular.shoes.Medium,
-            p.regular.shoes.Large
-        ].filter(v => v !== undefined && v !== null && typeof v === 'number');
-        if (shoesPrices.length > 0 && document.getElementById('card-price-shoes')) {
-            document.getElementById('card-price-shoes').innerText = `Mulai ${DB.formatCurrency(Math.min(...shoesPrices))}`;
-        }
-        if (document.getElementById('card-time-shoes')) {
-            document.getElementById('card-time-shoes').innerText = `Estimasi: ${p.regular.shoes.est || '2-3 Hari'}`;
-        }
-    }
-
-    // - Repaint Sepatu
-    if (p.special) {
-        const repaintPrices = [
-            p.special.repaint_p?.Upper,
-            p.special.repaint_s?.Upper,
-            p.special.repaint_suede?.Upper
-        ].filter(v => v !== undefined && v !== null && typeof v === 'number');
-        if (repaintPrices.length > 0 && document.getElementById('card-price-repaint')) {
-            document.getElementById('card-price-repaint').innerText = `Mulai ${DB.formatCurrency(Math.min(...repaintPrices))}`;
-        }
-        if (document.getElementById('card-time-repaint')) {
-            const repaintEst = p.special.repaint_p?.est || p.special.repaint_s?.est || p.special.repaint_suede?.est;
-            document.getElementById('card-time-repaint').innerText = `Estimasi: ${repaintEst || '5-7 Hari'}`;
-        }
-    }
-
-    // - Unyellowing
-    if (p.special?.extra) {
-        const unyellowingVal = p.special.extra["Unyellowing"];
-        if (unyellowingVal !== undefined && unyellowingVal !== null && document.getElementById('card-price-unyellowing')) {
-            document.getElementById('card-price-unyellowing').innerText = `Mulai ${DB.formatCurrency(unyellowingVal)}`;
-        }
-        if (document.getElementById('card-time-unyellowing')) {
-            document.getElementById('card-time-unyellowing').innerText = `Estimasi: ${p.special.extra.est || '3-4 Hari'}`;
-        }
-    }
-
-    // - Cuci Tas
-    if (p.regular) {
-        const bagPrices = [
-            p.regular.bag_leather?.Small,
-            p.regular.bag_leather?.Medium,
-            p.regular.bag_leather?.Large,
-            p.regular.bag_fabric?.Small,
-            p.regular.bag_fabric?.Medium,
-            p.regular.bag_fabric?.Large
-        ].filter(v => v !== undefined && v !== null && typeof v === 'number');
-        if (bagPrices.length > 0 && document.getElementById('card-price-bag')) {
-            document.getElementById('card-price-bag').innerText = `Mulai ${DB.formatCurrency(Math.min(...bagPrices))}`;
-        }
-        if (document.getElementById('card-time-bag')) {
-            const bagEst = p.regular.bag_fabric?.est || p.regular.bag_leather?.est || '3-5 Hari';
-            document.getElementById('card-time-bag').innerText = `Estimasi: ${bagEst}`;
-        }
-    }
-
-    // - Cuci Helm
-    if (p.regular?.helmet) {
-        const helmetPrices = [
-            p.regular.helmet["Half Face"],
-            p.regular.helmet["Full Face"]
-        ].filter(v => v !== undefined && v !== null && typeof v === 'number');
-        if (helmetPrices.length > 0 && document.getElementById('card-price-helmet')) {
-            document.getElementById('card-price-helmet').innerText = `Mulai ${DB.formatCurrency(Math.min(...helmetPrices))}`;
-        }
-        if (document.getElementById('card-time-helmet')) {
-            document.getElementById('card-time-helmet').innerText = `Estimasi: ${p.regular.helmet.est || '1-2 Hari'}`;
-        }
     }
 }
 
 const ARTICLE_FALLBACKS = [
-    { id:'ART-F1', title:'Cara Jitu Menghilangkan Noda Kuning di Sepatu Minimalis Putih', category:'Perawatan Sepatu', image:'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500', desc:'Noda menguning sering terjadi pada sol akibat oksidasi suhu. Inilah rahasianya...', status:'Publik' },
-    { id:'ART-F2', title:'Perhatikan 3 Hal Ini Sebelum Mencuci Tas Kulit Asli Anda!', category:'Perawatan Tas', image:'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=500', desc:'Mencuci tas kulit butuh perlakuan khusus agar permukaannya tidak retak (crack).', status:'Publik' },
-    { id:'ART-F3', title:'Bahaya Bakteri Keringat Berlebih Pada Busa Helm Kesayangan', category:'Perawatan Helm', image:'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500', desc:'Busa helm basah adalah sarang bagi ribuan bakteri yang sering memicu gatal rambut.', status:'Publik' }
+    { id:'ART-F1', title:'Cara Jitu Menghilangkan Noda Kuning di Sepatu Minimalis Putih', category:'Perawatan Sepatu', image:'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500', desc:'Noda menguning sering terjadi pada sol akibat oksidasi suhu. Inilah rahasianya...', status:'Publik' }
 ];
-
-let allPublicArticles = [];
-let articlesShown = 0;
-const ARTICLES_PER_PAGE = 3;
-
-function buildArticleCard(a) {
-    const desc = a.description || a.desc || '';
-    return `
-        <div class="glass-card" style="overflow: hidden; text-align: left;">
-            <div style="height: 200px; background: url('${a.image}') center/cover;"></div>
-            <div style="padding: 1.5rem;">
-                <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">${DB.sanitize ? DB.sanitize(a.category) : a.category}</span>
-                <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">${DB.sanitize ? DB.sanitize(a.title) : a.title}</h3>
-                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">${DB.sanitize ? DB.sanitize(desc) : desc}</p>
-                <a href="${a.content && a.content.startsWith('http') ? a.content : '#'}" ${a.content && a.content.startsWith('http') ? 'target="_blank"' : ''}
-                   style="color: var(--primary-navy); font-weight: 600; text-decoration: none; font-size: 0.9rem;">
-                   Baca Selengkapnya <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
-                </a>
-            </div>
-        </div>
-    `;
-}
 
 async function renderArticles() {
     const rawArticles = await DB.getArticles();
-    // Pastikan selalu array — DB bisa kembalikan null, object error, atau array
     const articlesFromDB = Array.isArray(rawArticles) ? rawArticles : [];
-    allPublicArticles = (articlesFromDB.length > 0 ? articlesFromDB : ARTICLE_FALLBACKS).filter(a => a.status === 'Publik');
+    const allPublic = (articlesFromDB.length > 0 ? articlesFromDB : ARTICLE_FALLBACKS).filter(a => a.status === 'Publik');
     const container = document.getElementById('articles-container');
     if (!container) return;
-    articlesShown = 0;
-    container.innerHTML = '';
-    if (allPublicArticles.length === 0) {
-        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Belum ada artikel yang dipublikasikan.</div>`;
-        return;
-    }
-    _showNextArticles(container);
+    container.innerHTML = allPublic.map(a => `
+        <div class="glass-card" style="overflow: hidden; text-align: left;">
+            <div style="height: 200px; background: url('${a.image}') center/cover;"></div>
+            <div style="padding: 1.5rem;">
+                <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary-sky);">${a.category}</span>
+                <h3 style="margin: 0.5rem 0; font-size: 1.1rem; line-height:1.4;">${a.title}</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">${a.description || a.desc || ''}</p>
+            </div>
+        </div>
+    `).join('');
 }
 
-function _showNextArticles(container) {
-    const next = allPublicArticles.slice(articlesShown, articlesShown + ARTICLES_PER_PAGE);
-    next.forEach(a => { container.innerHTML += buildArticleCard(a); });
-    articlesShown += next.length;
-    const btn = document.getElementById('loadMoreBtn');
-    if (btn) btn.style.display = articlesShown < allPublicArticles.length ? 'inline-block' : 'none';
-}
-
-window.loadMoreArticles = function() {
-    const container = document.getElementById('articles-container');
-    if (container) _showNextArticles(container);
-};
-
-// Visual Selection Handlers
-window.selectItem = function(val, el) {
-    document.querySelectorAll('#itemSelection .selection-card').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('orderItemType').value = val;
-    window.updateServiceOptions();
-};
-
-window.selectTreatment = function(val, el) {
-    document.querySelectorAll('#treatmentSelection .treatment-opt').forEach(o => o.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('orderTreatmentType').value = val;
-    window.updateServiceOptions();
-};
-
-// Update Service Options based on Item Type and Treatment Type
-window.updateServiceOptions = function() {
-    const type = document.getElementById('orderItemType').value;
-    const treatment = document.getElementById('orderTreatmentType').value;
-    const serviceSelect = document.getElementById('orderService');
-    
-    serviceSelect.innerHTML = '<option value="">- Pilih Layanan -</option>';
-    
-    if (!type || !window.PRICING) return;
-    const p = window.PRICING;
-
-    let options = {};
-    if (treatment === 'regular') {
-        if (type === 'Sepatu' && p.regular.shoes) {
-            options = {
-                "Small": p.regular.shoes.Small,
-                "Medium": p.regular.shoes.Medium,
-                "Large": p.regular.shoes.Large
-            };
-        }
-        if (type === 'Tas' && p.regular.bag_leather && p.regular.bag_fabric) {
-            options = {
-                "Leather Small": p.regular.bag_leather.Small,
-                "Leather Medium": p.regular.bag_leather.Medium,
-                "Leather Large": p.regular.bag_leather.Large,
-                "Fabric Small": p.regular.bag_fabric.Small,
-                "Fabric Medium": p.regular.bag_fabric.Medium,
-                "Fabric Large": p.regular.bag_fabric.Large
-            };
-        }
-        if (type === 'Helm' && p.regular.helmet) {
-            options = {
-                "Half Face": p.regular.helmet["Half Face"],
-                "Full Face": p.regular.helmet["Full Face"]
-            };
-        }
-    } else {
-        // Special Treatment
-        if (type === 'Sepatu' && p.special) {
-            options = {};
-            if (p.special.boots) {
-                options["Boots Small"] = p.special.boots.Small;
-                options["Boots Medium"] = p.special.boots.Medium;
-                options["Boots Large"] = p.special.boots.Large;
-            }
-            if (p.special.suede) {
-                options["Suede Small"] = p.special.suede.Small;
-                options["Suede Medium"] = p.special.suede.Medium;
-                options["Suede Large"] = p.special.suede.Large;
-            }
-            if (p.special.dress_shoes) {
-                options["Dress Shoes Small"] = p.special.dress_shoes.Small;
-                options["Dress Shoes Medium"] = p.special.dress_shoes.Medium;
-                options["Dress Shoes Large"] = p.special.dress_shoes.Large;
-            }
-            if (p.special.repaint_p) {
-                options["Repaint P Upper"] = p.special.repaint_p.Upper;
-                options["Repaint P Midsole"] = p.special.repaint_p.Midsole;
-                options["Repaint P Outsole"] = p.special.repaint_p.Outsole;
-                options["Repaint P Insole"] = p.special.repaint_p.Insole;
-            }
-            if (p.special.repaint_s) {
-                options["Repaint S Upper"] = p.special.repaint_s.Upper;
-                options["Repaint S Midsole"] = p.special.repaint_s.Midsole;
-                options["Repaint S Outsole"] = p.special.repaint_s.Outsole;
-                options["Repaint S Insole"] = p.special.repaint_s.Insole;
-            }
-            if (p.special.repaint_suede) {
-                options["Repaint Suede Upper"] = p.special.repaint_suede.Upper;
-                options["Repaint Suede Midsole"] = p.special.repaint_suede.Midsole;
-                options["Repaint Suede Outsole"] = p.special.repaint_suede.Outsole;
-                options["Repaint Suede Insole"] = p.special.repaint_suede.Insole;
-            }
-            if (p.special.extra) {
-                options["Liquid Remover"] = p.special.extra["Liquid Remover Sepatu"] || 15000;
-                options["Unyellowing"] = p.special.extra["Unyellowing"] || 20000;
-                options["Canvas Cleaner & Whitener"] = p.special.extra["Canvas Cleaner"] || 20000;
-                options["Leather Filler"] = p.special.extra["Leather Filler"] || 25000;
-            }
-        }
-        if (type === 'Tas' && p.special && p.special.extra) {
-            options = { "Liquid Remover Small Fabric": p.special.extra["Liquid Remover Tas"] || 5000 };
-        }
-        if (type === 'Helm') {
-            options = { "Belum ada layanan special": 0 };
-        }
-    }
-
-    for (const [key, val] of Object.entries(options)) {
-        if (key !== 'est') {
-            serviceSelect.innerHTML += `<option value="${key}|${val}">${key} (Rp ${val.toLocaleString('id-ID')})</option>`;
-        }
-    }
-    window.calculateTotal();
-};
-
+// 7. Order Calculations
 window.toggleDeliveryOptions = function(val) {
     const details = document.getElementById('deliveryDetails');
     const addr = document.getElementById('orderAddress');
     if (val === 'Ya') {
-        details.style.display = 'block';
-        addr.required = true;
+        if (details) details.style.display = 'block';
+        if (addr) addr.required = true;
     } else {
-        details.style.display = 'none';
-        addr.required = false;
-        addr.value = '';
-        document.getElementById('orderDistance').value = 0;
+        if (details) details.style.display = 'none';
+        if (addr) {
+            addr.required = false;
+            addr.value = '';
+        }
+        const dist = document.getElementById('orderDistance');
+        if (dist) dist.value = 0;
     }
     window.calculateTotal();
 };
@@ -410,28 +438,27 @@ window.previewPhoto = function(input) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const preview = document.getElementById('photoPreview');
-            preview.src = e.target.result;
-            preview.style.display = 'block';
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
         }
         reader.readAsDataURL(input.files[0]);
     }
 };
 
 window.calculateTotal = function() {
-    const serviceVal = document.getElementById('orderService').value;
-    const qty = parseInt(document.getElementById('orderQty').value) || 1;
-    const expressVal = document.getElementById('orderExpress').value;
-    const delivery = document.getElementById('orderDelivery').value;
-    const distance = parseFloat(document.getElementById('orderDistance').value) || 0;
+    const totalQty = window.cart.reduce((sum, item) => sum + item.qty, 0);
+    const subtotal = window.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     
-    let servicePrice = 0;
-    if (serviceVal) {
-        servicePrice = parseInt(serviceVal.split('|')[1]);
-    }
+    const expressVal = document.getElementById('orderExpress')?.value || 'none';
+    const delivery = document.getElementById('orderDelivery')?.value || 'Tidak';
+    const distance = parseFloat(document.getElementById('orderDistance')?.value) || 0;
     
     let expressCost = 0;
     if (expressVal && expressVal !== 'none') {
-        expressCost = window.PRICING.express[expressVal] || 0;
+        const prices = window.PRICING?.express || { "8 Jam": 20000, "18 Jam": 15000, "24 Jam": 10000 };
+        expressCost = prices[expressVal] || 0;
     }
     
     let ongkir = 0;
@@ -439,70 +466,113 @@ window.calculateTotal = function() {
         ongkir = (distance - 10) * 2000;
     }
     
-    const sumService = servicePrice * qty;
-    const sumExpress = expressCost * qty; // Asumsi express per item
+    const sumService = subtotal;
+    const sumExpress = expressCost * totalQty;
     const total = sumService + sumExpress + ongkir;
     
-    document.getElementById('sumService').innerText = DB.formatCurrency(sumService);
-    document.getElementById('sumExpress').innerText = DB.formatCurrency(sumExpress);
-    document.getElementById('sumOngkir').innerText = delivery === 'Ya' ? (ongkir === 0 ? 'Rp 0 (Gratis)' : DB.formatCurrency(ongkir)) : 'Rp 0';
-    document.getElementById('sumTotal').innerText = DB.formatCurrency(total);
+    const sumServiceEl = document.getElementById('sumService');
+    const sumExpressEl = document.getElementById('sumExpress');
+    const sumOngkirEl = document.getElementById('sumOngkir');
+    const sumTotalEl = document.getElementById('sumTotal');
+    const sumEstEl = document.getElementById('sumEst');
     
-    // Estimasi
-    let est = "3-4 Hari"; // default
+    if (sumServiceEl) sumServiceEl.innerText = DB.formatCurrency(sumService);
+    if (sumExpressEl) sumExpressEl.innerText = DB.formatCurrency(sumExpress);
+    if (sumOngkirEl) sumOngkirEl.innerText = delivery === 'Ya' ? (ongkir === 0 ? 'Rp 0 (Gratis)' : DB.formatCurrency(ongkir)) : 'Rp 0';
+    if (sumTotalEl) sumTotalEl.innerText = DB.formatCurrency(total);
+    
+    let est = "3-4 Hari";
     if (expressVal !== 'none') est = expressVal;
-    document.getElementById('sumEst').innerText = est;
+    if (sumEstEl) sumEstEl.innerText = est;
 };
 
-
+// 8. Order Submission
 window.processOrder = async function(event) {
     event.preventDefault();
     
+    if (window.cart.length === 0) {
+        alert("Keranjang Anda kosong! Silakan pilih layanan terlebih dahulu.");
+        return;
+    }
+    
     const name = document.getElementById('orderName').value;
     const phone = document.getElementById('orderPhone').value;
-    const itemType = document.getElementById('orderItemType').value;
-    const qty = document.getElementById('orderQty').value;
-    const treatment = document.getElementById('orderTreatmentType').value;
-    const serviceVal = document.getElementById('orderService').value;
     const expressVal = document.getElementById('orderExpress').value;
     const delivery = document.getElementById('orderDelivery').value;
     const address = document.getElementById('orderAddress').value;
     const distance = document.getElementById('orderDistance').value;
     const schedule = document.getElementById('orderSchedule').value;
     const notes = document.getElementById('orderNotes').value;
+    const photoInput = document.getElementById('orderPhoto');
     
-    if (!serviceVal) {
-        alert("Silakan pilih layanan terlebih dahulu!");
+    const totalQty = window.cart.reduce((sum, item) => sum + item.qty, 0);
+    const subtotal = window.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    
+    let expressPrice = expressVal !== 'none' ? (window.PRICING?.express?.[expressVal] || 0) : 0;
+    let ongkir = (delivery === 'Ya' && distance > 10) ? (distance - 10) * 2000 : 0;
+    const total = subtotal + (expressPrice * totalQty) + ongkir;
+
+    const orderId = DB.generateOrderCode();
+    
+    let photoUrl = null;
+    if (photoInput && photoInput.files && photoInput.files[0]) {
+        const formData = new FormData();
+        formData.append('image', photoInput.files[0]);
+        
+        try {
+            const uploadResp = await fetch('http://localhost:3000/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const uploadResult = await uploadResp.json();
+            if (uploadResult.success) {
+                photoUrl = uploadResult.urls[0];
+            }
+        } catch (uploadErr) {
+            console.error('Failed to upload condition photo:', uploadErr);
+        }
+    }
+
+    const orderData = {
+        id: orderId,
+        name,
+        phone,
+        itemType: 'Multi-Item',
+        qty: totalQty,
+        treatment: 'Multi-Item',
+        service: window.cart.map(i => `${i.name} (${i.qty}x)`).join(', '),
+        express: expressVal,
+        delivery,
+        address,
+        distance,
+        schedule,
+        notes,
+        price: subtotal,
+        expressPrice: expressPrice * totalQty,
+        ongkir,
+        total,
+        status: 1,
+        items: JSON.stringify(window.cart),
+        photo: photoUrl
+    };
+
+    const res = await DB.addOrder(orderData);
+    if (!res || res.error) {
+        alert('Gagal mengirim pesanan. Silakan coba lagi.');
         return;
     }
     
-    const serviceName = serviceVal.split('|')[0];
-    const servicePrice = parseInt(serviceVal.split('|')[1]);
-    let expressPrice = expressVal !== 'none' ? PRICING.express[expressVal] : 0;
-    let ongkir = (delivery === 'Ya' && distance > 10) ? (distance - 10) * 2000 : 0;
-    const total = (servicePrice * qty) + (expressPrice * qty) + ongkir;
-
-    const orderId = DB.generateOrderCode();
-    const orderData = {
-        id: orderId,
-        name, phone, itemType, qty, treatment, 
-        service: serviceName, express: expressVal,
-        delivery, address, distance, schedule, notes,
-        price: servicePrice, expressPrice, ongkir, total,
-        status: 1
-    };
-
-    await DB.addOrder(orderData);
-    
-    // Generate Nota WA (Customer to Admin)
     const shopPhone = "6285965957290"; 
     let msg = `Halo kak, saya mau pesan layanan cuci di *Sparkling Cleaners* ✨%0A%0A`;
     msg += `*Detail Pesanan:*%0A`;
     msg += `- No. Order: *${orderId}*%0A`;
     msg += `- Nama: ${name}%0A`;
-    msg += `- Item: ${itemType} (${qty} item)%0A`;
-    msg += `- Layanan: ${serviceName} (${treatment})%0A`;
-    if (expressVal && expressVal !== 'none') msg += `- Express: ${expressVal}%0A`;
+    msg += `- WhatsApp: ${phone}%0A%0A`;
+    msg += `*Layanan yang Dipilih:*%0A`;
+    window.cart.forEach(item => {
+        msg += `- ${item.name} (${item.qty}x) - ${DB.formatCurrency(item.price * item.qty)}%0A`;
+    });
+    msg += `%0A- Express: ${expressVal !== 'none' ? expressVal : 'Normal'}%0A`;
     msg += `- Catatan: ${notes || '-'}%0A%0A`;
     
     if (delivery === 'Ya') {
@@ -512,6 +582,9 @@ window.processOrder = async function(event) {
     }
     
     msg += `*Estimasi Biaya:*%0A`;
+    msg += `- Subtotal: ${DB.formatCurrency(subtotal)}%0A`;
+    if (expressPrice > 0) msg += `- Biaya Express: ${DB.formatCurrency(expressPrice * totalQty)}%0A`;
+    if (delivery === 'Ya') msg += `- Ongkos Kirim: ${ongkir === 0 ? 'Gratis' : DB.formatCurrency(ongkir)}%0A`;
     msg += `- Total: *${DB.formatCurrency(total)}*%0A%0A`;
     msg += `Mohon segera dikonfirmasi ya kak, terima kasih! 🙏`;
 
@@ -519,16 +592,21 @@ window.processOrder = async function(event) {
     
     alert(`Pesanan berhasil dibuat!\nKode Order: ${orderData.id}\nAnda akan diarahkan ke WhatsApp untuk mengirim pesanan.`);
     
-    // Reset Form and UI
-    event.target.reset();
-    document.querySelectorAll('.selection-card, .treatment-opt').forEach(el => el.classList.remove('active'));
-    document.querySelector('.treatment-opt[onclick*="regular"]').classList.add('active'); // Default treatment
-    if (window.calculateTotal) window.calculateTotal();
+    window.cart = [];
+    window.saveCart();
+    window.updateCartUI();
+    
+    document.getElementById('orderForm').reset();
+    const preview = document.getElementById('photoPreview');
+    if (preview) {
+        preview.src = '';
+        preview.style.display = 'none';
+    }
     
     window.location.href = waURL;
 };
 
-// Order Tracking Simulation
+// 9. Order Tracking Simulation
 window.simulateTracking = function() {
     const inputEl = document.getElementById('trackInput');
     const input = inputEl ? inputEl.value.trim() : '';
@@ -540,18 +618,14 @@ window.simulateTracking = function() {
         return;
     }
 
-    // Reset Steps
     steps.forEach(step => step.classList.remove('active'));
-    msg.style.display = 'block';
-    msg.innerText = "Mencari data pesanan...";
+    if (msg) {
+        msg.style.display = 'block';
+        msg.innerText = "Mencari data pesanan...";
+    }
 
     setTimeout(async () => {
         const code = input.toUpperCase();
-<<<<<<< HEAD
-=======
-        if(!code) return;
->>>>>>> origin/update-fitur-kategori
-        
         const orders = await DB.getOrders();
         const found = orders.find(o => o.id === code || o.phone === code);
         
@@ -559,11 +633,9 @@ window.simulateTracking = function() {
         if (found) {
             currentStep = found.status;
         } else {
-            // Simulasi jika tidak ketemu
             currentStep = Math.floor(Math.random() * 5) + 1;
         }
 
-        // Aktifkan step
         for (let i = 0; i < currentStep; i++) {
             if (steps[i]) steps[i].classList.add('active');
         }
@@ -576,25 +648,15 @@ window.simulateTracking = function() {
             "Barang SIAP DIAMBIL / dalam perjalanan diantar ke lokasi Anda!"
         ];
 
-        msg.innerText = found 
-            ? `Order ${found.id}: ${statusLabels[currentStep - 1]} ✨` 
-            : `Data simulasi: ${statusLabels[currentStep - 1]} ✨`;
-
+        if (msg) {
+            msg.innerText = found 
+                ? `Order ${found.id}: ${statusLabels[currentStep - 1]} ✨` 
+                : `Data simulasi: ${statusLabels[currentStep - 1]} ✨`;
+        }
     }, 800);
 };
 
-// Smooth Scrolling for Navbar Links
-document.querySelectorAll('.nav-links a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
-        }
-    });
-});
-
-// Modal Testimoni Logic
+// 10. Testimonials rendering and modal
 window.openTestimoniModal = function() {
     document.getElementById('testimoniModal').style.display = 'flex';
 };
@@ -603,7 +665,6 @@ window.closeTestimoniModal = function() {
     document.getElementById('testimoniModal').style.display = 'none';
 };
 
-// Fungsi masking nama anonim: "Budi Santoso" → "B***o"
 function _maskName(name) {
     const parts = name.trim().split(' ');
     return parts.map(p => p.length <= 1 ? p : p[0] + '***' + p[p.length - 1]).join(' ');
@@ -627,7 +688,6 @@ window.submitTestimoni = async function(event) {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...'; }
 
     try {
-        // Upload foto terlebih dahulu jika ada
         let imageUrl = null;
         if (photoInput && photoInput.files && photoInput.files.length > 0) {
             const files = Array.from(photoInput.files);
@@ -643,7 +703,6 @@ window.submitTestimoni = async function(event) {
                 }
             }
 
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengupload foto...';
             const formData = new FormData();
             files.forEach(file => formData.append('image', file));
             
@@ -654,14 +713,12 @@ window.submitTestimoni = async function(event) {
             } else {
                 throw new Error(uploadResult.error || 'Gagal mengupload foto.');
             }
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan ulasan...';
         }
 
         const res = await DB.addTestimonial({ name, rating, content, image: imageUrl });
         if (res && res.success) {
             alert('Terima kasih! ✅ Ulasan Anda berhasil dikirim dan akan ditinjau oleh tim kami sebelum ditampilkan.');
             document.getElementById('testimoniForm').reset();
-            // Reset stars UI
             document.querySelectorAll('#modalStarRating i').forEach(s => s.style.color = '');
             document.getElementById('ratingValue').value = '';
             const ratingText = document.getElementById('ratingText');
@@ -677,7 +734,7 @@ window.submitTestimoni = async function(event) {
     }
 };
 
-// GPS Distance Calculation
+// 11. GPS Distance Calculation
 window.calculateDistanceGPS = function() {
     const btn = document.getElementById('btnGps');
     const status = document.getElementById('gpsStatus');
@@ -698,13 +755,10 @@ window.calculateDistanceGPS = function() {
         (position) => {
             const userLat = position.coords.latitude;
             const userLon = position.coords.longitude;
-            
-            // Koordinat Toko: Sukodadi Wagir (Perkiraan: -8.0261, 112.5855)
             const shopLat = -8.0261;
             const shopLon = 112.5855;
 
-            // Haversine formula
-            const R = 6371; // Radius bumi dalam km
+            const R = 6371;
             const dLat = (userLat - shopLat) * Math.PI / 180;
             const dLon = (userLon - shopLon) * Math.PI / 180; 
             const a = 
@@ -712,12 +766,8 @@ window.calculateDistanceGPS = function() {
                 Math.cos(shopLat * Math.PI / 180) * Math.cos(userLat * Math.PI / 180) * 
                 Math.sin(dLon/2) * Math.sin(dLon/2); 
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-            let distance = R * c; // Jarak garis lurus dalam km
-            
-            // Margin error jalan raya (~1.3x jarak lurus)
+            let distance = R * c;
             distance = distance * 1.3;
-            
-            // Pembulatan ke atas
             distance = Math.ceil(distance);
             
             distanceInput.value = distance;
@@ -738,6 +788,7 @@ window.calculateDistanceGPS = function() {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 };
+
 async function renderTestimonials() {
     const rawTests = await DB.getTestimonials();
     const approved = (rawTests || []).filter(t => t.status === 'Approved');
