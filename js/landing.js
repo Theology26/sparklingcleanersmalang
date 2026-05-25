@@ -520,7 +520,7 @@ window.processOrder = async function(event) {
         formData.append('image', photoInput.files[0]);
         
         try {
-            const uploadResp = await fetch('http://localhost:3000/api/upload', {
+            const uploadResp = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData
             });
@@ -706,7 +706,7 @@ window.submitTestimoni = async function(event) {
             const formData = new FormData();
             files.forEach(file => formData.append('image', file));
             
-            const uploadResp = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+            const uploadResp = await fetch('/api/upload', { method: 'POST', body: formData });
             const uploadResult = await uploadResp.json();
             if (uploadResult.success) {
                 imageUrl = uploadResult.urls.join(',');

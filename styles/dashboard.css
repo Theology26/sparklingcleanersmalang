@@ -1548,3 +1548,73 @@ body.dark-theme .top-nav input {
     height: 250px;
     width: 100%;
 }
+
+/* === DASHBOARD MOBILE RESPONSIVE === */
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: 64px;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1000;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0;
+    border-radius: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-header,
+  .sidebar-profile,
+  .menu-label { display: none; }
+  .sidebar-menu {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    width: 100%;
+    padding: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .sidebar-menu::-webkit-scrollbar { display: none; }
+  .menu-item {
+    flex-direction: column;
+    font-size: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    gap: 3px;
+    white-space: nowrap;
+    min-width: 64px;
+    border-radius: 0;
+    justify-content: center;
+    align-items: center;
+    border-left: none;
+    border-top: 3px solid transparent;
+  }
+  .menu-item.active { border-top: 3px solid var(--primary-sky); border-left: none; }
+  .menu-item i { font-size: 1.1rem; }
+  .menu-item span { display: block; font-size: 0.6rem; }
+  .main-wrapper { margin-left: 0; padding-bottom: 72px; }
+  .top-nav { position: sticky; top: 0; z-index: 999; padding: 0.75rem 1rem; }
+  .search-box { display: none; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .charts-row-4 { grid-template-columns: 1fr; }
+  .grid.grid-2 { grid-template-columns: 1fr; }
+  .data-table { font-size: 0.78rem; }
+  .data-table th,
+  .data-table td { padding: 0.5rem 0.4rem; }
+  /* Modal fullscreen di mobile */
+  #progressModal > div,
+  #serviceModal > div,
+  #stockModal > div,
+  #galeriModal > div,
+  #kategoriModal > div,
+  #additionalModal > div {
+    width: 95% !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+@media (max-width: 480px) {
+  .menu-item { min-width: 56px; padding: 0.3rem 0.4rem; }
+  .kpi-value { font-size: 1.4rem; }
+}

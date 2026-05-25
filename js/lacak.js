@@ -134,7 +134,7 @@ window.trackOrder = async function(event) {
         // Update Stepper Highlight
         const statusVal = parseInt(found.status) || 1;
         
-        for (let step = 1; step <= 7; step++) {
+        for (let step = 1; step <= 9; step++) {
             const stepEl = document.getElementById(`step-${step}`);
             if (stepEl) {
                 stepEl.classList.remove('active', 'current');

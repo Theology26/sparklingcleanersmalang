@@ -5,3 +5,11 @@ FULL_CODE_BACKUP.txt
 .DS_Store
 git_diff_dashboard.txt
 git_diff_dashboard_utf8.txt
+
+# Application Dynamic Data
+uploads/
+photo_paths.json
+
+# Local Backup & Archives
+*.zip
+Photo From Sparkling/

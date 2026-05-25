@@ -7,6 +7,17 @@
     <title>Sparkling Cleaners Malang | Laundry Sepatu & Helm Premium</title>
     <link rel="icon" href="assets/logo.png" type="image/png">
     <meta name="description" content="Layanan cuci spesialis Sepatu, Tas, Helm premium di Malang. Aesthetic, terpercaya, dan profesional.">
+    <!-- Performance & PWA -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1E2A38">
+    <!-- Open Graph -->
+    <meta property="og:title" content="Sparkling Cleaners Malang | Laundry Sepatu & Helm Premium">
+    <meta property="og:description" content="Layanan cuci spesialis Sepatu, Tas, Helm premium di Malang. Aesthetic, terpercaya, dan profesional.">
+    <meta property="og:image" content="/assets/logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="id_ID">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="styles/main.css?v=4">
@@ -27,6 +38,10 @@
             <li><a href="layanan.html">Layanan & Pesan</a></li>
             <li><a href="lacak.html">Lacak Pesanan</a></li>
         </ul>
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Buka menu navigasi" onclick="toggleMobileNav()">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMobileNav()"></div>
     </nav>
 
     <!-- Hero Section: Full 100vh Slideshow -->
@@ -34,9 +49,9 @@
         <div class="hero-slideshow-container" id="heroSlideshow"></div>
         <div class="hero-overlay-fade" id="heroOverlay"></div>
         <div class="hero-content-center">
-            <div class="hero-text-box glass-panel" style="padding: 2rem; border-radius: 16px; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px);">
-                <h1 id="heroTitle" style="color: #ffffff; text-shadow: 1px 1px 4px rgba(0,0,0,0.8);">Laundry Sepatu & Helm Premium di Malang</h1>
-                <p id="heroSubtitle" style="color: #f8fafc; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">Kembalikan kilau sepatu kesayanganmu dengan teknologi deep clean terbaru kami.</p>
+            <div class="hero-text-box">
+                <h1 id="heroTitle">Laundry Sepatu & Helm Premium di Malang</h1>
+                <p id="heroSubtitle">Kembalikan kilau sepatu kesayanganmu dengan teknologi deep clean terbaru kami.</p>
                 <a href="layanan.html" class="btn btn-primary" style="margin-top: 1rem;">Pesan Sekarang <i class="fa-solid fa-arrow-right" style="margin-left:8px;"></i></a>
             </div>
         </div>
@@ -134,11 +149,11 @@
         <div class="glass-panel" style="background:rgba(255,255,255,0.9); padding: 2.5rem; width: 500px; max-width: 90%; border-radius: 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <h3 style="margin:0;">Tulis Ulasan</h3>
-                <button onclick="window.closeTestimoniModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+                <button onclick="window.closeTestimoniModal()" aria-label="Tutup modal" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
             </div>
             <form id="testimoniForm" onsubmit="window.submitTestimoni(event)">
                 <div class="input-group">
-                    <label>Nama Lengkap</label>
+                    <label for="reviewerName">Nama Lengkap</label>
                     <input type="text" id="reviewerName" class="form-control" placeholder="Cth: Budi Santoso" required>
                     <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="isAnonim" style="width: 16px; height: 16px; cursor: pointer;">
@@ -160,11 +175,11 @@
                     <input type="number" id="ratingValue" style="opacity:0; position:absolute; z-index:-1;" required>
                 </div>
                 <div class="input-group">
-                    <label>Pesan / Cerita</label>
+                    <label for="reviewerMessage">Pesan / Cerita</label>
                     <textarea id="reviewerMessage" class="form-control" rows="3" placeholder="Ceritakan pengalaman Anda..." required></textarea>
                 </div>
                 <div class="input-group">
-                    <label>Bukti Foto Barang (Opsional)</label>
+                    <label for="reviewerPhoto">Bukti Foto Barang (Opsional)</label>
                     <input type="file" id="reviewerPhoto" accept=".jpg,.jpeg,.png,.webp,.avif" class="form-control" style="padding: 0.6rem; background: var(--white);" multiple>
                 </div>
                 <button type="submit" id="submitTestimoniBtn" class="btn btn-primary" style="width:100%; margin-top:1rem;">Kirim Testimoni <i class="fa-solid fa-paper-plane" style="margin-left: 5px;"></i></button>
@@ -179,6 +194,16 @@
 
     <script src="js/db.js?v=4"></script>
     <script src="js/beranda.js?v=4"></script>
+    <script>
+    function toggleMobileNav() {
+      const nav = document.querySelector('.nav-links');
+      const overlay = document.getElementById('mobileNavOverlay');
+      const btn = document.getElementById('hamburgerBtn');
+      const isOpen = nav.classList.toggle('mobile-open');
+      overlay.classList.toggle('active', isOpen);
+      btn.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+    </script>
 </body>
-
 </html>

@@ -39,11 +39,20 @@
 
     <!-- Dynamic Catalog Grid -->
     <section id="katalog" class="section container">
-        <div id="services-grid" class="grid grid-3">
-            <div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
-                <p style="margin-top:1rem;">Memuat katalog layanan...</p>
+        <div id="section-kategori">
+            <div id="kategori-grid" class="grid grid-3">
+                <div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
+                    <p style="margin-top:1rem;">Memuat kategori layanan...</p>
+                </div>
             </div>
+        </div>
+        <div id="section-layanan-detail" style="display:none;">
+            <button class="btn btn-secondary" onclick="window.backToKategori()" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-arrow-left"></i> Kembali ke Kategori
+            </button>
+            <h2 id="detail-kategori-nama" style="margin-bottom: 1.5rem; color: var(--primary-navy);">Nama Kategori</h2>
+            <div id="layanan-in-kategori-grid" class="grid grid-3"></div>
         </div>
     </section>
 
@@ -108,8 +117,12 @@
                     <div class="info-card mt-2">
                         <h4>Catatan Penting:</h4>
                         <ul>
-                            <li><i class="fa-solid fa-shield-halved"></i> Garansi cuci ulang 1x berlaku 1 hari setelah barang diambil (kondisi belum dipakai).</li>
-                            <li><i class="fa-solid fa-clock"></i> Estimasi waktu bisa berubah tergantung kondisi antrean / cuaca.</li>
+                            <li><i class="fa-solid fa-truck-fast"></i> Hanya melayani antar-jemput (tidak ada drop-off).</li>
+                            <li><i class="fa-solid fa-calendar-days"></i> Jadwal penjemputan & pengiriman di form, alamat penjemputan = alamat pengiriman.</li>
+                            <li><i class="fa-solid fa-magnifying-glass"></i> Status dipantau via menu "Lacak Pesanan" / "Cleaning Status" dengan nomor SPK.</li>
+                            <li><i class="fa-solid fa-file-invoice-dollar"></i> Nota dikirim saat status berubah menjadi "Menunggu Pembayaran".</li>
+                            <li><i class="fa-solid fa-circle-check"></i> Barang dikirim SETELAH pembayaran lunas dan terverifikasi.</li>
+                            <li><i class="fa-solid fa-circle-info"></i> Harap centang syarat & ketentuan sebelum melakukan checkout.</li>
                         </ul>
                     </div>
                 </div>
@@ -148,14 +161,14 @@
 
                         <div class="input-group" style="margin-bottom: 1.5rem;">
                             <label>Opsi Pengiriman</label>
-                            <select id="orderDelivery" class="form-control" required onchange="window.toggleDeliveryOptions(this.value)">
-                                <option value="Ya">Jemput / Antar ke Alamat (Antar-Jemput)</option>
+                            <select id="orderDelivery" class="form-control" disabled>
+                                <option value="Ya" selected>Jemput / Antar ke Alamat (Antar-Jemput)</option>
                             </select>
                         </div>
 
                         <div id="deliveryDetails" style="display: block; background: rgba(52, 152, 219, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(52, 152, 219, 0.2);">
                             <div class="input-group">
-                                <label>Alamat Lengkap</label>
+                                <label>Alamat Penjemputan & Pengiriman</label>
                                 <textarea id="orderAddress" class="form-control" rows="2" placeholder="Nama Jalan, RT/RW, Kecamatan, Patokan..." required onchange="window.calculateTotal()"></textarea>
                             </div>
                             <div class="input-group">
@@ -295,8 +308,8 @@
         </div>
     </div>
 
-    <script src="js/db.js?v=4"></script>
-    <script src="js/layanan.js?v=4"></script>
+    <script src="js/db.js?v=5"></script>
+    <script src="js/layanan.js?v=5"></script>
 </body>
 
 </html>

@@ -122,6 +122,48 @@ const pool = mysql.createPool({
             )
         `);
 
+        // Tambah kolom foto dan id_kategori jika belum ada (safe migration)
+        const safeMigrations = [
+          'ALTER TABLE layanan ADD COLUMN id_kategori INT DEFAULT NULL',
+          'ALTER TABLE layanan ADD COLUMN foto_utama TEXT',
+          'ALTER TABLE layanan ADD COLUMN foto_tambahan TEXT'
+        ];
+        for (const sql of safeMigrations) {
+          try { await pool.query(sql); } catch(e) { /* kolom sudah ada, abaikan */ }
+        }
+
+        // Tabel Kategori Layanan
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS kategori_layanan (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nama_kategori VARCHAR(100) NOT NULL,
+                foto_kategori TEXT,
+                urutan INT DEFAULT 0,
+                aktif TINYINT DEFAULT 1,
+                dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Tabel Additional Service
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS additional_service (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nama VARCHAR(100) NOT NULL,
+                harga DECIMAL(10,2) NOT NULL DEFAULT 0,
+                deskripsi TEXT,
+                aktif TINYINT DEFAULT 1
+            )
+        `);
+
+        // Tabel Relasi layanan ↔ additional_service
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS layanan_additional (
+                id_layanan VARCHAR(30) NOT NULL,
+                id_additional INT NOT NULL,
+                PRIMARY KEY (id_layanan, id_additional)
+            )
+        `);
+
         // 3. Tabel Repaint Warna
         await pool.query(`
             CREATE TABLE IF NOT EXISTS tabel_repaint_warna (
@@ -234,6 +276,10 @@ const pool = mysql.createPool({
                 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200',
                 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1200'
             ])]);
+        await pool.query(`INSERT IGNORE INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES 
+            ('rekening_bca', 'BCA – 4480896021 – a.n EVAN NOVANDI KRISMANUEL'),
+            ('rekening_blu', 'BluAccount – 007280954378 – a.n Evan Novandi Krismanuel'),
+            ('nama_kasir_default', 'Evan')`);
 
 
         // smart seeding layanan: 23 product tiers if empty or 5 items
@@ -298,6 +344,22 @@ const pool = mysql.createPool({
             `;
             await pool.query(colorSeedSQL);
         }
+
+        // Seed default categories if empty
+        const [catCount] = await pool.query('SELECT COUNT(*) as count FROM kategori_layanan');
+        if (catCount[0].count === 0) {
+            console.log('Seeding default categories...');
+            await pool.query(`INSERT INTO kategori_layanan (id, nama_kategori, foto_kategori, urutan) VALUES
+                (1, 'Sepatu', 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=600', 1),
+                (2, 'Helm', 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=600', 2),
+                (3, 'Tas', 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600', 3)
+            `);
+        }
+
+        // Update existing services with appropriate id_kategori if null
+        await pool.query("UPDATE layanan SET id_kategori = 1 WHERE kategori = 'Sepatu' AND id_kategori IS NULL");
+        await pool.query("UPDATE layanan SET id_kategori = 2 WHERE kategori = 'Helm' AND id_kategori IS NULL");
+        await pool.query("UPDATE layanan SET id_kategori = 3 WHERE kategori = 'Tas' AND id_kategori IS NULL");
 
         console.log('✅ Migrasi & Seeding Berhasil.');
     } catch (err) {
@@ -411,16 +473,23 @@ app.post('/api/config', validateOwner, async (req, res) => {
 // [LAYANAN]
 const handleGetLayanan = async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM layanan');
-        // Map fields to original names for backward compatibility if needed
+        const [rows] = await pool.query(`
+            SELECT l.*, kl.nama_kategori as nama_kategori_ref
+            FROM layanan l
+            LEFT JOIN kategori_layanan kl ON l.id_kategori = kl.id
+            ORDER BY l.nama_layanan ASC
+        `);
         const mapped = rows.map(r => ({
             id: r.id,
             name: r.nama_layanan,
-            category: r.kategori,
+            category: r.nama_kategori_ref || r.kategori, // fallback ke kategori lama
             treatment: r.tipe_treatment,
             price: r.harga,
             estimation: r.estimasi_waktu,
-            description: r.deskripsi
+            description: r.deskripsi,
+            image: r.foto_utama,
+            additional_images: r.foto_tambahan,
+            id_kategori: r.id_kategori
         }));
         res.json(mapped);
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -430,10 +499,18 @@ app.get('/api/services', handleGetLayanan);
 
 const handlePostLayanan = async (req, res) => {
     try {
-        const { id, name, category, treatment, price, estimation, description } = req.body;
+        const { id, name, category, treatment, price, estimation, description, image, additional_images, id_kategori } = req.body;
+        let namaKat = category || '';
+        if (id_kategori) {
+            const [katRow] = await pool.query(
+                'SELECT nama_kategori FROM kategori_layanan WHERE id = ?',
+                [id_kategori]
+            );
+            if (katRow.length > 0) namaKat = katRow[0].nama_kategori;
+        }
         await pool.query(
-            'INSERT INTO layanan (id, nama_layanan, kategori, tipe_treatment, harga, estimasi_waktu, deskripsi) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [id, name, category, treatment, parseFloat(price), estimation, description || '']
+            'INSERT INTO layanan (id, nama_layanan, kategori, tipe_treatment, harga, estimasi_waktu, deskripsi, foto_utama, foto_tambahan, id_kategori) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, name, namaKat, treatment || '', parseFloat(price), estimation, description || '', image || null, additional_images || null, id_kategori || null]
         );
         res.status(201).json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -444,10 +521,18 @@ app.post('/api/services', validateOwner, handlePostLayanan);
 const handlePutLayanan = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, category, treatment, price, estimation, description } = req.body;
+        const { name, category, treatment, price, estimation, description, image, additional_images, id_kategori } = req.body;
+        let namaKat = category || '';
+        if (id_kategori) {
+            const [katRow] = await pool.query(
+                'SELECT nama_kategori FROM kategori_layanan WHERE id = ?',
+                [id_kategori]
+            );
+            if (katRow.length > 0) namaKat = katRow[0].nama_kategori;
+        }
         await pool.query(
-            'UPDATE layanan SET nama_layanan = ?, kategori = ?, tipe_treatment = ?, harga = ?, estimasi_waktu = ?, deskripsi = ? WHERE id = ?',
-            [name, category, treatment, parseFloat(price), estimation, description || '', id]
+            'UPDATE layanan SET nama_layanan = ?, kategori = ?, tipe_treatment = ?, harga = ?, estimasi_waktu = ?, deskripsi = ?, foto_utama = ?, foto_tambahan = ?, id_kategori = ? WHERE id = ?',
+            [name, namaKat, treatment || '', parseFloat(price), estimation, description || '', image || null, additional_images || null, id_kategori || null, id]
         );
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -457,12 +542,169 @@ app.put('/api/services/:id', validateOwner, handlePutLayanan);
 
 const handleDeleteLayanan = async (req, res) => {
     try {
+        // Delete related additionals relation first
+        await pool.query('DELETE FROM layanan_additional WHERE id_layanan = ?', [req.params.id]);
         await pool.query('DELETE FROM layanan WHERE id = ?', [req.params.id]);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 };
 app.delete('/api/layanan/:id', validateOwner, handleDeleteLayanan);
 app.delete('/api/services/:id', validateOwner, handleDeleteLayanan);
+
+// =============================================
+// [KATEGORI LAYANAN ENDPOINTS]
+// =============================================
+
+// GET semua kategori aktif
+app.get('/api/kategori-layanan', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM kategori_layanan WHERE aktif = 1 ORDER BY urutan ASC, id ASC'
+    );
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET semua kategori termasuk nonaktif (untuk dashboard)
+app.get('/api/kategori-layanan/all', validateOwner, async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM kategori_layanan ORDER BY urutan ASC, id ASC');
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST tambah kategori baru
+app.post('/api/kategori-layanan', validateOwner, async (req, res) => {
+  try {
+    const { nama_kategori, foto_kategori, urutan } = req.body;
+    const [result] = await pool.query(
+      'INSERT INTO kategori_layanan (nama_kategori, foto_kategori, urutan) VALUES (?, ?, ?)',
+      [nama_kategori, foto_kategori || null, parseInt(urutan) || 0]
+    );
+    res.status(201).json({ success: true, id: result.insertId });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// PUT edit kategori
+app.put('/api/kategori-layanan/:id', validateOwner, async (req, res) => {
+  try {
+    const { nama_kategori, foto_kategori, urutan, aktif } = req.body;
+    await pool.query(
+      'UPDATE kategori_layanan SET nama_kategori=?, foto_kategori=?, urutan=?, aktif=? WHERE id=?',
+      [nama_kategori, foto_kategori || null, parseInt(urutan) || 0,
+       aktif !== undefined ? parseInt(aktif) : 1, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// DELETE kategori
+app.delete('/api/kategori-layanan/:id', validateOwner, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM kategori_layanan WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET layanan by kategori
+app.get('/api/layanan/kategori/:idKategori', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM layanan WHERE id_kategori = ? ORDER BY nama_layanan ASC',
+      [req.params.idKategori]
+    );
+    const mapped = rows.map(r => ({
+      id: r.id,
+      name: r.nama_layanan,
+      category: r.kategori,
+      treatment: r.tipe_treatment,
+      price: r.harga,
+      estimation: r.estimasi_waktu,
+      description: r.deskripsi,
+      image: r.foto_utama,
+      additional_images: r.foto_tambahan,
+      id_kategori: r.id_kategori
+    }));
+    res.json(mapped);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// =============================================
+// [ADDITIONAL SERVICE ENDPOINTS]
+// =============================================
+
+// GET semua additional service
+app.get('/api/additional-service', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM additional_service WHERE aktif = 1 ORDER BY nama ASC'
+    );
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET additional service milik layanan tertentu
+app.get('/api/additional-service/layanan/:idLayanan', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT ads.* FROM additional_service ads
+      INNER JOIN layanan_additional la ON la.id_additional = ads.id
+      WHERE la.id_layanan = ? AND ads.aktif = 1
+    `, [req.params.idLayanan]);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST tambah additional service baru (global)
+app.post('/api/additional-service', validateOwner, async (req, res) => {
+  try {
+    const { nama, harga, deskripsi } = req.body;
+    const [result] = await pool.query(
+      'INSERT INTO additional_service (nama, harga, deskripsi) VALUES (?, ?, ?)',
+      [nama, parseFloat(harga) || 0, deskripsi || '']
+    );
+    res.status(201).json({ success: true, id: result.insertId });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// PUT edit additional service
+app.put('/api/additional-service/:id', validateOwner, async (req, res) => {
+  try {
+    const { nama, harga, deskripsi, aktif } = req.body;
+    await pool.query(
+      'UPDATE additional_service SET nama=?, harga=?, deskripsi=?, aktif=? WHERE id=?',
+      [nama, parseFloat(harga) || 0, deskripsi || '',
+       aktif !== undefined ? parseInt(aktif) : 1, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// DELETE additional service
+app.delete('/api/additional-service/:id', validateOwner, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM layanan_additional WHERE id_additional = ?', [req.params.id]);
+    await pool.query('DELETE FROM additional_service WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST set relasi layanan ↔ additional (replace all)
+app.post('/api/layanan/:id/additional', validateOwner, async (req, res) => {
+  try {
+    const { additional_ids } = req.body; // array of int
+    const idLayanan = req.params.id;
+    await pool.query('DELETE FROM layanan_additional WHERE id_layanan = ?', [idLayanan]);
+    if (additional_ids && additional_ids.length > 0) {
+      const values = additional_ids.map(aid => [idLayanan, parseInt(aid)]);
+      await pool.query(
+        'INSERT INTO layanan_additional (id_layanan, id_additional) VALUES ?',
+        [values]
+      );
+    }
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
 // [REPAINT COLORS]
 const handleGetColors = async (req, res) => {
@@ -472,7 +714,7 @@ const handleGetColors = async (req, res) => {
             id: r.id,
             kode_warna: r.kode_warna,
             nama_warna: r.nama_warna,
-            hex_color_fallback: r.hex_warna_fallback,
+            hex_color_fallback: r.hex_color_fallback || r.hex_warna_fallback,
             tipe_treatment: r.tipe_treatment
         }));
         res.json(mapped);
@@ -551,18 +793,69 @@ const handlePostPesanan = async (req, res) => {
 };
 app.post('/api/pesanan', handlePostPesanan);
 app.post('/api/orders', handlePostPesanan);
+app.post('/api/pesanan-manual', handlePostPesanan);
+
+// GET riwayat transaksi customer by nama atau no HP, dalam 1 tahun terakhir
+app.get('/api/riwayat-customer', async (req, res) => {
+  try {
+    const q = req.query.q || '';
+    if (!q.trim()) return res.json({ pesanan: [], total: 0, customer: null });
+
+    const satu_tahun_lalu = new Date();
+    satu_tahun_lalu.setFullYear(satu_tahun_lalu.getFullYear() - 1);
+    const batasWaktu = satu_tahun_lalu.toISOString().slice(0,10);
+
+    const [rows] = await pool.query(`
+      SELECT * FROM pesanan
+      WHERE (
+        LOWER(nama_pelanggan) LIKE LOWER(?)
+        OR nomor_whatsapp LIKE ?
+        OR nomor_whatsapp LIKE ?
+      )
+      AND tanggal_dibuat >= ?
+      ORDER BY tanggal_dibuat DESC
+    `, [`%${q}%`, `%${q}%`, `%${q.replace(/^0/,'62')}%`, batasWaktu]);
+
+    const mapped = rows.map(r => ({
+      id: r.id,
+      date: r.tanggal_dibuat,
+      name: r.nama_pelanggan,
+      phone: r.nomor_whatsapp,
+      service: r.layanan_pilihan,
+      total: r.total_harga,
+      status: r.status_proses,
+      lunas: r.status_pembayaran
+    }));
+
+    const customer = mapped.length > 0
+      ? { name: mapped[0].name, phone: mapped[0].phone }
+      : null;
+
+    res.json({
+      customer,
+      total_transaksi: mapped.length,
+      total_omset: mapped.reduce((s, x) => s + parseFloat(x.total || 0), 0),
+      pesanan: mapped,
+      periode: `${batasWaktu} s/d ${new Date().toISOString().slice(0,10)}`
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
 // [STATUS PROSES PESANAN]
 app.put('/api/pesanan/:id/status_proses', async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; // integer 1-7
+        const { status } = req.body; // integer 1-9
         const statusVal = parseInt(status);
         
-        if (statusVal === 7) {
+        if (statusVal === 9) {
             await pool.query('UPDATE pesanan SET status_proses = ?, status_pembayaran = 1 WHERE id = ?', [statusVal, id]);
         } else {
             await pool.query('UPDATE pesanan SET status_proses = ? WHERE id = ?', [statusVal, id]);
+        }
+        
+        if (statusVal === 7) {
+            return res.json({ success: true, triggerWaNota: true, orderId: id });
         }
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -571,12 +864,17 @@ app.put('/api/pesanan/:id/status_proses', async (req, res) => {
 app.put('/api/orders/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status } = req.body; // integer 1-9
         const statusVal = parseInt(status);
-        if (statusVal === 7) {
+        
+        if (statusVal === 9) {
             await pool.query('UPDATE pesanan SET status_proses = ?, status_pembayaran = 1 WHERE id = ?', [statusVal, id]);
         } else {
             await pool.query('UPDATE pesanan SET status_proses = ? WHERE id = ?', [statusVal, id]);
+        }
+        
+        if (statusVal === 7) {
+            return res.json({ success: true, triggerWaNota: true, orderId: id });
         }
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -797,6 +1095,53 @@ app.delete('/api/inventory/:id', validateOwner, async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// [RINGKASAN KINERJA - KPI Agregasi]
+app.get('/api/ringkasan', async (req, res) => {
+  try {
+    const [pesanan] = await pool.query('SELECT * FROM pesanan');
+    const total = pesanan.length;
+    const selesai = pesanan.filter(p => parseInt(p.status_proses) === 9).length;
+    const pendapatan = pesanan
+      .filter(p => parseInt(p.status_pembayaran) === 1)
+      .reduce((s, p) => s + parseFloat(p.total_harga || 0), 0);
+
+    const breakdown_kategori = { Sepatu: 0, Helm: 0, Tas: 0 };
+    const breakdown_delivery = { antar_jemput: 0, drop_off: 0 };
+
+    pesanan.forEach(p => {
+      const kat = p.tipe_item || 'Sepatu';
+      if (breakdown_kategori[kat] !== undefined) breakdown_kategori[kat]++;
+      if (p.pengiriman === 'Ya') breakdown_delivery.antar_jemput++;
+      else breakdown_delivery.drop_off++;
+    });
+
+    const [stokRow] = await pool.query(
+      'SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"'
+    );
+    let stok_rata_persen = 0;
+    if (stokRow.length > 0) {
+      const stokList = JSON.parse(stokRow[0].teks_nilai || '[]');
+      if (stokList.length > 0) {
+        stok_rata_persen = Math.round(
+          stokList.reduce((acc, item) =>
+            acc + Math.min((item.stock / (item.min_stock * 3)) * 100, 100), 0
+          ) / stokList.length
+        );
+      }
+    }
+
+    res.json({
+      total_pesanan: total,
+      pesanan_selesai: selesai,
+      rasio_penyelesaian: total > 0 ? Math.round((selesai / total) * 100) : 0,
+      pendapatan_bersih: pendapatan,
+      breakdown_kategori,
+      breakdown_delivery,
+      stok_rata_persen
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // [RESTOCK / REQUEST RESTOK COMPATIBILITY]
 app.get('/api/restock', async (req, res) => {
     try {
@@ -878,10 +1223,10 @@ app.put('/api/restock/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// [FINANCE COMPATIBILITY COMPILINGpesanan WHERE status_proses = 7]
+// [FINANCE COMPATIBILITY COMPILINGpesanan WHERE status_proses = 9]
 app.get('/api/finance', validateOwner, async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM pesanan WHERE status_proses = 7 ORDER BY tanggal_dibuat DESC');
+        const [rows] = await pool.query('SELECT * FROM pesanan WHERE status_proses = 9 ORDER BY tanggal_dibuat DESC');
         const mapped = rows.map(r => ({
             id: r.id,
             date: r.tanggal_dibuat,

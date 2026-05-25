@@ -93,9 +93,10 @@ async function renderBranding() {
         const s = document.getElementById('heroSubtitle');
         if (t && sysCfg.hero_welcome_title) t.innerText = sysCfg.hero_welcome_title;
         if (s && sysCfg.hero_welcome_subtitle) s.innerText = sysCfg.hero_welcome_subtitle;
-        if (sysCfg.hero_font_color) {
-            const color = sysCfg.hero_font_color;
-            if (t) t.style.color = color;
+        // warna title tetap putih (diatur CSS), ignore hero_font_color untuk title
+        // tapi bisa override subtitle color jika ada config
+        if (sysCfg.hero_font_subtitle_color && s) {
+            s.style.color = sysCfg.hero_font_subtitle_color;
         }
     }
 }
@@ -126,47 +127,50 @@ async function renderAboutUs() {
             <h3 style="color:var(--primary-navy); font-size:2rem; margin-bottom:0.5rem; font-weight:800;">${aboutData.title || ''}</h3>
             <p style="color:var(--text-muted); font-size:1.1rem; margin-bottom:2rem; max-width:600px; margin-inline:auto;">${aboutData.subtitle || ''}</p>
             
-            <div class="glass-panel" style="padding: 1.5rem; background:rgba(241, 196, 15, 0.1); border-radius:12px; margin-bottom:3rem; border-left:4px solid var(--accent-yellow);">
-                <strong style="color:var(--primary-navy);">Motto:</strong> <span style="font-style:italic; color:var(--text-main); font-size:1.1rem;">"${aboutData.motto || ''}"</span>
+            <div class="about-motto-box">
+                <span class="about-motto-label">Motto Kami</span>
+                <span class="about-motto-text">"${aboutData.motto || ''}"</span>
             </div>
             
             <div style="display:flex; flex-wrap:wrap; gap:3rem; align-items:center; justify-content:center; text-align:left; margin-bottom:3rem;">
-                <div style="flex:1; min-width:300px; max-width:400px; position:relative;">
-                    <div style="position:absolute; inset: -10px; background: linear-gradient(45deg, var(--primary-sky), transparent); border-radius:20px; z-index:-1; opacity:0.5;"></div>
+                <div class="about-image-wrapper" style="flex:1; min-width:300px; max-width:400px; position:relative;">
                     <img src="${aboutImgUrl}" alt="Workshop" class="about-img" onclick="this.classList.toggle('active')">
                 </div>
                 <div style="flex:1; min-width:300px;">
-                    <h4 style="color:var(--primary-navy); margin-bottom:1rem; font-size:1.3rem; display:flex; align-items:center; gap:12px;">
-                        <span style="display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; background:rgba(52, 152, 219, 0.15); color:var(--primary-sky); border:1px solid rgba(52, 152, 219, 0.3); box-shadow:0 4px 10px rgba(52, 152, 219, 0.15);">
-                            <i class="fa-solid fa-gem" style="font-size: 1.1rem;"></i>
-                        </span>
-                        Makna Sparkling Cleaners
-                    </h4>
-                    <p style="line-height:1.7; color:var(--text-main); margin-bottom:2rem;">${aboutData.semantics || ''}</p>
-                    <h4 style="color:var(--primary-navy); margin-bottom:1rem; font-size:1.3rem; display:flex; align-items:center; gap:12px;">
-                        <span style="display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; background:rgba(52, 152, 219, 0.15); color:var(--primary-sky); border:1px solid rgba(52, 152, 219, 0.3); box-shadow:0 4px 10px rgba(52, 152, 219, 0.15);">
-                            <i class="fa-solid fa-eye" style="font-size: 1.1rem;"></i>
-                        </span>
-                        Visi Kami
-                    </h4>
-                    <p style="line-height:1.7; color:var(--text-main);">${aboutData.vision || ''}</p>
+                    <div class="about-card-sparkle" style="margin-bottom: 2rem;">
+                        <h4 style="color:var(--primary-navy); margin-bottom:0.75rem; font-size:1.3rem; display:flex; align-items:center; gap:12px;">
+                            <span class="about-icon-container icon-cyan">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </span>
+                            Makna Sparkling Cleaners
+                        </h4>
+                        <p style="line-height:1.7; color:var(--text-main); margin:0;">${aboutData.semantics || ''}</p>
+                    </div>
+                    
+                    <div class="about-card-visi">
+                        <h4 style="color:var(--primary-navy); margin-bottom:0.75rem; font-size:1.3rem; display:flex; align-items:center; gap:12px;">
+                            <span class="about-icon-container icon-blue">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </span>
+                            Visi Kami
+                        </h4>
+                        <p style="line-height:1.7; color:var(--text-main); margin:0;">${aboutData.vision || ''}</p>
+                    </div>
                 </div>
             </div>
             
-            <div class="glass-panel" style="text-align:left; padding:2.5rem; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.05);">
+            <div class="glass-panel about-card-misi" style="text-align:left; padding:2.5rem; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.05);">
                 <h4 style="color:var(--primary-navy); margin-bottom:1.5rem; text-align:center; font-size:1.4rem; display:flex; align-items:center; justify-content:center; gap:12px;">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px; background:rgba(241, 196, 15, 0.15); color:var(--accent-yellow); border:1px solid rgba(241, 196, 15, 0.3); box-shadow:0 4px 10px rgba(241, 196, 15, 0.2);">
-                        <i class="fa-solid fa-rocket" style="font-size: 1.25rem;"></i>
+                    <span class="about-icon-container icon-gold">
+                        <i class="fa-solid fa-rocket"></i>
                     </span>
                     Misi Utama
                 </h4>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem; color:var(--text-main);">
                     ${missionItems.map(m => `
-                        <div style="display:flex; gap:12px; align-items:flex-start;">
-                            <div style="width:24px; height:24px; border-radius:50%; background:var(--accent-yellow); color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;">
-                                <i class="fa-solid fa-check" style="font-size:0.8rem;"></i>
-                            </div>
-                            <span style="line-height:1.6;">${m.trim()}</span>
+                        <div class="about-misi-list-item">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span style="line-height:1.6; color: var(--text-main); font-weight: 500;">${m.trim()}</span>
                         </div>
                     `).join('')}
                 </div>
@@ -371,7 +375,7 @@ window.submitTestimoni = async function(event) {
             const files = Array.from(photoInput.files);
             const formData = new FormData();
             files.forEach(file => formData.append('image', file));
-            const uploadResp = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+            const uploadResp = await fetch('/api/upload', { method: 'POST', body: formData });
             const uploadResult = await uploadResp.json();
             if (uploadResult.success) {
                 imageUrl = uploadResult.urls.join(',');

@@ -38,8 +38,10 @@
                     <span>Ringkasan Kinerja</span></li>
                 <li class="menu-item" data-target="tab-orders"><i class="fa-solid fa-box"></i> <span>Pesanan
                         Masuk</span></li>
-                <li class="menu-item" data-target="tab-new-order"><i class="fa-solid fa-circle-plus"></i> <span>Order
-                        Baru</span></li>
+                <li class="menu-item" data-target="tab-new-order"><i class="fa-solid fa-circle-plus"></i>
+                    <span>Order Baru</span></li>
+                <li class="menu-item" data-target="tab-membership"><i class="fa-solid fa-crown"></i>
+                    <span>Membership</span></li>
                 <li class="menu-item" data-target="tab-admin-restock"><i class="fa-solid fa-cart-shopping"></i>
                     <span>Restok Gudang</span></li>
                 <li class="menu-item" data-target="tab-stock"><i class="fa-solid fa-flask"></i> <span>Stok Bahan</span>
@@ -52,6 +54,10 @@
                         <span>Keuangan</span></li>
                     <li class="menu-item" data-target="tab-catalog"><i class="fa-solid fa-tags"></i> <span>Katalog &
                             Harga</span></li>
+                    <li class="menu-item" data-target="tab-kategori-layanan"><i class="fa-solid fa-layer-group"></i>
+                        <span>Kategori Layanan</span></li>
+                    <li class="menu-item" data-target="tab-additional-service"><i class="fa-solid fa-puzzle-piece"></i>
+                        <span>Additional Service</span></li>
                     <li class="menu-item" data-target="tab-testimonials"><i class="fa-solid fa-star"></i>
                         <span>Testimoni</span></li>
                     <li class="menu-item" data-target="tab-galeri"><i class="fa-solid fa-images"></i> <span>Galeri
@@ -120,6 +126,209 @@
                     </div>
                 </div>
 
+                <div id="tab-new-order" class="tab-content">
+                  <div class="glass-panel">
+                    <h2>Form Order Pemesanan — Admin</h2>
+                    <p style="color:var(--text-muted);">
+                      Sparkling Cleaners · Jasa Cuci & Perawatan Sepatu, Tas, dan Helm
+                    </p>
+
+                    <div class="grid grid-2" style="margin-top:1.5rem; gap:1.5rem; align-items:start;">
+                      <!-- KOLOM KIRI: Data & pengiriman -->
+                      <div style="display:flex; flex-direction:column; gap:1rem;">
+
+                        <div class="glass-card" style="padding:1.5rem;">
+                          <h3 style="margin-bottom:1rem; color:var(--primary-navy);">Data Pelanggan</h3>
+                          <div class="form-group">
+                            <label for="manTglMasuk">Tanggal Masuk</label>
+                            <input type="date" id="manTglMasuk" class="form-input">
+                          </div>
+                          <div class="form-group">
+                            <label for="manTglSelesai">Estimasi Tanggal Selesai</label>
+                            <input type="date" id="manTglSelesai" class="form-input">
+                          </div>
+                          <div class="form-group">
+                            <label for="manNama">Nama Customer</label>
+                            <input type="text" id="manNama" class="form-input"
+                                   placeholder="Nama lengkap pelanggan" required>
+                          </div>
+                          <div class="form-group">
+                            <label for="manPhone">Nomor WhatsApp</label>
+                            <input type="text" id="manPhone" class="form-input"
+                                   placeholder="08xxxxxxxxxx" required>
+                          </div>
+                          <div class="form-group">
+                            <label for="manKasir">Nama Kasir</label>
+                            <input type="text" id="manKasir" class="form-input"
+                                   placeholder="Nama yang menginput">
+                          </div>
+                        </div>
+
+                        <div class="glass-card" style="padding:1.5rem;">
+                          <h3 style="margin-bottom:1rem; color:var(--primary-navy);">
+                            Member Card Benefit
+                          </h3>
+                          <div class="form-group">
+                            <select id="manMemberBenefit" class="form-input"
+                                    onchange="window.manApplyBenefit()">
+                              <option value="none">Tidak Ada / Tidak Pakai</option>
+                              <option value="diskon15">
+                                Diskon 15% — Cuci 4 Item Sepatu Regular Size Medium
+                              </option>
+                              <option value="birthday">Birthday Treat (input % manual)</option>
+                            </select>
+                          </div>
+                          <div id="manBirthdayInput" style="display:none;">
+                            <div class="form-group">
+                              <label for="manBirthdayPersen">Diskon Birthday (%)</label>
+                              <input type="number" id="manBirthdayPersen" class="form-input"
+                                     min="0" max="100" value="0"
+                                     onchange="window.manHitung()" placeholder="0">
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="glass-card" style="padding:1.5rem;">
+                          <h3 style="margin-bottom:1rem; color:var(--primary-navy);">
+                            Pengiriman & Penjemputan
+                          </h3>
+                          <div class="form-group">
+                            <label for="manPengiriman">Opsi Layanan</label>
+                            <select id="manPengiriman" class="form-input"
+                                    onchange="window.manToggleDelivery()">
+                              <option value="Ya">Antar-Jemput (Delivery & Pick-up)</option>
+                              <option value="Tidak">Drop-off / Antar Sendiri</option>
+                            </select>
+                          </div>
+                          <div id="manDeliveryFields">
+                            <div class="form-group">
+                              <label for="manAlamat">Alamat Lengkap Penjemputan & Pengiriman</label>
+                              <textarea id="manAlamat" class="form-input" rows="2"
+                                        placeholder="Nama Jalan, RT/RW, Kelurahan, Kecamatan..."
+                                        onchange="window.manHitungOngkir()"></textarea>
+                              <a id="manGmapsLink" href="#" target="_blank"
+                                 style="font-size:0.82rem; color:var(--primary-sky);
+                                        display:none; margin-top:4px;">
+                                📍 Lihat di Google Maps
+                              </a>
+                            </div>
+                            <div class="form-group">
+                              <label for="manJarak">Jarak Estimasi (KM)</label>
+                              <div style="display:flex; gap:8px;">
+                                <input type="number" id="manJarak" class="form-input"
+                                       min="0" value="0" onchange="window.manHitungOngkir()"
+                                       style="flex:1;">
+                                <button class="btn btn-secondary"
+                                        onclick="window.manGpsJarak()"
+                                        aria-label="Hitung jarak via GPS"
+                                        style="white-space:nowrap; min-height:44px;">
+                                  📍 GPS
+                                </button>
+                              </div>
+                              <small id="manGpsStatus" style="color:var(--text-muted);
+                                     font-size:0.8rem; margin-top:4px;"></small>
+                            </div>
+                            <div class="form-group">
+                              <label for="manJadwal">Jadwal Penjemputan</label>
+                              <select id="manJadwal" class="form-input">
+                                <option value="Sesi 1 (07.00 - 09.00)">Sesi 1 (07.00 - 09.00)</option>
+                                <option value="Sesi 2 (11.00 - 13.00)">Sesi 2 (11.00 - 13.00)</option>
+                                <option value="Sesi 3 (17.00 - 19.00)">Sesi 3 (17.00 - 19.00)</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="form-group">
+                            <label for="manCatatan">Catatan Tambahan</label>
+                            <textarea id="manCatatan" class="form-input" rows="2"
+                                      placeholder="Kondisi barang, keluhan, dll..."></textarea>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- KOLOM KANAN: Layanan & Rincian -->
+                      <div style="display:flex; flex-direction:column; gap:1rem;">
+                        <div class="glass-card" style="padding:1.5rem;">
+                          <h3 style="margin-bottom:1rem; color:var(--primary-navy);">
+                            Pilih Layanan
+                          </h3>
+                          <div style="display:flex; gap:8px; margin-bottom:1rem;">
+                            <select id="manLayananSelect" class="form-input" style="flex:1;"></select>
+                            <button class="btn btn-primary" onclick="window.manTambahLayanan()"
+                                    style="min-height:44px;" aria-label="Tambah layanan">
+                              + Tambah
+                            </button>
+                          </div>
+                          <div id="manLayananList"
+                               style="min-height:60px; padding:8px; background:rgba(0,0,0,0.02);
+                                      border-radius:10px; display:flex; flex-direction:column; gap:6px;">
+                            <p style="color:var(--text-muted);font-size:0.85rem;
+                                      text-align:center;margin:auto;">
+                              Belum ada layanan dipilih
+                            </p>
+                          </div>
+                        </div>
+
+                        <!-- Rincian Pemesanan -->
+                        <div class="glass-card" style="padding:1.5rem;">
+                          <h3 style="margin-bottom:1rem; color:var(--primary-navy);">
+                            Rincian Pemesanan
+                          </h3>
+                          <div class="row" style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                            <span style="color:var(--text-muted);">a. Layanan</span>
+                            <span id="manSubtotal" style="font-weight:700;">Rp 0</span>
+                          </div>
+                          <div class="row" style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                            <span style="color:var(--text-muted);">b. Ongkos Kirim</span>
+                            <span id="manOngkirDisplay" style="font-weight:700;">Rp 0</span>
+                          </div>
+                          <div class="row" style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                            <span style="color:var(--text-muted);">c. Estimasi Selesai</span>
+                            <span id="manEstimasiDisplay" style="font-weight:700; color:var(--primary-sky);">—</span>
+                          </div>
+                          <div class="row" style="display:flex;justify-content:space-between;margin-bottom:12px;">
+                            <span style="color:#e74c3c;">Diskon</span>
+                            <span id="manDiskonDisplay" style="color:#e74c3c; font-weight:700;">- Rp 0</span>
+                          </div>
+                          <div style="border-top:2px solid rgba(0,0,0,0.1); padding-top:12px;
+                                      display:flex; justify-content:space-between;
+                                      font-size:1.2rem; font-weight:800; color:var(--primary-navy);">
+                            <span>d. Total Biaya</span>
+                            <span id="manTotal">Rp 0</span>
+                          </div>
+                        </div>
+
+                        <button onclick="window.simpanPesananManual()"
+                                class="btn btn-primary"
+                                style="padding:1.1rem; font-size:1rem; width:100%;">
+                          💾 Simpan & Unduh Nota
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="tab-membership" class="tab-content">
+                  <div class="glass-panel">
+                    <h2>Riwayat Transaksi Customer</h2>
+                    <p style="color:var(--text-muted); margin-top:4px;">
+                      Cari customer berdasarkan nama atau nomor HP. Menampilkan transaksi 1 tahun terakhir.
+                    </p>
+
+                    <div style="display:flex; gap:10px; margin-top:1.5rem; flex-wrap:wrap;">
+                      <input type="text" id="memberCariInput" class="form-input"
+                             placeholder="Masukkan nama atau no. HP customer..."
+                             style="flex:1; min-width:240px;"
+                             onkeydown="if(event.key==='Enter')window.cariRiwayat()">
+                      <button class="btn btn-primary" onclick="window.cariRiwayat()"
+                              style="min-width:100px;" aria-label="Cari riwayat transaksi">
+                        <i class="fa-solid fa-magnifying-glass"></i> Cari
+                      </button>
+                    </div>
+
+                    <div id="memberResult" style="margin-top:1.5rem;"></div>
+                  </div>
+                </div>
+
                 <div id="tab-orders" class="tab-content">
                     <div class="glass-panel">
                         <div class="dashboard-header">
@@ -140,40 +349,6 @@
                                 <tbody></tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-
-                <div id="tab-new-order" class="tab-content">
-                    <div class="glass-panel">
-                        <h2>Input Pesanan Baru</h2>
-                        <form onsubmit="window.processAdminOrder(event)" style="margin-top: 1.5rem;">
-                            <div class="grid grid-2">
-                                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="admName"
-                                        class="form-input" required></div>
-                                <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="admPhone"
-                                        class="form-input" required></div>
-                                <div class="form-group"><label>Jenis Barang</label><select id="admItem"
-                                        class="form-input">
-                                        <option>Sepatu</option>
-                                        <option>Helm</option>
-                                        <option>Tas</option>
-                                    </select></div>
-                                <div class="form-group"><label>Layanan</label><select id="admService"
-                                        class="form-input">
-                                        <option>Deep Clean</option>
-                                        <option>Reguler</option>
-                                        <option>Express</option>
-                                    </select></div>
-                                <div class="form-group"><label>Jumlah</label><input type="number" id="admQty"
-                                        class="form-input" value="1"></div>
-                                <div class="form-group"><label>Harga (Total)</label><input type="number" id="admPrice"
-                                        class="form-input" required></div>
-                            </div>
-                            <div class="form-group"><label>Catatan Khusus</label><textarea id="admNotes"
-                                    class="form-input" rows="3"></textarea></div>
-                            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan & Cetak
-                                Pesanan</button>
-                        </form>
                     </div>
                 </div>
 
@@ -270,6 +445,71 @@
                     </div>
                 </div>
 
+                <!-- TAB KATEGORI LAYANAN -->
+                <div id="tab-kategori-layanan" class="tab-content">
+                  <div class="glass-panel">
+                    <div class="dashboard-header" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+                      <div>
+                        <h2>Manajemen Kategori Layanan</h2>
+                        <p style="color:var(--text-muted); margin-top:4px;">
+                          Kategori ini menjadi foto shortcut di halaman Layanan & Pesan.
+                        </p>
+                      </div>
+                      <button class="btn btn-primary" onclick="window.openKategoriModal()"
+                              aria-label="Tambah kategori layanan baru">
+                        + Tambah Kategori
+                      </button>
+                    </div>
+
+                    <div class="table-container" style="margin-top:1.5rem;">
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>FOTO</th>
+                            <th>NAMA KATEGORI</th>
+                            <th>URUTAN</th>
+                            <th>STATUS</th>
+                            <th>AKSI</th>
+                          </tr>
+                        </thead>
+                        <tbody id="kategoriTableBody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TAB ADDITIONAL SERVICE -->
+                <div id="tab-additional-service" class="tab-content">
+                  <div class="glass-panel">
+                    <div class="dashboard-header" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+                      <div>
+                        <h2>Manajemen Additional Service</h2>
+                        <p style="color:var(--text-muted); margin-top:4px;">
+                          Buat opsi layanan tambahan yang bisa dipilih customer, lalu assign ke layanan.
+                        </p>
+                      </div>
+                      <button class="btn btn-primary" onclick="window.openAdditionalModal()"
+                              aria-label="Tambah additional service baru">
+                        + Tambah Additional
+                      </button>
+                    </div>
+
+                    <div class="table-container" style="margin-top:1.5rem;">
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>NAMA</th>
+                            <th>HARGA TAMBAHAN</th>
+                            <th>DESKRIPSI</th>
+                            <th>AKSI</th>
+                          </tr>
+                        </thead>
+                        <tbody id="additionalTableBody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
                 <div id="tab-testimonials" class="tab-content">
                     <div class="glass-panel">
                         <h2>Moderasi Testimoni Pelanggan</h2>
@@ -280,6 +520,7 @@
                                         <th>PELANGGAN</th>
                                         <th>RATING</th>
                                         <th>KOMENTAR</th>
+                                        <th>FOTO BUKTI</th>
                                         <th>STATUS</th>
                                         <th>AKSI</th>
                                     </tr>
@@ -321,8 +562,13 @@
                                         id="configHeroTitle" class="form-input"></div>
                                 <div class="form-group"><label>Sub-judul (Hero Subtitle)</label><textarea
                                         id="configHeroSubtitle" class="form-input" rows="3"></textarea></div>
-                                <div class="form-group"><label>Warna Teks Hero</label><input type="color"
-                                        id="configHeroColor" class="form-input"></div>
+                                 <div class="form-group"><label>Warna Teks Hero</label><input type="color"
+                                         id="configHeroColor" class="form-input"></div>
+                                 <div class="form-group">
+                                   <label for="configHeroSubtitleColor">Warna Subtitle Hero</label>
+                                   <input type="color" id="configHeroSubtitleColor" class="form-input" value="#ffffff">
+                                   <small style="color:var(--text-muted);">Warna teks subtitle di bawah judul hero</small>
+                                 </div>
                             </div>
                             <div class="glass-card" style="padding: 2rem;">
                                 <h3>Kontak & Sosial Media</h3>
@@ -338,6 +584,23 @@
                                         type="checkbox" id="configWorkshopDropoff" style="width:20px; height:20px;">
                                     <label for="configWorkshopDropoff" style="margin:0;">Aktifkan Drop-off</label></div>
                             </div>
+                        </div>
+                        <div class="glass-card" style="padding:2rem; margin-top:2rem;">
+                          <h3>Info Pembayaran (tampil di nota)</h3>
+                          <div class="form-group">
+                            <label for="configRekeningBca">No. Rekening BCA</label>
+                            <input type="text" id="configRekeningBca" class="form-input"
+                                   placeholder="BCA – 1234567890 – a.n Nama">
+                          </div>
+                          <div class="form-group">
+                            <label for="configRekeningBlu">No. Rekening Blu/Lainnya</label>
+                            <input type="text" id="configRekeningBlu" class="form-input"
+                                   placeholder="BluAccount – 0072xxxxx – a.n Nama">
+                          </div>
+                          <div class="form-group">
+                            <label for="configNamaKasir">Nama Kasir Default</label>
+                            <input type="text" id="configNamaKasir" class="form-input" placeholder="Nama kasir">
+                          </div>
                         </div>
                         <div class="glass-card" style="padding: 2rem; margin-top: 2rem;">
                             <h3>Slideshow Latar Belakang Hero</h3>
@@ -408,12 +671,14 @@
             <div class="form-group">
                 <select id="statusSelect" class="form-input">
                     <option value="1">1. Penjemputan</option>
-                    <option value="2">2. Diterima (Antrian)</option>
+                    <option value="2">2. Antrian Workshop</option>
                     <option value="3">3. Proses Treatment</option>
-                    <option value="4">4. Pengeringan & Detailing</option>
-                    <option value="5">5. Menunggu Pembayaran</option>
-                    <option value="6">6. Pengantaran</option>
-                    <option value="7">7. Selesai (Lunas)</option>
+                    <option value="4">4. Pengeringan</option>
+                    <option value="5">5. Detailing & Finishing</option>
+                    <option value="6">6. Packaging</option>
+                    <option value="7">7. Menunggu Pembayaran (Kirim Nota WA)</option>
+                    <option value="8">8. Pengantaran</option>
+                    <option value="9">9. Selesai</option>
                 </select>
             </div>
             <div style="display:flex; gap:10px; margin-top: 1.5rem;">
@@ -436,6 +701,8 @@
                     style="margin-bottom: 10px;">
                 <input type="file" id="galeriImageFile" class="form-input" accept="image/*"
                     onchange="window.previewGaleriUpload(this)">
+                <img id="galeriImagePreview" src="" alt="Preview foto galeri"
+                     style="display:none; max-width:100%; max-height:180px; object-fit:contain; border-radius:10px; margin-top:8px; margin-left:auto; margin-right:auto;">
             </div>
             <div class="form-group"><label>Link Instagram</label><input type="text" id="galeriIgLink" class="form-input"
                     placeholder="https://instagram.com/p/..."></div>
@@ -452,35 +719,70 @@
         <div class="glass-panel"
             style="background:white; padding: 2.5rem; width: 600px; max-height: 90vh; overflow-y: auto; border-radius: 24px;">
             <h3 id="serviceModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Layanan Baru</h3>
-            <form id="serviceForm" onsubmit="window.saveServiceItem(event)">
+            <div id="serviceForm">
                 <input type="hidden" id="serviceFormId">
                 <div class="grid grid-2" style="gap:15px;">
-                    <div class="form-group"><label>Nama Layanan</label><input type="text" id="serviceFormName"
-                            class="form-input" required></div>
-                    <div class="form-group"><label>Kategori</label><select id="serviceFormCategory" class="form-input"
-                            required>
-                            <option>Sepatu</option>
-                            <option>Bags</option>
-                            <option>Helmets</option>
-                            <option>Repaints</option>
-                        </select></div>
+                    <div class="form-group">
+                        <label for="serviceFormName">Nama Layanan</label>
+                        <input type="text" id="serviceFormName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceFormKategori">Kategori Layanan</label>
+                        <select id="serviceFormKategori" class="form-input" required>
+                            <option value="">-- Pilih Kategori --</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="grid grid-2" style="gap:15px;">
-                    <div class="form-group"><label>Jenis Treatment</label><input type="text" id="serviceFormTreatment"
-                            class="form-input" required></div>
-                    <div class="form-group"><label>Harga (Rp)</label><input type="number" id="serviceFormPrice"
-                            class="form-input" required></div>
+                    <div class="form-group">
+                        <label for="serviceFormPrice">Harga (Rp)</label>
+                        <input type="number" id="serviceFormPrice" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceFormEstimation">Estimasi Waktu</label>
+                        <input type="text" id="serviceFormEstimation" class="form-input" required>
+                    </div>
                 </div>
-                <div class="form-group"><label>Estimasi Waktu</label><input type="text" id="serviceFormEstimation"
-                        class="form-input" required></div>
-                <div class="form-group"><label>Deskripsi</label><textarea id="serviceFormDescription" class="form-input"
-                        rows="2"></textarea></div>
+                <div class="form-group">
+                    <label for="serviceFormDescription">Deskripsi</label>
+                    <textarea id="serviceFormDescription" class="form-input" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="serviceFormImage">Foto Utama Layanan</label>
+                    <input type="text" id="serviceFormImage" class="form-input" 
+                           placeholder="URL foto atau upload file di bawah">
+                    <input type="file" id="serviceFormImageFile" class="form-input" 
+                           accept="image/*" onchange="window.previewServiceMainPhoto(this)"
+                           style="margin-top:8px;" aria-label="Upload foto utama layanan">
+                    <img id="serviceFormImagePreview" src="" alt="Preview foto utama layanan"
+                         style="display:none; max-width:100%; max-height:180px; object-fit:contain; border-radius:8px; 
+                                margin-top:8px; border:1px solid var(--glass-border); margin-left:auto; margin-right:auto;">
+                </div>
+                <div class="form-group">
+                    <label for="serviceFormAdditionalImages">Foto Tambahan (slideshow, pisah koma)</label>
+                    <input type="text" id="serviceFormAdditionalImages" class="form-input"
+                           placeholder="https://url1.jpg, https://url2.jpg">
+                    <input type="file" id="serviceFormAdditionalFiles" class="form-input" 
+                           accept="image/*" multiple onchange="window.uploadServiceAdditionalPhotos(this)"
+                           style="margin-top:8px;" aria-label="Upload foto tambahan layanan">
+                    <div id="serviceFormAdditionalPreview" 
+                         style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+                </div>
+                <div class="form-group">
+                  <label>Additional Service yang Tersedia</label>
+                  <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.75rem;">
+                    Centang additional service yang bisa dipilih customer untuk layanan ini.
+                  </p>
+                  <div id="serviceFormAdditionalList" style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- Dirender dinamis -->
+                  </div>
+                </div>
                 <div style="display:flex; gap:10px; margin-top: 1.5rem;">
                     <button type="button" class="btn" style="flex:1; background:#64748b; color:white;"
                         onclick="document.getElementById('serviceModal').style.display='none'">Batal</button>
-                    <button type="submit" class="btn btn-primary owner-only" style="flex:2;">Simpan Layanan</button>
+                    <button type="button" class="btn btn-primary owner-only" style="flex:2;" onclick="window.saveServiceItem(event)">Simpan Layanan</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -488,7 +790,7 @@
         style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
         <div class="glass-panel" style="background:white; padding: 2.5rem; width: 500px; border-radius: 24px;">
             <h3 id="stockModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Item Stok Baru</h3>
-            <form onsubmit="window.saveStockItem(event)">
+            <div id="stockForm">
                 <input type="hidden" id="stockId">
                 <div class="form-group"><label>Nama Bahan</label><input type="text" id="stockName" class="form-input"
                         required></div>
@@ -508,12 +810,86 @@
                 <div style="display:flex; gap:10px; margin-top: 1.5rem;">
                     <button type="button" class="btn" style="flex:1; background:#64748b; color:white;"
                         onclick="document.getElementById('stockModal').style.display='none'">Batal</button>
-                    <button type="submit" class="btn btn-primary" style="flex:2;">Simpan Item</button>
+                    <button type="button" class="btn btn-primary" style="flex:2;" onclick="window.saveStockItem(event)">Simpan Item</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
+    <!-- MODAL KATEGORI -->
+    <div id="kategoriModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+         background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+      <div class="glass-panel" style="background:white; padding:2.5rem; width:500px;
+           max-width:95%; border-radius:24px; max-height:90vh; overflow-y:auto;">
+        <h3 id="kategoriModalTitle" style="margin-bottom:1.5rem; color:#0f172a;">Tambah Kategori</h3>
+        <input type="hidden" id="kategoriId">
+        <div class="form-group">
+          <label for="kategoriNama">Nama Kategori</label>
+          <input type="text" id="kategoriNama" class="form-input"
+                 placeholder="Cth: Sepatu, Tas Kulit, Helm..." required>
+        </div>
+        <div class="form-group">
+          <label for="kategoriUrutan">Urutan Tampil</label>
+          <input type="number" id="kategoriUrutan" class="form-input" value="0" min="0">
+        </div>
+        <div class="form-group">
+          <label for="kategoriImageUrl">Foto Kategori (URL)</label>
+          <input type="text" id="kategoriImageUrl" class="form-input"
+                 placeholder="Masukkan URL atau upload file">
+          <input type="file" id="kategoriImageFile" class="form-input" accept="image/*"
+                 onchange="window.uploadKategoriFoto(this)"
+                 style="margin-top:8px;" aria-label="Upload foto kategori">
+          <img id="kategoriImagePreview" src="" alt="Preview foto kategori"
+               style="display:none; max-width:100%; max-height:180px; object-fit:contain; border-radius:10px; margin-top:8px; margin-left:auto; margin-right:auto;">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:1.5rem;">
+          <button class="btn" style="flex:1; background:#64748b; color:white;"
+                  onclick="document.getElementById('kategoriModal').style.display='none'">
+            Batal
+          </button>
+          <button class="btn btn-primary" style="flex:2;" onclick="window.saveKategori()">
+            Simpan Kategori
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ADDITIONAL SERVICE -->
+    <div id="additionalModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+         background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+      <div class="glass-panel" style="background:white; padding:2.5rem; width:480px;
+           max-width:95%; border-radius:24px;">
+        <h3 id="additionalModalTitle" style="margin-bottom:1.5rem; color:#0f172a;">
+          Tambah Additional Service
+        </h3>
+        <input type="hidden" id="additionalId">
+        <div class="form-group">
+          <label for="additionalNama">Nama Layanan Tambahan</label>
+          <input type="text" id="additionalNama" class="form-input"
+                 placeholder="Cth: Parfum Premium, Waterproof Coating..." required>
+        </div>
+        <div class="form-group">
+          <label for="additionalHarga">Harga Tambahan (Rp)</label>
+          <input type="number" id="additionalHarga" class="form-input" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label for="additionalDeskripsi">Deskripsi (opsional)</label>
+          <textarea id="additionalDeskripsi" class="form-input" rows="2"
+                    placeholder="Penjelasan singkat layanan tambahan ini..."></textarea>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:1.5rem;">
+          <button class="btn" style="flex:1; background:#64748b; color:white;"
+                  onclick="document.getElementById('additionalModal').style.display='none'">
+            Batal
+          </button>
+          <button class="btn btn-primary" style="flex:2;" onclick="window.saveAdditional()">
+            Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/db.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 

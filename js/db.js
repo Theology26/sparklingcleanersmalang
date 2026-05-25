@@ -1,6 +1,6 @@
 // db.js - Backend API Wrapper with Robust Fallbacks and Global Sync
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = '/api';
 
 const FALLBACKS = {
     config: {
@@ -45,6 +45,18 @@ const DB = {
         }
     },
 
+    async getRingkasan() {
+        return (await this.call('/ringkasan')) || {
+            total_pesanan: 0,
+            pesanan_selesai: 0,
+            rasio_penyelesaian: 0,
+            pendapatan_bersih: 0,
+            breakdown_kategori: { Sepatu: 0, Helm: 0, Tas: 0 },
+            breakdown_delivery: { antar_jemput: 0, drop_off: 0 },
+            stok_rata_persen: 0
+        };
+    },
+
     // [SERVICES CRUD] - Mapped to /api/layanan
     async getServices() {
         return (await this.call('/layanan')) || [];
@@ -57,7 +69,10 @@ const DB = {
             treatment: service.treatment,
             price: service.price,
             estimation: service.estimation,
-            description: service.description
+            description: service.description,
+            image: service.image,
+            additional_images: service.additional_images,
+            id_kategori: service.id_kategori
         });
     },
     async updateService(id, service) {
@@ -67,11 +82,60 @@ const DB = {
             treatment: service.treatment,
             price: service.price,
             estimation: service.estimation,
-            description: service.description
+            description: service.description,
+            image: service.image,
+            additional_images: service.additional_images,
+            id_kategori: service.id_kategori
         });
     },
     async deleteService(id) {
         return await this.call(`/layanan/${id}`, 'DELETE');
+    },
+
+    // Kategori Layanan
+    async getKategoriLayanan() {
+      return (await this.call('/kategori-layanan')) || [];
+    },
+    async getAllKategoriLayanan() {
+      return (await this.call('/kategori-layanan/all')) || [];
+    },
+    async addKategori(data) {
+      return await this.call('/kategori-layanan', 'POST', data);
+    },
+    async updateKategori(id, data) {
+      return await this.call(`/kategori-layanan/${id}`, 'PUT', data);
+    },
+    async deleteKategori(id) {
+      return await this.call(`/kategori-layanan/${id}`, 'DELETE');
+    },
+    async getLayananByKategori(idKategori) {
+      return (await this.call(`/layanan/kategori/${idKategori}`)) || [];
+    },
+
+    // Additional Service
+    async getAdditionalService() {
+      return (await this.call('/additional-service')) || [];
+    },
+    async getAdditionalByLayanan(idLayanan) {
+      return (await this.call(`/additional-service/layanan/${idLayanan}`)) || [];
+    },
+    async addAdditionalService(data) {
+      return await this.call('/additional-service', 'POST', data);
+    },
+    async updateAdditionalService(id, data) {
+      return await this.call(`/additional-service/${id}`, 'PUT', data);
+    },
+    async deleteAdditionalService(id) {
+      return await this.call(`/additional-service/${id}`, 'DELETE');
+    },
+    async setLayananAdditional(idLayanan, additionalIds) {
+      return await this.call(`/layanan/${idLayanan}/additional`, 'POST', { additional_ids: additionalIds });
+    },
+
+    async getRiwayatCustomer(q) {
+      return (await this.call(`/riwayat-customer?q=${encodeURIComponent(q)}`)) || {
+        customer: null, total_transaksi: 0, total_omset: 0, pesanan: []
+      };
     },
 
     // [GALERI CRUD] - Mapped to /api/galeri
@@ -194,24 +258,7 @@ const DB = {
         return await this.call(`/users/${id}`, 'PUT', userData);
     },
 
-    // [GALERI] - Stored in konfigurasi_sistem
-    async getGaleri() {
-        const config = await this.getSystemConfig();
-        if (config && config.instagram_gallery_images) {
-            try { return JSON.parse(config.instagram_gallery_images); } catch(e){}
-        }
-        return [];
-    },
-    async addGaleri(item) {
-        let items = await this.getGaleri();
-        items.push(item);
-        return await this.call('/system-config', 'PUT', { instagram_gallery_images: items });
-    },
-    async deleteGaleri(id) {
-        let items = await this.getGaleri();
-        items = items.filter(x => x.id != id);
-        return await this.call('/system-config', 'PUT', { instagram_gallery_images: items });
-    },
+
 
     // UI Helpers
     formatCurrency: (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num),

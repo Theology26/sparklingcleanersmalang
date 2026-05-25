@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.WA_NUMBER = await DB.getWhatsAppNumber();
 
     await initFulfillmentToggle();
-    await renderServicesGrid();
+    await renderKategoriGrid();
     window.updateCartUI();
     await renderColors();
     await renderFooterMeta();
@@ -19,86 +19,353 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 1. FULFILLMENT MODE TOGGLE
 // =============================================
 async function initFulfillmentToggle() {
-    const config = await DB.getConfig();
-    const dropoffAllowed = config.workshop_dropoff_allowed === true;
     const deliverySelect = document.getElementById('orderDelivery');
     const details = document.getElementById('deliveryDetails');
     const addr = document.getElementById('orderAddress');
 
     if (deliverySelect) {
-        if (!dropoffAllowed) {
-            deliverySelect.innerHTML = `<option value="Ya">Jemput / Antar ke Alamat (Antar-Jemput)</option>`;
-            deliverySelect.value = 'Ya';
-            deliverySelect.disabled = true;
-            if (details) { details.style.display = 'block'; }
-            if (addr) addr.required = true;
-        } else {
-            deliverySelect.innerHTML = `
-                <option value="Tidak">Antar Sendiri ke Workshop (Drop-off)</option>
-                <option value="Ya" selected>Jemput / Antar ke Alamat (Antar-Jemput)</option>
-            `;
-            deliverySelect.disabled = false;
-            window.toggleDeliveryOptions(deliverySelect.value);
-        }
+        deliverySelect.innerHTML = `<option value="Ya" selected>Jemput / Antar ke Alamat (Antar-Jemput)</option>`;
+        deliverySelect.value = 'Ya';
+        deliverySelect.disabled = true;
+        if (details) { details.style.display = 'block'; }
+        if (addr) addr.required = true;
     }
 }
 
 // =============================================
-// 2. DYNAMIC CATALOG GRID
+// 2. DYNAMIC CATALOG GRID & GROUPING
 // =============================================
-async function renderServicesGrid() {
-    const grid = document.getElementById('services-grid');
-    if (!grid) return;
+// =============================================
+// LEVEL 1: RENDER GRID KATEGORI
+// =============================================
+async function renderKategoriGrid() {
+  const grid = document.getElementById('kategori-grid');
+  if (!grid) return;
 
-    const services = await DB.getServices();
-    if (!services || services.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Belum ada layanan yang tersedia.</div>';
-        return;
-    }
+  const categories = await DB.getKategoriLayanan();
 
-    grid.innerHTML = '';
-    services.forEach(s => {
-        const inCart = window.cart.find(item => item.id === s.id);
-        const imageUrl = s.image || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500';
-        const treatmentBadge = s.treatment === 'special'
-            ? '<span class="badge badge-special" style="font-size:0.7rem;">Special</span>'
-            : '<span class="badge badge-regular" style="font-size:0.7rem;">Regular</span>';
+  if (!categories || categories.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-muted);">
+        <i class="fa-solid fa-box-open" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
+        <p>Kategori layanan belum tersedia.</p>
+      </div>`;
+    return;
+  }
 
-        let actionHtml = '';
-        if (inCart) {
-            actionHtml = `
-                <div class="service-qty-control">
-                    <button type="button" class="qty-btn-large" onclick="window.updateCartQty('${s.id}', -1)">&minus;</button>
-                    <span class="service-qty-val">${inCart.qty}</span>
-                    <button type="button" class="qty-btn-large" onclick="window.updateCartQty('${s.id}', 1)">&plus;</button>
-                </div>
-            `;
-        } else {
-            actionHtml = `<button type="button" class="btn btn-primary" onclick="window.addToCart('${s.id}')" style="width: 100%;">Tambah <i class="fa-solid fa-cart-plus" style="margin-left:8px;"></i></button>`;
-        }
+  grid.innerHTML = categories.map(cat => `
+    <div class="kategori-card glass-card"
+         onclick="window.openKategori(${cat.id}, '${cat.nama_kategori.replace(/'/g, "\\'")}')"
+         role="button"
+         tabindex="0"
+         aria-label="Lihat layanan kategori ${cat.nama_kategori}"
+         onkeydown="if(event.key==='Enter'||event.key===' ')window.openKategori(${cat.id},'${cat.nama_kategori.replace(/'/g, "\\'")}')">
+      <div style="overflow:hidden;">
+        <img src="${cat.foto_kategori || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=600'}"
+             alt="Kategori layanan ${cat.nama_kategori} - Sparkling Cleaners"
+             loading="lazy">
+      </div>
+      <div class="kategori-card-label">
+        <span>${cat.nama_kategori}</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </div>
+    </div>
+  `).join('');
+}
 
-        grid.innerHTML += `
-            <div class="glass-card service-card" style="text-align:left; display:flex; flex-direction:column; justify-content:space-between;">
-                <div>
-                    <div class="service-card-img-wrapper" onclick="window.openLightbox('${s.id}')">
-                        <img src="${imageUrl}" alt="${s.name}" class="service-card-img">
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                        ${treatmentBadge}
-                        <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase;">${s.category}</span>
-                    </div>
-                    <h3 style="margin:0.4rem 0; font-size:1.1rem; line-height:1.3;">${s.name}</h3>
-                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.4; margin-bottom:1rem;">${s.description || ''}</p>
-                </div>
-                <div>
-                    <div style="font-size:1.25rem; font-weight:700; color:var(--primary-navy); margin-bottom:0.25rem;">${DB.formatCurrency(s.price)}</div>
-                    <span style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:1rem;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i> Estimasi: ${s.estimation}</span>
-                    <div class="service-card-action">${actionHtml}</div>
-                </div>
+// =============================================
+// LEVEL 2: BUKA KATEGORI → TAMPILKAN LAYANAN
+// =============================================
+window.openKategori = async function(idKategori, namaKategori) {
+  // Sembunyikan level 1, tampilkan level 2
+  document.getElementById('section-kategori').style.display = 'none';
+  document.getElementById('section-layanan-detail').style.display = 'block';
+  document.getElementById('detail-kategori-nama').innerText = namaKategori;
+
+  // Scroll ke atas
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const container = document.getElementById('layanan-in-kategori-grid');
+  container.innerHTML = `
+    <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
+      <p style="margin-top:1rem;">Memuat layanan...</p>
+    </div>`;
+
+  const layananList = await DB.getLayananByKategori(idKategori);
+
+  if (!layananList || layananList.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+        <p>Belum ada layanan dalam kategori ini.</p>
+      </div>`;
+    return;
+  }
+
+  // Render tiap layanan sebagai card detail
+  const renderedCards = await Promise.all(layananList.map(s => renderLayananDetailCard(s)));
+  container.innerHTML = renderedCards.join('');
+};
+
+window.backToKategori = function() {
+  document.getElementById('section-layanan-detail').style.display = 'none';
+  document.getElementById('section-kategori').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// =============================================
+// RENDER CARD LAYANAN DETAIL (Level 2)
+// =============================================
+async function renderLayananDetailCard(s) {
+  const additionals = await DB.getAdditionalByLayanan(s.id);
+
+  const photos = [
+    s.image,
+    ...(s.additional_images || '').split(',').map(u => u.trim()).filter(Boolean)
+  ].filter(Boolean);
+  if (photos.length === 0) {
+    photos.push('https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=600');
+  }
+
+  const sliderId = `slider_${s.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+  // Foto slideshow HTML
+  const fotoHtml = `
+    <div class="foto-area">
+      <div id="${sliderId}_wrapper" style="position:relative; overflow:hidden; width:100%;">
+        <div id="${sliderId}" style="display:flex; width:${photos.length * 100}%; transition:transform 0.35s ease;">
+          ${photos.map(url => `
+            <div style="width:${100 / photos.length}%; flex-shrink:0;">
+              <img src="${url}"
+                   alt="Foto layanan ${s.name} - Sparkling Cleaners"
+                   loading="lazy"
+                   style="width:100%; height:auto; max-height:420px;
+                          object-fit:contain; background:#f8fafc; display:block;">
             </div>
-        `;
-    });
+          `).join('')}
+        </div>
+        ${photos.length > 1 ? `
+          <button onclick="window.slideLayanan('${sliderId}', ${photos.length}, -1)"
+                  aria-label="Foto sebelumnya"
+                  style="position:absolute; left:10px; top:50%; transform:translateY(-50%);
+                         background:rgba(0,0,0,0.45); border:none; color:white;
+                         width:36px; height:36px; border-radius:50%; cursor:pointer;
+                         font-size:1rem; display:flex; align-items:center; justify-content:center;
+                         z-index:2;">&#8249;</button>
+          <button onclick="window.slideLayanan('${sliderId}', ${photos.length}, 1)"
+                  aria-label="Foto berikutnya"
+                  style="position:absolute; right:10px; top:50%; transform:translateY(-50%);
+                         background:rgba(0,0,0,0.45); border:none; color:white;
+                         width:36px; height:36px; border-radius:50%; cursor:pointer;
+                         font-size:1rem; display:flex; align-items:center; justify-content:center;
+                         z-index:2;">&#8250;</button>
+          <div style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+                      display:flex; gap:5px; z-index:2;">
+            ${photos.map((_, i) => `
+              <div id="dot_${sliderId}_${i}"
+                   style="width:${i===0?'18px':'7px'}; height:7px; border-radius:4px;
+                          background:${i===0?'var(--primary-sky)':'rgba(255,255,255,0.7)'};
+                          transition:all 0.25s;"></div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  // Additional service pills HTML
+  const additionalHtml = additionals.length > 0 ? `
+    <div style="border-top:1px solid rgba(0,0,0,0.06); padding-top:1rem;">
+      <p style="font-size:0.85rem; font-weight:700; color:var(--primary-navy);
+                margin-bottom:0.75rem; display:flex; align-items:center; gap:6px;">
+        <i class="fa-solid fa-plus-circle" style="color:var(--primary-sky);"></i>
+        Layanan Tambahan (Opsional):
+      </p>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;" id="add_pills_${s.id}">
+        ${additionals.map(a => `
+          <button class="additional-pill"
+                  data-id="${a.id}"
+                  data-harga="${a.harga}"
+                  data-nama="${a.nama}"
+                  onclick="window.toggleAdditional(this, '${s.id}')"
+                  aria-label="Tambahkan ${a.nama} seharga ${DB.formatCurrency(a.harga)}">
+            <span>${a.nama}</span>
+            <span style="font-size:0.78rem; opacity:0.75;">+${DB.formatCurrency(a.harga)}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  return `
+    <div class="layanan-detail-card glass-card"
+         id="card_${s.id}"
+         data-base-price="${parseFloat(s.price)}">
+      ${fotoHtml}
+      <div class="info-area">
+        <div>
+          <span style="font-size:0.75rem; font-weight:700; color:var(--primary-sky);
+                       text-transform:uppercase; letter-spacing:1px;">
+            ${s.category || ''}
+          </span>
+          <h3 style="margin:0.4rem 0 0.5rem; font-size:1.3rem; color:var(--primary-navy);">
+            ${s.name}
+          </h3>
+          <p style="color:var(--text-muted); line-height:1.65; font-size:0.92rem; margin:0;">
+            ${s.description || ''}
+          </p>
+        </div>
+
+        <!-- Harga & Estimasi -->
+        <div style="display:flex; align-items:center; gap:2rem; flex-wrap:wrap;
+                    background:rgba(52,152,219,0.07); padding:1rem 1.25rem;
+                    border-radius:14px;">
+          <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:2px;">Harga</div>
+            <div id="harga_display_${s.id}"
+                 style="font-size:1.5rem; font-weight:800; color:var(--primary-navy);">
+              ${DB.formatCurrency(parseFloat(s.price))}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:2px;">Estimasi</div>
+            <div style="font-weight:700; color:var(--primary-sky); font-size:1.05rem;">
+              ${s.estimation}
+            </div>
+          </div>
+        </div>
+
+        ${additionalHtml}
+
+        <!-- Tombol Tambah Keranjang -->
+        <button onclick="window.addLayananToCart('${s.id}')"
+                class="btn btn-primary"
+                style="padding:1rem; font-size:1rem; width:100%; margin-top:0.25rem;"
+                aria-label="Tambahkan ${s.name} ke keranjang">
+          Tambah ke Keranjang
+          <i class="fa-solid fa-cart-plus" style="margin-left:8px;"></i>
+        </button>
+      </div>
+    </div>
+  `;
 }
+
+// =============================================
+// SLIDER FOTO (LAYANAN DETAIL CARD)
+// =============================================
+window._sliderIndex = {};
+window.slideLayanan = function(sliderId, total, direction) {
+  if (!window._sliderIndex[sliderId]) window._sliderIndex[sliderId] = 0;
+  window._sliderIndex[sliderId] = (window._sliderIndex[sliderId] + direction + total) % total;
+  const el = document.getElementById(sliderId);
+  if (el) el.style.transform = `translateX(-${(window._sliderIndex[sliderId] * 100) / total}%)`;
+  // Update dots
+  for (let i = 0; i < total; i++) {
+    const dot = document.getElementById(`dot_${sliderId}_${i}`);
+    if (dot) {
+      dot.style.width = i === window._sliderIndex[sliderId] ? '18px' : '7px';
+      dot.style.background = i === window._sliderIndex[sliderId]
+        ? 'var(--primary-sky)' : 'rgba(255,255,255,0.7)';
+    }
+  }
+};
+
+// =============================================
+// ADDITIONAL SERVICE TOGGLE
+// =============================================
+window.toggleAdditional = function(btn, serviceId) {
+  btn.classList.toggle('selected');
+  updateLayananTotalDisplay(serviceId);
+};
+
+function updateLayananTotalDisplay(serviceId) {
+  const card = document.getElementById(`card_${serviceId}`);
+  if (!card) return;
+  const pills = card.querySelectorAll('.additional-pill.selected');
+  const additionalTotal = Array.from(pills).reduce((sum, p) => sum + parseFloat(p.dataset.harga || 0), 0);
+
+  // Ambil harga base dari dataset card (simpan saat render)
+  const basePrice = parseFloat(card.dataset.basePrice || 0);
+  const total = basePrice + additionalTotal;
+  const displayEl = document.getElementById(`harga_display_${serviceId}`);
+  if (displayEl) {
+    displayEl.innerText = DB.formatCurrency(total);
+    displayEl.style.color = additionalTotal > 0 ? 'var(--primary-sky)' : 'var(--primary-navy)';
+  }
+}
+
+// =============================================
+// TAMBAH KE KERANJANG DARI DETAIL LAYANAN
+// =============================================
+function hitungEstimasiTerlama(cart) {
+    let maxHari = 0;
+    let maxEst = '3 Hari';
+    cart.forEach(item => {
+        const m = (item.estimation || '').match(/(\d+)/);
+        const h = m ? parseInt(m[1]) : 3;
+        if (h > maxHari) { maxHari = h; maxEst = item.estimation; }
+    });
+    return maxEst;
+}
+
+window.addLayananToCart = async function(serviceId) {
+  const services = await DB.getServices();
+  const s = services.find(x => x.id === serviceId);
+  if (!s) return;
+
+  const card = document.getElementById(`card_${serviceId}`);
+  const selectedAdditionals = card
+    ? Array.from(card.querySelectorAll('.additional-pill.selected')).map(p => ({
+        id: p.dataset.id,
+        nama: p.dataset.nama,
+        harga: parseFloat(p.dataset.harga)
+      }))
+    : [];
+
+  const additionalTotal = selectedAdditionals.reduce((sum, a) => sum + a.harga, 0);
+  const totalPrice = parseFloat(s.price) + additionalTotal;
+
+  const cartItemName = selectedAdditionals.length > 0
+    ? `${s.name} + ${selectedAdditionals.map(a => a.nama).join(', ')}`
+    : s.name;
+
+  const additionalKey = selectedAdditionals.map(a => a.id).sort().join('_');
+  const cartItemId = additionalKey ? `${serviceId}-${additionalKey}` : serviceId;
+
+  const existing = window.cart.find(item => item.id === cartItemId);
+
+  if (existing) {
+    existing.qty++;
+  } else {
+    window.cart.push({
+      id: cartItemId,
+      serviceId: serviceId,
+      name: cartItemName,
+      price: totalPrice,
+      qty: 1,
+      image: s.image || '',
+      additional_images: s.additional_images || '',
+      additionals: selectedAdditionals,
+      estimation: s.estimation || '3 Hari'
+    });
+  }
+
+  window.saveCart();
+  window.updateCartUI();
+  window.toggleCartDrawer(true);
+
+  // Visual feedback
+  const btn = card?.querySelector('button[onclick*="addLayananToCart"]');
+  if (btn) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Ditambahkan!';
+    btn.style.background = '#2ecc71';
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.style.background = '';
+    }, 1500);
+  }
+};
 
 // =============================================
 // 3. SHOPPING CART ENGINE
@@ -120,7 +387,8 @@ window.addToCart = async function(serviceId) {
             price: service.price,
             qty: 1,
             image: service.image || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=500',
-            additional_images: service.additional_images || ''
+            additional_images: service.additional_images || '',
+            estimation: service.estimation || '3 Hari'
         });
     }
 
@@ -205,7 +473,7 @@ window.updateCartUI = function() {
         }
     }
 
-    renderServicesGrid();
+    // renderServicesGrid(); // Removed in V3 Category Restructure
     window.calculateTotal();
 };
 
@@ -269,7 +537,7 @@ window.calculateTotal = function() {
     if (el('sumOngkir')) el('sumOngkir').innerText = delivery === 'Ya' ? (ongkir === 0 ? 'Rp 0 (Gratis)' : DB.formatCurrency(ongkir)) : 'Rp 0';
     if (el('sumTotal')) el('sumTotal').innerText = DB.formatCurrency(total);
 
-    let est = "3-4 Hari";
+    let est = hitungEstimasiTerlama(window.cart);
     if (expressVal !== 'none') est = expressVal;
     if (el('sumEst')) el('sumEst').innerText = est;
 };
@@ -282,6 +550,12 @@ window.processOrder = async function(event) {
 
     if (window.cart.length === 0) {
         alert("Keranjang Anda kosong! Silakan pilih layanan terlebih dahulu.");
+        return;
+    }
+
+    const termsChecked = document.getElementById('orderTerms')?.checked;
+    if (!termsChecked) {
+        alert("Anda harus menyetujui syarat & ketentuan sebelum mengirim pesanan.");
         return;
     }
 
@@ -302,6 +576,9 @@ window.processOrder = async function(event) {
     let ongkir = (delivery === 'Ya' && distance > 10) ? (distance - 10) * 2000 : 0;
     const total = subtotal + (expressPrice * totalQty) + ongkir;
 
+    let est = hitungEstimasiTerlama(window.cart);
+    if (expressVal !== 'none') est = expressVal;
+
     const orderId = DB.generateOrderCode();
 
     let photoUrl = null;
@@ -309,7 +586,7 @@ window.processOrder = async function(event) {
         const formData = new FormData();
         formData.append('image', photoInput.files[0]);
         try {
-            const uploadResp = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+            const uploadResp = await fetch('/api/upload', { method: 'POST', body: formData });
             const uploadResult = await uploadResp.json();
             if (uploadResult.success) { photoUrl = uploadResult.urls[0]; }
         } catch (uploadErr) { console.error('Failed to upload condition photo:', uploadErr); }
@@ -321,7 +598,8 @@ window.processOrder = async function(event) {
         service: window.cart.map(i => `${i.name} (${i.qty}x)`).join(', '),
         express: expressVal, delivery, address, distance, schedule, notes,
         price: subtotal, express_price: expressPrice * totalQty, ongkir, total,
-        status: 1, items: JSON.stringify(window.cart), photo: photoUrl
+        status: 1, items: JSON.stringify(window.cart), photo: photoUrl,
+        estimasi_selesai: est
     };
 
     const res = await DB.addOrder(orderData);
@@ -342,6 +620,7 @@ window.processOrder = async function(event) {
         msg += `- ${item.name} (${item.qty}x) - ${DB.formatCurrency(item.price * item.qty)}%0A`;
     });
     msg += `%0A- Express: ${expressVal !== 'none' ? expressVal : 'Normal'}%0A`;
+    msg += `- Estimasi Selesai: *${est}*%0A`;
     msg += `- Catatan: ${notes || '-'}%0A%0A`;
 
     if (delivery === 'Ya') {
@@ -528,8 +807,9 @@ window.openLightbox = async function(serviceId) {
 
     currentLightboxIndex = 0;
     const slider = document.getElementById('lightboxSlider');
+    slider.style.width = `${lightboxSlides.length * 100}%`;
     slider.innerHTML = lightboxSlides.map(img => `
-        <div class="lightbox-slide"><img src="${img}" alt="Detail"></div>
+        <div class="lightbox-slide" style="width:${100 / lightboxSlides.length}%; min-width:${100 / lightboxSlides.length}%;"><img src="${img}" alt="Detail"></div>
     `).join('');
 
     const prevBtn = document.querySelector('.lightbox-prev');
@@ -564,7 +844,7 @@ window.nextLightboxSlide = function() {
 
 window.updateLightboxSlider = function() {
     const slider = document.getElementById('lightboxSlider');
-    slider.style.transform = `translateX(-${currentLightboxIndex * 100}%)`;
+    slider.style.transform = `translateX(-${(currentLightboxIndex * 100) / lightboxSlides.length}%)`;
 };
 
 // =============================================

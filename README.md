@@ -67,9 +67,12 @@ Akses Dashboard di: **http://localhost:3000/dashboard**
 
 ```
 sparklingcleanersmalang/
-├── index.html          # Landing Page Publik
-├── dashboard.html      # Dashboard Operasional
-├── database.sql        # Skema Produksi & Dummy Data
+├── index.html          # Landing Page Publik & Misi Utama
+├── layanan.html        # Katalog Sub-layanan & Keranjang Belanja
+├── lacak.html          # Lacak Status Pesanan (Customer)
+├── dashboard.html      # Dashboard Operasional (Admin & Owner)
+├── login.html          # Portal Login Admin/Owner
+├── database.sql        # Skema Produksi MySQL & Dummy Data
 │
 ├── server/
 │   ├── server.js       # Core API (Node/Express + Pooling)
@@ -77,16 +80,19 @@ sparklingcleanersmalang/
 │
 ├── js/
 │   ├── db.js           # API Wrapper (Frontend-to-Backend)
-│   ├── dashboard.js    # Logic Bisnis Dashboard
-│   └── landing.js      # Logic Landing Page
+│   ├── dashboard.js    # Logic Bisnis Dashboard & Cetak Nota
+│   ├── beranda.js      # Animasi Staggered & Integrasi landing
+│   ├── layanan.js      # Cart Engine, Checkout, & GPS Ongkir
+│   └── lacak.js        # Logic Lacak Pesanan Real-time
 │
 ├── assets/
 │   ├── logo.png        # Logo Utama
+│   ├── owner_bg.png    # Gambar Latar Kustom
 │   └── sidebar-texture.png # Tekstur Kertas Biru Eksklusif
 │
 └── styles/
-    ├── main.css        # Global Styles
-    └── dashboard.css   # Aesthetic Frost UI Styles
+    ├── main.css        # Global Styles & Animasi Customer
+    └── dashboard.css   # Aesthetic Frost UI Styles (Dashboard)
 ```
 
 ---
@@ -100,13 +106,17 @@ sparklingcleanersmalang/
 
 ---
 
-## 🛠️ Fitur Produksi (v2.0)
+## 🛠️ Fitur Produksi Terkini (v6.2)
 
-- **Inventory Tracking**: Pengurangan stok otomatis saat barang digunakan dan penambahan otomatis saat restok diselesaikan.
-- **Financial Analytics**: Grafik batang (infografis) pendapatan 7 hari terakhir yang dinamis.
-- **Restok Moderation**: Admin mengajukan request, Owner menyetujui, stok bertambah otomatis.
-- **Live Config Editor**: Owner bisa mengubah Judul Hero dan Harga Layanan langsung dari dashboard tanpa edit kode.
-- **Order Lifecycle**: SOP 6 tahap dari "Diterima" hingga "Selesai/Lunas".
+- **Inventory Tracking**: Pengurangan stok otomatis saat bahan/alat digunakan dan penambahan otomatis saat restok diselesaikan oleh Owner.
+- **Financial Analytics**: Grafik batang (infografis) pendapatan 7 hari terakhir yang dinamis menggunakan Chart.js.
+- **Restok Moderation**: Admin mengajukan request pembelian barang, Owner menyetujui, stok bertambah otomatis.
+- **Live Config Editor**: Owner bisa mengubah Judul Hero, Nomor WhatsApp, Akun Instagram, dan Alamat Workshop langsung dari dashboard tanpa edit kode.
+- **Multilayanan Catalog & Checkout Drawer**: Navigasi bertingkat kategori (Level 1) ke detail sub-layanan (Level 2). Slider gambar bebas potong dengan rasio 1:1, add-ons opsional, detail keranjang belanja, dan penyesuaian biaya express dinamis.
+- **GPS Distance Cost (Haversine)**: Integrasi HTML5 Geolocation dengan kalkulasi rumus Haversine untuk estimasi jarak dari workshop ke lokasi pelanggan dan penghitungan biaya ongkir otomatis.
+- **Save Invoice (Nota) as Image**: Menyimpan/mengunduh nota transaksi dalam format berkas gambar PNG beresolusi tinggi secara instan dari dashboard menggunakan pustaka client-side `html2canvas`.
+- **Creative Micro-interactions**: Efek pantulan cahaya (*glossy shine sweeps*), staggered entrance fade-up sekuritas pada menu Tentang Kami, dan hover dinamis pada ikon/list menu.
+- **Order Lifecycle**: SOP 6 tahap pelacakan transaksi dari "Diterima" hingga "Selesai/Lunas".
 
 ---
 

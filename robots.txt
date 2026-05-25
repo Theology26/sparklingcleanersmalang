@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard.html
+Disallow: /login
+Disallow: /login.html
+Disallow: /uploads/
+
+Sitemap: https://sparklingcleaners.com/sitemap.xml
