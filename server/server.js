@@ -979,7 +979,7 @@ app.post('/api/galeri', validateOwner, async (req, res) => {
         const images = rows.length > 0 ? JSON.parse(rows[0].teks_nilai || '[]') : [];
         
         const nextId = images.reduce((max, img) => img.id > max ? img.id : max, 0) + 1;
-        images.push({ id: nextId, path_gambar, link_instagram: link_instagram || null });
+        images.push({ id: nextId, path_gambar, link_instagram: link_instagram || null, deskripsi_singkat: req.body.deskripsi_singkat || null });
         
         await pool.query(
             'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
@@ -999,7 +999,7 @@ app.put('/api/galeri/:id', validateOwner, async (req, res) => {
         let images = JSON.parse(rows[0].teks_nilai || '[]');
         images = images.map(img => {
             if (img.id == id) {
-                return { ...img, path_gambar, link_instagram: link_instagram || null };
+                return { ...img, path_gambar, link_instagram: link_instagram || null, deskripsi_singkat: req.body.deskripsi_singkat !== undefined ? req.body.deskripsi_singkat : img.deskripsi_singkat };
             }
             return img;
         });

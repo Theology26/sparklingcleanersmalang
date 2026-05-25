@@ -626,25 +626,25 @@ window.saveAllSettings = async function () {
 window.sliderImagesList = [];
 window.currentSlideIndex = 0;
 
-window.openImageSlider = function(imageUrlsStr, startIndex) {
+window.openImageSlider = function (imageUrlsStr, startIndex) {
     window.sliderImagesList = imageUrlsStr.split(',').map(u => u.trim());
     window.currentSlideIndex = startIndex;
     document.getElementById('imageSliderModal').style.display = 'flex';
     window.updateSliderView();
 };
 
-window.closeImageSlider = function() {
+window.closeImageSlider = function () {
     document.getElementById('imageSliderModal').style.display = 'none';
 };
 
-window.slideImage = function(direction) {
+window.slideImage = function (direction) {
     window.currentSlideIndex += direction;
     if (window.currentSlideIndex >= window.sliderImagesList.length) window.currentSlideIndex = 0;
     if (window.currentSlideIndex < 0) window.currentSlideIndex = window.sliderImagesList.length - 1;
     window.updateSliderView();
 };
 
-window.updateSliderView = function() {
+window.updateSliderView = function () {
     document.getElementById('sliderImage').src = window.sliderImagesList[window.currentSlideIndex];
     document.getElementById('sliderIndicator').innerText = (window.currentSlideIndex + 1) + " / " + window.sliderImagesList.length;
 };
@@ -661,7 +661,7 @@ async function renderTestimonials() {
         if (t.image) {
             const urls = t.image.split(',');
             const safeImageStr = t.image.replace(/'/g, "\\'");
-            fotoBuktiHtml = urls.map((url, i) => `<a href="javascript:void(0)" onclick="window.openImageSlider('${safeImageStr}', ${i})" style="color: var(--primary-sky); text-decoration: underline; display: block; margin-bottom: 2px;"><i class="fa-solid fa-image"></i> ${urls.length > 1 ? 'Foto ' + (i+1) : 'Lihat Foto'}</a>`).join('');
+            fotoBuktiHtml = urls.map((url, i) => `<a href="javascript:void(0)" onclick="window.openImageSlider('${safeImageStr}', ${i})" style="color: var(--primary-sky); text-decoration: underline; display: block; margin-bottom: 2px;"><i class="fa-solid fa-image"></i> ${urls.length > 1 ? 'Foto ' + (i + 1) : 'Lihat Foto'}</a>`).join('');
         }
         tbody.innerHTML += `<tr><td><strong>${t.name}</strong></td><td>${'⭐'.repeat(t.rating)}</td><td><em>"${t.content}"</em></td><td>${fotoBuktiHtml}</td><td>${badgeStatus}</td><td>${tombolAksi}</td></tr>`;
     });
@@ -682,11 +682,18 @@ async function renderGaleriTab() {
     foto.forEach(f => {
         const safePath = (f.path_gambar || '').replace(/'/g, "\\'");
         const safeLink = (f.link_instagram || '').replace(/'/g, "\\'");
+        const safeDesc = (f.deskripsi_singkat || '').replace(/'/g, "\\'");
+
+        const hasLink = f.link_instagram && f.link_instagram.trim() !== '' && f.link_instagram.trim() !== '#' && f.link_instagram !== 'null' && f.link_instagram !== 'undefined';
+        const linkHref = hasLink ? f.link_instagram : 'javascript:void(0)';
+        const linkTarget = hasLink ? 'target="_blank"' : '';
+        const linkOnclick = hasLink ? '' : `onclick="alert('Link belum dimasukkan!'); return false;"`;
+
         tbody.innerHTML += `<tr>
             <td><img src="${f.path_gambar}" style="width:60px; height:40px; object-fit:cover; border-radius:6px;"></td>
-            <td><a href="${f.link_instagram || '#'}" target="_blank" style="color:var(--primary-sky);">Link Feed</a></td>
+            <td><a href="${linkHref}" ${linkTarget} ${linkOnclick} style="color:var(--primary-sky);">Link Feed</a></td>
             <td>
-                <button class="btn btn-primary" style="padding:4px 8px; font-size:0.8rem; margin-right:5px;" onclick="window.openEditGaleriModal(${f.id}, '${safePath}', '${safeLink}')">Edit</button>
+                <button class="btn btn-primary" style="padding:4px 8px; font-size:0.8rem; margin-right:5px;" onclick="window.openEditGaleriModal(${f.id}, '${safePath}', '${safeLink}', '${safeDesc}')">Edit</button>
                 <button class="btn" style="background:#e74c3c; color:white; padding:4px 8px; font-size:0.8rem;" onclick="window.hapusFotoGaleri(${f.id})">Hapus</button>
             </td>
         </tr>`;
@@ -697,14 +704,20 @@ window.openGaleriModal = () => {
     document.getElementById('galeriId').value = '';
     document.getElementById('galeriImageUrl').value = '';
     document.getElementById('galeriIgLink').value = '';
+    document.getElementById('galeriDeskripsiSingkat').value = '';
+    document.getElementById('galeriUploadGroup').style.display = 'block';
+    document.getElementById('galeriDescGroup').style.display = 'block';
     document.getElementById('galeriModalTitle').innerText = 'Tambah Foto Galeri';
     document.getElementById('galeriModal').style.display = 'flex';
 };
 
-window.openEditGaleriModal = (id, path, link) => {
+window.openEditGaleriModal = (id, path, link, desc) => {
     document.getElementById('galeriId').value = id;
     document.getElementById('galeriImageUrl').value = path;
     document.getElementById('galeriIgLink').value = link;
+    document.getElementById('galeriDeskripsiSingkat').value = desc && desc !== 'undefined' ? desc : '';
+    document.getElementById('galeriUploadGroup').style.display = 'block';
+    document.getElementById('galeriDescGroup').style.display = 'block';
     document.getElementById('galeriModalTitle').innerText = 'Edit Foto Galeri';
     document.getElementById('galeriModal').style.display = 'flex';
 };
@@ -713,21 +726,22 @@ window.saveGaleri = async function () {
     const id = document.getElementById('galeriId').value;
     const path_gambar = document.getElementById('galeriImageUrl').value;
     const link_instagram = document.getElementById('galeriIgLink').value;
-    const payload = { path_gambar, link_instagram };
-    
+    const deskripsi_singkat = document.getElementById('galeriDeskripsiSingkat').value;
+    const payload = { path_gambar, link_instagram, deskripsi_singkat };
+
     let rute = '/api/galeri';
     let metode = 'POST';
     if (id) {
         rute = `/api/galeri/${id}`;
         metode = 'PUT';
     }
-    
+
     await fetch(rute, {
         method: metode,
         headers: { 'Content-Type': 'application/json', 'X-User-Role': 'owner' },
         body: JSON.stringify(payload)
     });
-    
+
     document.getElementById('galeriModal').style.display = 'none';
     alert(id ? 'Foto galeri berhasil diperbarui!' : 'Foto galeri berhasil disimpan!');
     await renderGaleriTab();

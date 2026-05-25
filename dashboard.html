@@ -431,7 +431,11 @@
         <div class="glass-panel" style="background:white; padding: 2.5rem; width: 500px; border-radius: 24px;">
             <h3 id="galeriModalTitle" style="margin-bottom: 1.5rem; color: #0f172a;">Tambah Foto Galeri</h3>
             <input type="hidden" id="galeriId">
-            <div class="form-group">
+            <div class="form-group" id="galeriDescGroup" style="display:none;">
+                <label>Deskripsi Singkat</label>
+                <input type="text" id="galeriDeskripsiSingkat" class="form-input" placeholder="Masukkan Deskripsi Singkat">
+            </div>
+            <div class="form-group" id="galeriUploadGroup">
                 <label>Upload Foto</label>
                 <input type="text" id="galeriImageUrl" class="form-input" placeholder="Masukkan URL Foto atau Upload"
                     style="margin-bottom: 10px;">

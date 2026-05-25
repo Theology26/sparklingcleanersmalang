@@ -198,8 +198,9 @@ async function renderGallery() {
             <div class="gallery-item" onclick="${onclick}">
                 <img src="${g.path_gambar}" alt="Gallery" loading="lazy">
                 <div class="gallery-overlay">
-                    <i class="fa-brands fa-instagram" style="font-size:1.5rem;"></i>
-                    ${hasLink ? '<span>Buka di Instagram</span>' : '<span>Lihat Foto</span>'}
+                    <i class="fa-brands fa-instagram" style="font-size:1.5rem; margin-bottom: 8px;"></i>
+                    ${g.deskripsi_singkat ? `<span style="font-weight: 600; margin-bottom: 5px; padding: 0 10px; text-align: center; font-size: 0.95rem;">${g.deskripsi_singkat}</span>` : ''}
+                    <span style="font-size: 0.8rem; opacity: 0.8;">${hasLink ? 'Buka di Instagram' : 'Lihat Foto'}</span>
                 </div>
             </div>
         `;
