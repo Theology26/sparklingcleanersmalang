@@ -513,27 +513,22 @@ window.calculateTotal = function() {
     const totalQty = window.cart.reduce((sum, item) => sum + item.qty, 0);
     const subtotal = window.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-    const expressVal = document.getElementById('orderExpress')?.value || 'none';
+    const expressVal = 'none';
     const delivery = document.getElementById('orderDelivery')?.value || 'Ya';
     const distance = parseFloat(document.getElementById('orderDistance')?.value) || 0;
 
     let expressCost = 0;
-    if (expressVal && expressVal !== 'none') {
-        const prices = window.PRICING?.express || { "8 Jam": 20000, "18 Jam": 15000, "24 Jam": 10000 };
-        expressCost = prices[expressVal] || 0;
-    }
 
     let ongkir = 0;
     if (delivery === 'Ya' && distance > 10) {
         ongkir = (distance - 10) * 2000;
     }
 
-    const sumExpress = expressCost * totalQty;
+    const sumExpress = 0;
     const total = subtotal + sumExpress + ongkir;
 
     const el = (id) => document.getElementById(id);
     if (el('sumService')) el('sumService').innerText = DB.formatCurrency(subtotal);
-    if (el('sumExpress')) el('sumExpress').innerText = DB.formatCurrency(sumExpress);
     if (el('sumOngkir')) el('sumOngkir').innerText = delivery === 'Ya' ? (ongkir === 0 ? 'Rp 0 (Gratis)' : DB.formatCurrency(ongkir)) : 'Rp 0';
     if (el('sumTotal')) el('sumTotal').innerText = DB.formatCurrency(total);
 
@@ -561,7 +556,7 @@ window.processOrder = async function(event) {
 
     const name = document.getElementById('orderName').value;
     const phone = document.getElementById('orderPhone').value;
-    const expressVal = document.getElementById('orderExpress').value;
+    const expressVal = 'none';
     const delivery = document.getElementById('orderDelivery').value;
     const address = document.getElementById('orderAddress').value;
     const distance = document.getElementById('orderDistance').value;
@@ -572,7 +567,7 @@ window.processOrder = async function(event) {
     const totalQty = window.cart.reduce((sum, item) => sum + item.qty, 0);
     const subtotal = window.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-    let expressPrice = expressVal !== 'none' ? (window.PRICING?.express?.[expressVal] || 0) : 0;
+    let expressPrice = 0;
     let ongkir = (delivery === 'Ya' && distance > 10) ? (distance - 10) * 2000 : 0;
     const total = subtotal + (expressPrice * totalQty) + ongkir;
 
@@ -626,7 +621,11 @@ window.processOrder = async function(event) {
     if (delivery === 'Ya') {
         msg += `*Pengiriman:*%0A`;
         msg += `- Jadwal Pickup: ${schedule}%0A`;
-        msg += `- Alamat: ${address}%0A%0A`;
+        msg += `- Alamat: ${address}%0A`;
+        if (window._gmapsLinkCustomer) {
+            msg += `- 📍 Link Maps: ${window._gmapsLinkCustomer}%0A`;
+        }
+        msg += `%0A`;
     }
 
     msg += `*Estimasi Biaya:*%0A`;
@@ -733,56 +732,201 @@ async function renderFooterMeta() {
 }
 
 // =============================================
-// 8. GPS DISTANCE (HAVERSINE)
+// 8. KOORDINAT WORKSHOP (WAGIR, MALANG)
 // =============================================
-window.calculateDistanceGPS = function() {
-    const btn = document.getElementById('btnGps');
-    const status = document.getElementById('gpsStatus');
-    const distanceInput = document.getElementById('orderDistance');
+const SHOP_LAT = -8.0261;
+const SHOP_LON = 112.5855;
+const SHOP_ADDRESS_ENCODED = encodeURIComponent(
+  'Dusun Jamuran, Sukodadi, Wagir, Malang, Jawa Timur'
+);
 
-    if (!navigator.geolocation) {
-        status.innerText = "Geolocation tidak didukung oleh browser Anda.";
-        status.style.color = "red";
-        return;
+// =============================================
+// HELPER: HAVERSINE FORMULA
+// =============================================
+function hitungHaversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+    Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+    Math.sin(dLon/2)**2;
+  return Math.ceil(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.3);
+}
+
+// =============================================
+// HELPER: SET JARAK + UPDATE UI
+// =============================================
+function terapkanJarak(km, metode, customerLat = null, customerLon = null, alamatText = '') {
+  const distEl = document.getElementById('orderDistance');
+  const statusEl = document.getElementById('jarakStatusMsg');
+  const mapsLink = document.getElementById('mapsLinkCustomer');
+
+  if (distEl) distEl.value = km;
+  window.calculateTotal();
+
+  // Buat Google Maps link ke workshop dari titik customer
+  let gmapsUrl = '';
+  if (customerLat && customerLon) {
+    // GPS: pakai koordinat presisi
+    gmapsUrl = `https://www.google.com/maps/dir/${customerLat},${customerLon}/${SHOP_LAT},${SHOP_LON}`;
+  } else if (alamatText) {
+    // Alamat manual: pakai teks alamat
+    const encodedAlamat = encodeURIComponent(alamatText);
+    gmapsUrl = `https://www.google.com/maps/dir/${encodedAlamat}/${SHOP_LAT},${SHOP_LON}`;
+  }
+
+  // Simpan ke window agar bisa diakses processOrder()
+  window._gmapsLinkCustomer = gmapsUrl;
+
+  // Tampilkan link peta di form
+  if (mapsLink && gmapsUrl) {
+    mapsLink.href = gmapsUrl;
+    mapsLink.style.display = 'flex';
+  }
+
+  if (statusEl) {
+    const ongkirInfo = km > 10
+      ? ` (Ongkir: +Rp ${((km - 10) * 2000).toLocaleString('id-ID')})`
+      : ' (Gratis ongkir)';
+    statusEl.innerText = `${metode}: ${km} KM dari Workshop Wagir${ongkirInfo}`;
+    statusEl.style.color = 'var(--primary-sky)';
+  }
+}
+
+// =============================================
+// OPSI 1: GPS OTOMATIS
+// =============================================
+window.hitungJarakGPS = function() {
+  const btn = document.getElementById('btnGpsAuto');
+  const statusEl = document.getElementById('jarakStatusMsg');
+
+  if (!navigator.geolocation) {
+    if (statusEl) {
+      statusEl.innerText = 'GPS tidak didukung browser ini.';
+      statusEl.style.color = '#e74c3c';
+    }
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengambil lokasi...';
+  }
+  if (statusEl) {
+    statusEl.innerText = 'Meminta izin akses GPS...';
+    statusEl.style.color = 'var(--text-muted)';
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const km = hitungHaversine(
+        pos.coords.latitude, pos.coords.longitude,
+        SHOP_LAT, SHOP_LON
+      );
+
+      terapkanJarak(
+        km,
+        '📍 GPS Otomatis',
+        pos.coords.latitude,
+        pos.coords.longitude
+      );
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Posisi GPS Saya';
+      }
+    },
+    (err) => {
+      if (statusEl) {
+        statusEl.innerText = 'Gagal ambil GPS. Pastikan izin lokasi diaktifkan.';
+        statusEl.style.color = '#e74c3c';
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Posisi GPS Saya';
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// =============================================
+// OPSI 2: HITUNG DARI ALAMAT YANG DIKETIK
+// Menggunakan Nominatim (OpenStreetMap) — gratis, no API key
+// =============================================
+window.hitungJarakDariAlamat = async function() {
+  const alamat = (document.getElementById('orderAddress')?.value || '').trim();
+  const btn = document.getElementById('btnAlamatMaps');
+  const statusEl = document.getElementById('jarakStatusMsg');
+
+  if (!alamat) {
+    if (statusEl) {
+      statusEl.innerText = 'Isi alamat lengkap terlebih dahulu, lalu klik tombol ini.';
+      statusEl.style.color = '#e74c3c';
+    }
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari alamat...';
+  }
+  if (statusEl) {
+    statusEl.innerText = 'Mencari koordinat alamat...';
+    statusEl.style.color = 'var(--text-muted)';
+  }
+
+  try {
+    // Geocoding via Nominatim (OpenStreetMap) — tidak perlu API key
+    const query = encodeURIComponent(alamat + ', Malang, Jawa Timur, Indonesia');
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=id`,
+      { headers: { 'Accept-Language': 'id', 'User-Agent': 'SparklingCleaners/1.0' } }
+    );
+    const results = await resp.json();
+
+    if (!results || results.length === 0) {
+      throw new Error('Alamat tidak ditemukan. Coba tulis lebih spesifik.');
     }
 
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ...';
-    btn.disabled = true;
-    status.innerText = "Meminta izin akses lokasi GPS...";
-    status.style.color = "var(--primary-navy)";
+    const { lat, lon, display_name } = results[0];
+    const customerLat = parseFloat(lat);
+    const customerLon = parseFloat(lon);
+    const km = hitungHaversine(customerLat, customerLon, SHOP_LAT, SHOP_LON);
 
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const userLat = position.coords.latitude;
-            const userLon = position.coords.longitude;
-            const shopLat = -8.0261;
-            const shopLon = 112.5855;
+    terapkanJarak(km, '🗺 Dari Alamat', customerLat, customerLon, alamat);
 
-            const R = 6371;
-            const dLat = (userLat - shopLat) * Math.PI / 180;
-            const dLon = (userLon - shopLon) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(shopLat * Math.PI / 180) * Math.cos(userLat * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            let distance = Math.ceil(R * c * 1.3);
+  } catch (err) {
+    if (statusEl) {
+      statusEl.innerText = err.message || 'Gagal geocoding. Isi jarak manual.';
+      statusEl.style.color = '#e74c3c';
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-map-location-dot"></i> Dari Alamat Ketik';
+    }
+  }
+};
 
-            distanceInput.value = distance;
-            window.calculateTotal();
+// =============================================
+// TRIGGER OTOMATIS: saat alamat selesai diketik
+// (debounce 1.5 detik agar tidak spam API)
+// =============================================
+let _alamatDebounceTimer = null;
+window.onAddressChange = function() {
+  clearTimeout(_alamatDebounceTimer);
+  const alamat = document.getElementById('orderAddress')?.value?.trim();
 
-            btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> GPS';
-            btn.disabled = false;
-            status.innerText = `Berhasil! Jarak perkiraan: ${distance} KM.`;
-            status.style.color = "green";
-        },
-        () => {
-            btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> GPS';
-            btn.disabled = false;
-            status.innerText = "Gagal. Pastikan izin lokasi GPS diaktifkan.";
-            status.style.color = "red";
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+  // Update maps link berdasarkan teks alamat saat ini
+  const mapsLink = document.getElementById('mapsLinkCustomer');
+  if (mapsLink && alamat) {
+    const encodedAlamat = encodeURIComponent(alamat);
+    const gmapsUrl = `https://www.google.com/maps/dir/${encodedAlamat}/${SHOP_LAT},${SHOP_LON}`;
+    mapsLink.href = gmapsUrl;
+    mapsLink.style.display = 'flex';
+    window._gmapsLinkCustomer = gmapsUrl;
+  }
 };
 
 // =============================================

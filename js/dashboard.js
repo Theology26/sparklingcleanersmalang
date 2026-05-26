@@ -2050,7 +2050,7 @@ window.simpanPesananManual = async function() {
     address: alamat,
     distance: jarak,
     schedule: jadwal,
-    notes: `[Kasir: ${kasir}] [Diskon: ${DB.formatCurrency(diskon)}] ${benefitNote} ${catatan}`.trim(),
+    notes: `[Kasir: ${kasir}] [Diskon: ${DB.formatCurrency(diskon)}] ${benefitNote} ${catatan}${window._gmapsLinkCustomer ? ` [Maps: ${window._gmapsLinkCustomer}]` : ''}`.trim(),
     price: subtotal,
     express_price: 0,
     ongkir: ongkir,

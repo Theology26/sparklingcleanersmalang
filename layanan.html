@@ -149,15 +149,7 @@
                             </div>
                         </div>
 
-                        <div class="input-group">
-                            <label>Layanan Express (Opsional)</label>
-                            <select id="orderExpress" class="form-control" onchange="window.calculateTotal()">
-                                <option value="none">Tidak Pakai (Normal)</option>
-                                <option value="8 Jam">Super Express (8 Jam) +Rp 20.000 / item</option>
-                                <option value="18 Jam">Express (18 Jam) +Rp 15.000 / item</option>
-                                <option value="24 Jam">Sameday (24 Jam) +Rp 10.000 / item</option>
-                            </select>
-                        </div>
+
 
                         <div class="input-group" style="margin-bottom: 1.5rem;">
                             <label>Opsi Pengiriman</label>
@@ -166,27 +158,80 @@
                             </select>
                         </div>
 
-                        <div id="deliveryDetails" style="display: block; background: rgba(52, 152, 219, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(52, 152, 219, 0.2);">
-                            <div class="input-group">
-                                <label>Alamat Penjemputan & Pengiriman</label>
-                                <textarea id="orderAddress" class="form-control" rows="2" placeholder="Nama Jalan, RT/RW, Kecamatan, Patokan..." required onchange="window.calculateTotal()"></textarea>
+                        <div id="deliveryDetails" style="display:block; background:rgba(52,152,219,0.05);
+                             padding:1.5rem; border-radius:12px; margin-bottom:1.5rem;
+                             border:1px solid rgba(52,152,219,0.2);">
+
+                          <!-- ALAMAT -->
+                          <div class="input-group">
+                            <label>Alamat Penjemputan & Pengiriman</label>
+                            <textarea id="orderAddress" class="form-control" rows="2"
+                                      placeholder="Nama Jalan, RT/RW, Kecamatan, Patokan..."
+                                      required onchange="window.onAddressChange()"></textarea>
+                            <a id="mapsLinkCustomer" href="#" target="_blank"
+                               style="display:none; font-size:0.82rem; color:var(--primary-sky);
+                                      margin-top:6px; display:none; align-items:center; gap:4px; text-decoration:none;">
+                              📍 Lihat di Google Maps
+                            </a>
+                          </div>
+
+                          <!-- DUAL JARAK -->
+                          <div class="input-group">
+                            <label>Hitung Jarak ke Workshop Wagir</label>
+
+                            <!-- 2 tombol pilihan -->
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+
+                              <!-- Opsi 1: GPS -->
+                              <button type="button" id="btnGpsAuto"
+                                      onclick="window.hitungJarakGPS()"
+                                      style="display:flex; align-items:center; justify-content:center;
+                                             gap:8px; padding:0.75rem; border-radius:12px;
+                                             border:2px solid var(--primary-sky); background:white;
+                                             color:var(--primary-sky); font-weight:700; cursor:pointer;
+                                             font-size:0.88rem; min-height:52px; transition:all 0.2s;"
+                                      aria-label="Gunakan GPS untuk hitung jarak otomatis">
+                                <i class="fa-solid fa-location-crosshairs"></i>
+                                Posisi GPS Saya
+                              </button>
+
+                              <!-- Opsi 2: Alamat Manual ke Maps -->
+                              <button type="button" id="btnAlamatMaps"
+                                      onclick="window.hitungJarakDariAlamat()"
+                                      style="display:flex; align-items:center; justify-content:center;
+                                             gap:8px; padding:0.75rem; border-radius:12px;
+                                             border:2px solid var(--accent-yellow); background:white;
+                                             color:#b7860b; font-weight:700; cursor:pointer;
+                                             font-size:0.88rem; min-height:52px; transition:all 0.2s;"
+                                      aria-label="Hitung jarak dari alamat yang diketik">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                                Dari Alamat Ketik
+                              </button>
                             </div>
-                            <div class="input-group">
-                                <label>Jarak (KM dari Wagir)</label>
-                                <div style="display: flex; gap: 10px;">
-                                    <input type="number" id="orderDistance" class="form-control" min="0" value="0" onchange="window.calculateTotal()" style="flex: 1;">
-                                    <button type="button" class="btn btn-secondary" onclick="window.calculateDistanceGPS()" id="btnGps" style="padding: 0 1rem;"><i class="fa-solid fa-location-crosshairs"></i> GPS</button>
-                                </div>
-                                <small style="color:var(--text-muted);" id="gpsStatus">Isi manual atau klik GPS untuk hitung otomatis.</small>
+
+                            <!-- Input jarak manual (override) -->
+                            <div style="display:flex; gap:8px; align-items:center;">
+                              <input type="number" id="orderDistance" class="form-control"
+                                     min="0" value="0" onchange="window.calculateTotal()"
+                                     style="flex:1;" placeholder="0"
+                                     aria-label="Jarak dalam KM, bisa diisi manual">
+                              <span style="color:var(--text-muted); font-size:0.88rem; white-space:nowrap;">KM</span>
                             </div>
-                            <div class="input-group" style="margin-bottom:0;">
-                                <label>Jadwal Penjemputan</label>
-                                <select id="orderSchedule" class="form-control">
-                                    <option value="Sesi 1 (07.00 - 09.00)">Sesi 1 (07.00 - 09.00)</option>
-                                    <option value="Sesi 2 (11.00 - 13.00)">Sesi 2 (11.00 - 13.00)</option>
-                                    <option value="Sesi 3 (17.00 - 19.00)">Sesi 3 (17.00 - 19.00)</option>
-                                </select>
-                            </div>
+                            <small style="color:var(--text-muted); font-size:0.8rem; margin-top:4px; display:block;"
+                                   id="jarakStatusMsg">
+                              Isi manual atau pilih salah satu opsi hitung otomatis di atas.
+                            </small>
+                          </div>
+
+                          <!-- JADWAL -->
+                          <div class="input-group">
+                            <label for="orderSchedule">Jadwal Penjemputan</label>
+                            <select id="orderSchedule" class="form-control">
+                              <option value="Sesi 1 (07.00 - 09.00)">Sesi 1 (07.00 - 09.00)</option>
+                              <option value="Sesi 2 (11.00 - 13.00)">Sesi 2 (11.00 - 13.00)</option>
+                              <option value="Sesi 3 (17.00 - 19.00)">Sesi 3 (17.00 - 19.00)</option>
+                            </select>
+                          </div>
                         </div>
 
                         <div class="input-group">
@@ -209,7 +254,7 @@
                         <div class="order-summary" id="orderSummaryBox">
                             <h3>Ringkasan Pesanan</h3>
                             <div class="summary-row"><span>Layanan Utama</span><span id="sumService">Rp 0</span></div>
-                            <div class="summary-row"><span>Biaya Tambahan (Express)</span><span id="sumExpress">Rp 0</span></div>
+
                             <div class="summary-row"><span>Ongkos Kirim</span><span id="sumOngkir">Rp 0</span></div>
                             <div class="summary-row"><span>Estimasi Selesai</span><span id="sumEst" style="color:var(--primary-sky); font-weight:600;">-</span></div>
                             <div class="summary-row total"><span>Total Biaya</span><span id="sumTotal">Rp 0</span></div>
