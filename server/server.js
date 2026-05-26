@@ -1102,7 +1102,7 @@ app.get('/api/ringkasan', async (req, res) => {
     const total = pesanan.length;
     const selesai = pesanan.filter(p => parseInt(p.status_proses) === 9).length;
     const pendapatan = pesanan
-      .filter(p => parseInt(p.status_pembayaran) === 1)
+      .filter(p => parseInt(p.status_proses) === 9)
       .reduce((s, p) => s + parseFloat(p.total_harga || 0), 0);
 
     const breakdown_kategori = { Sepatu: 0, Helm: 0, Tas: 0 };

@@ -118,10 +118,28 @@
                     </div>
                     <div class="charts-row-4">
                         <div class="chart-card glass-card">
+                            <div class="chart-card-header">
+                                <h4>Kategori Layanan Terlaris</h4>
+                            </div>
                             <div class="chart-canvas-wrapper"><canvas id="chartLayananLaris"></canvas></div>
                         </div>
                         <div class="chart-card glass-card">
+                            <div class="chart-card-header">
+                                <h4>Metode Pengiriman</h4>
+                            </div>
                             <div class="chart-canvas-wrapper"><canvas id="chartMetodePesan"></canvas></div>
+                        </div>
+                        <div class="chart-card glass-card">
+                            <div class="chart-card-header" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                                <h4>Tren Pendapatan Harian</h4>
+                                <select id="selectRangeSummary" class="form-input" style="width: auto; padding: 4px 8px; border-radius: 8px; font-size: 0.8rem; margin: 0; min-height: auto; cursor: pointer; background: rgba(255,255,255,0.15); color: inherit;" onchange="window.updateSummaryChartRange(this.value)">
+                                    <option value="7" style="color: black;">7 Hari</option>
+                                    <option value="30" style="color: black;">1 Bulan</option>
+                                    <option value="180" style="color: black;">6 Bulan</option>
+                                    <option value="365" style="color: black;">1 Tahun</option>
+                                </select>
+                            </div>
+                            <div class="chart-canvas-wrapper"><canvas id="chartTrenPendapatan"></canvas></div>
                         </div>
                     </div>
                 </div>
@@ -410,6 +428,22 @@
                             <div class="stat-card glass-card" style="padding: 2rem;">
                                 <h3>Total Pesanan</h3>
                                 <h2 id="rev-orders">0</h2>
+                            </div>
+                        </div>
+
+                        <!-- Financial Chart Section -->
+                        <div class="chart-card glass-card" style="margin-top: 2rem; padding: 2rem;">
+                            <div class="chart-card-header" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                                <h4>Grafik Laporan Keuangan</h4>
+                                <select id="selectRangeRevenue" class="form-input" style="width: auto; padding: 4px 8px; border-radius: 8px; font-size: 0.8rem; margin: 0; min-height: auto; cursor: pointer; background: rgba(255,255,255,0.15); color: inherit;" onchange="window.updateRevenueChartRange(this.value)">
+                                    <option value="180" style="color: black;">6 Bulan</option>
+                                    <option value="7" style="color: black;">7 Hari</option>
+                                    <option value="30" style="color: black;">1 Bulan</option>
+                                    <option value="365" style="color: black;">1 Tahun</option>
+                                </select>
+                            </div>
+                            <div class="chart-canvas-wrapper" style="height: 320px;">
+                                <canvas id="chartKeuanganBulanan"></canvas>
                             </div>
                         </div>
                     </div>
