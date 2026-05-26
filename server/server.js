@@ -1105,6 +1105,31 @@ app.delete('/api/inventory/:id', validateOwner, async (req, res) => {
 app.get('/api/ringkasan', async (req, res) => {
   try {
     const [pesanan] = await pool.query('SELECT * FROM pesanan');
+    // Ambil mapping id layanan → jenis (Sepatu/Helm/Tas) via CASE pattern matching
+    // Menggunakan COALESCE(kategori_layanan.nama, layanan.kategori) agar cocok dengan data lama & baru
+    const [layananKat] = await pool.query(`
+      SELECT l.id,
+        CASE
+          WHEN LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%shoe%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%suede%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%boot%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%repaint%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%dress%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%sepatu%' THEN 'Sepatu'
+          WHEN LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%helmet%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%helm%' THEN 'Helm'
+          WHEN LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%bag%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%tas%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%leather%'
+            OR LOWER(COALESCE(kl.nama_kategori, l.kategori)) LIKE '%fabric%' THEN 'Tas'
+          ELSE NULL
+        END as jenis
+      FROM layanan l
+      LEFT JOIN kategori_layanan kl ON l.id_kategori = kl.id
+    `);
+    const svcKatMap = {};
+    layananKat.forEach(l => { if (l.jenis) svcKatMap[l.id] = l.jenis; });
+
     const total = pesanan.length;
     const selesai = pesanan.filter(p => parseInt(p.status_proses) === 9).length;
     const pendapatan = pesanan
@@ -1115,8 +1140,29 @@ app.get('/api/ringkasan', async (req, res) => {
     const breakdown_delivery = { antar_jemput: 0, drop_off: 0 };
 
     pesanan.forEach(p => {
-      const kat = p.tipe_item || 'Sepatu';
-      if (breakdown_kategori[kat] !== undefined) breakdown_kategori[kat]++;
+      // Klasifikasi kategori: parse rincian_item (JSON cart) dan lookup ke svcKatMap
+      let terklasifikasi = false;
+      if (p.rincian_item) {
+        try {
+          const items = JSON.parse(p.rincian_item);
+          items.forEach(item => {
+            // Cart item bisa punya 'serviceId' (format baru) atau 'id' (format lama)
+            const svcId = item.serviceId || item.id;
+            const kat = svcKatMap[svcId];
+            const qty = parseInt(item.qty) || 1;
+            if (kat && breakdown_kategori[kat] !== undefined) {
+              breakdown_kategori[kat] += qty;
+              terklasifikasi = true;
+            }
+          });
+        } catch (e) { /* rincian_item bukan JSON valid, lewati */ }
+      }
+      // Fallback: gunakan tipe_item jika rincian_item kosong atau service tidak ditemukan
+      if (!terklasifikasi) {
+        const kat = p.tipe_item;
+        if (kat && breakdown_kategori[kat] !== undefined) breakdown_kategori[kat]++;
+      }
+
       if (p.pengiriman === 'Ya') breakdown_delivery.antar_jemput++;
       else breakdown_delivery.drop_off++;
     });

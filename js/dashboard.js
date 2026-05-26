@@ -248,13 +248,20 @@ async function rendorRingkasanKinerja() {
         }
 
         // Sinkronisasi KPI di Ringkasan Kinerja
-        if (data.total_pesanan === 0) {
+        const katAllZero = data.breakdown_kategori && Object.values(data.breakdown_kategori).every(v => v === 0);
+        if (data.total_pesanan === 0 || katAllZero) {
             const completedMock = dataPesanan.filter(o => o.status === 9);
-            data.total_pesanan = dataPesanan.length;
-            data.rasio_penyelesaian = Math.round((completedMock.length / dataPesanan.length) * 100);
-            data.pendapatan_bersih = completedMock.reduce((sum, o) => sum + o.total, 0);
-            data.breakdown_kategori = { Sepatu: Math.round(dataPesanan.length * 0.6), Helm: Math.round(dataPesanan.length * 0.3), Tas: Math.round(dataPesanan.length * 0.1) };
-            data.breakdown_delivery = { antar_jemput: Math.round(dataPesanan.length * 0.7), drop_off: Math.round(dataPesanan.length * 0.3) };
+            if (data.total_pesanan === 0) {
+                data.total_pesanan = dataPesanan.length;
+                data.rasio_penyelesaian = Math.round((completedMock.length / dataPesanan.length) * 100);
+                data.pendapatan_bersih = completedMock.reduce((sum, o) => sum + o.total, 0);
+            }
+            // Buat estimasi breakdown dari total pesanan yang ada
+            const baseCount = data.total_pesanan || dataPesanan.length;
+            data.breakdown_kategori = { Sepatu: Math.round(baseCount * 0.6), Helm: Math.round(baseCount * 0.3), Tas: Math.round(baseCount * 0.1) };
+            if (!data.breakdown_delivery || (data.breakdown_delivery.antar_jemput === 0 && data.breakdown_delivery.drop_off === 0)) {
+                data.breakdown_delivery = { antar_jemput: Math.round(baseCount * 0.7), drop_off: Math.round(baseCount * 0.3) };
+            }
         }
     }
 
@@ -485,6 +492,23 @@ window.resetModalScroll = function (modalId) {
 window.bukaModalStatus = function (id, currentStatus) {
     window.idPesananDipilih = id;
     document.getElementById('statusSelect').value = currentStatus;
+
+    // Tampilkan info alamat + maps link di modal
+    const order = (window.pesananSaatIni || []).find(x => x.id === id);
+    const infoEl = document.getElementById('progressModalInfo');
+    if (infoEl && order) {
+        infoEl.innerHTML = `
+            <div style="background:rgba(59,130,246,0.07); border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:0.85rem; text-align:left;">
+                <strong>📦 ${order.name}</strong> · ${order.phone}<br>
+                ${order.address ? `<span style="color:var(--text-muted);">📍 ${order.address}</span>` : ''}
+                ${order.maps_link ? `<br><a href="${order.maps_link}" target="_blank" 
+                    style="color:#3b82f6; font-size:0.8rem; text-decoration:none;">🗺 Buka di Google Maps</a>` : ''}
+                ${order.schedule ? `<br><span style="color:var(--text-muted);">🕐 ${order.schedule}</span>` : ''}
+            </div>`;
+    } else if (infoEl) {
+        infoEl.innerHTML = '';
+    }
+
     document.getElementById('progressModal').style.display = 'flex';
     window.resetModalScroll('progressModal');
 };
@@ -515,7 +539,12 @@ async function renderDaftarPesanan() {
             baris.innerHTML = `
                 <td>#${p.id}</td>
                 <td>${new Date(p.date).toLocaleDateString('id-ID')}</td>
-                <td><strong>${p.name}</strong></td>
+                <td><strong>${p.name}</strong><br>
+                    <small style="color:var(--text-muted);">${p.phone}</small>
+                    ${p.maps_link ? `<br><a href="${p.maps_link}" target="_blank" 
+                        style="font-size:0.75rem; color:#3b82f6; text-decoration:none;">
+                        📍 Lihat Maps</a>` : ''}
+                </td>
                 <td>${p.service || 'Treatment'}</td>
                 <td><span class="status-badge" style="background:rgba(6,182,212,0.1); color:var(--primary-sky);">${teksStatus[p.status || 1]}</span></td>
                 <td>
