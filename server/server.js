@@ -126,7 +126,10 @@ const pool = mysql.createPool({
         const safeMigrations = [
           'ALTER TABLE layanan ADD COLUMN id_kategori INT DEFAULT NULL',
           'ALTER TABLE layanan ADD COLUMN foto_utama TEXT',
-          'ALTER TABLE layanan ADD COLUMN foto_tambahan TEXT'
+          'ALTER TABLE layanan ADD COLUMN foto_tambahan TEXT',
+          'ALTER TABLE pesanan ADD COLUMN maps_link TEXT DEFAULT NULL',
+          // FIX: layanan_pilihan VARCHAR(100) → TEXT (cegah overflow error saat multi-item order)
+          'ALTER TABLE pesanan MODIFY layanan_pilihan TEXT'
         ];
         for (const sql of safeMigrations) {
           try { await pool.query(sql); } catch(e) { /* kolom sudah ada, abaikan */ }
@@ -190,7 +193,7 @@ const pool = mysql.createPool({
                 tipe_item VARCHAR(50),
                 jumlah INT DEFAULT 1,
                 treatment VARCHAR(50),
-                layanan_pilihan VARCHAR(100),
+                layanan_pilihan TEXT,
                 express VARCHAR(20),
                 pengiriman VARCHAR(20),
                 alamat TEXT,
@@ -200,7 +203,8 @@ const pool = mysql.createPool({
                 harga_dasar DECIMAL(15,2),
                 harga_express DECIMAL(15,2),
                 ongkir DECIMAL(15,2),
-                foto_barang TEXT
+                foto_barang TEXT,
+                maps_link TEXT DEFAULT NULL
             )
         `);
 
@@ -750,7 +754,8 @@ const handleGetPesanan = async (req, res) => {
             status: r.status_proses,
             lunas: r.status_pembayaran,
             items: r.rincian_item,
-            photo: r.foto_barang
+            photo: r.foto_barang,
+            maps_link: r.maps_link
         }));
         res.json(mapped);
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -761,8 +766,8 @@ app.get('/api/orders', handleGetPesanan);
 const handlePostPesanan = async (req, res) => {
     try {
         const o = req.body;
-        const sql = `INSERT INTO pesanan (id, nama_pelanggan, nomor_whatsapp, total_harga, status_proses, status_pembayaran, estimasi_selesai, rincian_item, tipe_item, jumlah, treatment, layanan_pilihan, express, pengiriman, alamat, jarak, jadwal, catatan, harga_dasar, harga_express, ongkir, foto_barang) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const sql = `INSERT INTO pesanan (id, nama_pelanggan, nomor_whatsapp, total_harga, status_proses, status_pembayaran, estimasi_selesai, rincian_item, tipe_item, jumlah, treatment, layanan_pilihan, express, pengiriman, alamat, jarak, jadwal, catatan, harga_dasar, harga_express, ongkir, foto_barang, maps_link) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         const itemsVal = o.items ? (typeof o.items === 'string' ? o.items : JSON.stringify(o.items)) : null;
         await pool.query(sql, [
             o.id, 
@@ -786,7 +791,8 @@ const handlePostPesanan = async (req, res) => {
             o.price ? parseFloat(o.price) : null,
             o.express_price ? parseFloat(o.express_price) : null,
             o.ongkir ? parseFloat(o.ongkir) : null,
-            o.photo || null
+            o.photo || null,
+            o.maps_link || null
         ]);
         res.status(201).json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1454,6 +1460,69 @@ app.put('/api/users/:id', async (req, res) => {
         }
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// =============================================
+// [GEOCODE PROXY] — Bypass CORS, multi-strategy
+// =============================================
+app.get('/api/geocode', async (req, res) => {
+    const alamat = (req.query.q || '').trim();
+    if (!alamat) return res.status(400).json({ error: 'Parameter q wajib diisi.' });
+
+    // Hapus RT/RW
+    const cleaned = alamat
+        .replace(/,?\s*[Rr][Tt]\.?\s*[\d/]+/g, '')
+        .replace(/,?\s*[Rr][Ww]\.?\s*[\d/]+/g, '')
+        .replace(/\s+/g, ' ').replace(/^,+|,+$/g, '').trim();
+
+    // Hapus prefix administratif Indonesia yang tidak dikenali Nominatim
+    const cleanedNoPrefix = cleaned
+        .replace(/,?\s*Kec\.?\s+/gi, ',')
+        .replace(/,?\s*Kel\.?\s+/gi, ',')
+        .replace(/,?\s*Kab\.?\s+/gi, ',')
+        .replace(/,?\s*Kota\s+/gi, ',')
+        .replace(/,?\s*Desa\s+/gi, ',')
+        .replace(/,?\s*Dusun\s+/gi, ',')
+        .replace(/,?\s*Kecamatan\s+/gi, ',')
+        .replace(/,?\s*Kelurahan\s+/gi, ',')
+        .replace(/,?\s*Kabupaten\s+/gi, ',')
+        .replace(/\s+/g, ' ').replace(/,+/g, ',').replace(/^,+|,+$/g, '').trim();
+
+    const strategies = [
+        cleanedNoPrefix + ', Indonesia',
+        cleaned + ', Indonesia',
+        cleanedNoPrefix.split(',').slice(0, 3).join(',') + ', Indonesia',
+        cleaned.split(',').slice(0, 3).join(',') + ', Indonesia',
+        cleanedNoPrefix.split(',').slice(0, 2).join(',') + ', Malang, Indonesia',
+        cleaned.split(',').slice(0, 2).join(',') + ', Malang, Indonesia',
+    ];
+
+    for (const q of strategies) {
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=id&addressdetails=1`;
+            const resp = await fetch(url, {
+                headers: {
+                    'User-Agent': 'SparklingCleaners/1.0 (sparklingcleaners@malang.id)',
+                    'Accept-Language': 'id,en'
+                }
+            });
+            const data = await resp.json();
+            if (data && data.length > 0) {
+                return res.json({
+                    success: true,
+                    lat: parseFloat(data[0].lat),
+                    lon: parseFloat(data[0].lon),
+                    display_name: data[0].display_name,
+                    strategy_used: q
+                });
+            }
+        } catch (e) {}
+    }
+
+    return res.json({
+        success: false,
+        error: 'Alamat tidak ditemukan. Tulis lebih spesifik: nama jalan, kelurahan, kota.'
+    });
 });
 
 const PORT = process.env.PORT || 3000;

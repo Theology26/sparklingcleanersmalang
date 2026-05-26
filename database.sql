@@ -46,7 +46,7 @@ CREATE TABLE pesanan (
     tipe_item VARCHAR(50),
     jumlah INT DEFAULT 1,
     treatment VARCHAR(50),
-    layanan_pilihan VARCHAR(100),
+    layanan_pilihan TEXT,
     express VARCHAR(20),
     pengiriman VARCHAR(20),
     alamat TEXT,
@@ -56,7 +56,8 @@ CREATE TABLE pesanan (
     harga_dasar DECIMAL(15,2),
     harga_express DECIMAL(15,2),
     ongkir DECIMAL(15,2),
-    foto_barang TEXT
+    foto_barang TEXT,
+    maps_link TEXT DEFAULT NULL
 );
 
 -- 5. Tabel Testimoni
