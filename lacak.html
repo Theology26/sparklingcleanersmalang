@@ -26,7 +26,16 @@
             <li><a href="index.html">Beranda</a></li>
             <li><a href="layanan.html">Layanan & Pesan</a></li>
             <li><a href="lacak.html" class="active">Lacak Pesanan</a></li>
+            <li class="mobile-back-container">
+                <button class="mobile-back-btn" onclick="toggleMobileNav()" aria-label="Kembali ke halaman">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </button>
+            </li>
         </ul>
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Buka menu navigasi" onclick="toggleMobileNav()">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMobileNav()"></div>
     </nav>
 
     <!-- Header Section -->
@@ -250,6 +259,17 @@
 
     <script src="js/db.js?v=4"></script>
     <script src="js/lacak.js?v=4"></script>
+    <script>
+    function toggleMobileNav() {
+      const nav = document.querySelector('.nav-links');
+      const overlay = document.getElementById('mobileNavOverlay');
+      const btn = document.getElementById('hamburgerBtn');
+      const isOpen = nav.classList.toggle('mobile-open');
+      overlay.classList.toggle('active', isOpen);
+      btn.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+    </script>
 </body>
 
 </html>
