@@ -1512,10 +1512,20 @@ select.form-control {
   max-width: 650px;
   width: 100%;
   max-height: 90vh;
-  overflow-y: auto;
+  /* FIX: panel itself does NOT scroll — inner body scrolls instead */
+  overflow: hidden;
   border-radius: 24px;
   animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable body inside modal — close btn stays above */
+.booking-modal-body {
+  overflow-y: auto;
+  flex: 1;
+  overscroll-behavior: contain;
 }
 
 #booking.modal-active .checkout-layout {
@@ -1527,22 +1537,30 @@ select.form-control {
 }
 
 .booking-modal-close {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: rgba(0, 0, 0, 0.05);
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  font-size: 1.2rem;
+  /* FIX: sticky to top of .glass-panel, NOT scrolls with content */
+  position: sticky;
+  top: 0;
+  float: right;
+  /* Shift out of normal flow to sit at top-right */
+  margin-left: auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  font-size: 1.3rem;
   cursor: pointer;
   color: var(--primary-navy);
   transition: all 0.2s ease;
-  z-index: 10;
+  z-index: 100;
+  /* Position it visually at top-right inside the panel */
+  align-self: flex-end;
+  flex-shrink: 0;
+  margin: 1rem 1rem 0 auto;
 }
 
 .booking-modal-close:hover {

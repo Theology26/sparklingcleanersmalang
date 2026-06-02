@@ -118,7 +118,10 @@
     <!-- Booking / Checkout -->
     <section id="booking" class="section container" style="display: none;">
         <div class="glass-panel" style="padding: 0;">
+            <!-- Close button: outside .booking-modal-body so it never scrolls -->
             <button type="button" class="booking-modal-close" onclick="window.closeCheckout()" aria-label="Tutup Form Pemesanan">&times;</button>
+            <!-- Scrollable content wrapper -->
+            <div class="booking-modal-body">
             <div class="checkout-layout">
                 <div style="padding: 2.5rem;">
                     <h2>Form Order & Booking</h2>
@@ -277,8 +280,9 @@
                         <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1.2rem;">Konfirmasi & Kirim Pesanan <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i></button>
                     </form>
                 </div>
-            </div>
-        </div>
+            </div><!-- /.checkout-layout -->
+            </div><!-- /.booking-modal-body -->
+        </div><!-- /.glass-panel -->
     </section>
 
     <!-- Footer -->
