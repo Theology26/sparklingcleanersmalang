@@ -594,7 +594,8 @@ window.processOrder = async function(event) {
         express: expressVal, delivery, address, distance, schedule, notes,
         price: subtotal, express_price: expressPrice * totalQty, ongkir, total,
         status: 1, items: JSON.stringify(window.cart), photo: photoUrl,
-        estimasi_selesai: est
+        estimasi_selesai: est,
+        maps_link: window._gmapsLinkCustomer || null
     };
 
     const res = await DB.addOrder(orderData);
@@ -860,52 +861,22 @@ window.hitungJarakDariAlamat = async function() {
   const statusEl = document.getElementById('jarakStatusMsg');
 
   if (!alamat) {
-    if (statusEl) {
-      statusEl.innerText = 'Isi alamat lengkap terlebih dahulu, lalu klik tombol ini.';
-      statusEl.style.color = '#e74c3c';
-    }
+    if (statusEl) { statusEl.innerText = 'Isi alamat lengkap terlebih dahulu.'; statusEl.style.color = '#e74c3c'; }
     return;
   }
-
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari alamat...';
-  }
-  if (statusEl) {
-    statusEl.innerText = 'Mencari koordinat alamat...';
-    statusEl.style.color = 'var(--text-muted)';
-  }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...'; }
+  if (statusEl) { statusEl.innerText = 'Mencari koordinat...'; statusEl.style.color = 'var(--text-muted)'; }
 
   try {
-    // Geocoding via Nominatim (OpenStreetMap) — tidak perlu API key
-    const query = encodeURIComponent(alamat + ', Malang, Jawa Timur, Indonesia');
-    const resp = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=id`,
-      { headers: { 'Accept-Language': 'id', 'User-Agent': 'SparklingCleaners/1.0' } }
-    );
-    const results = await resp.json();
-
-    if (!results || results.length === 0) {
-      throw new Error('Alamat tidak ditemukan. Coba tulis lebih spesifik.');
-    }
-
-    const { lat, lon, display_name } = results[0];
-    const customerLat = parseFloat(lat);
-    const customerLon = parseFloat(lon);
-    const km = hitungHaversine(customerLat, customerLon, SHOP_LAT, SHOP_LON);
-
-    terapkanJarak(km, '🗺 Dari Alamat', customerLat, customerLon, alamat);
-
+    const resp = await fetch(`/api/geocode?q=${encodeURIComponent(alamat)}`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error || 'Alamat tidak ditemukan.');
+    const km = hitungHaversine(data.lat, data.lon, SHOP_LAT, SHOP_LON);
+    terapkanJarak(km, '🗺 Dari Alamat', data.lat, data.lon, alamat);
   } catch (err) {
-    if (statusEl) {
-      statusEl.innerText = err.message || 'Gagal geocoding. Isi jarak manual.';
-      statusEl.style.color = '#e74c3c';
-    }
+    if (statusEl) { statusEl.innerText = err.message; statusEl.style.color = '#e74c3c'; }
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-map-location-dot"></i> Dari Alamat Ketik';
-    }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-map-location-dot"></i> Dari Alamat Ketik'; }
   }
 };
 
