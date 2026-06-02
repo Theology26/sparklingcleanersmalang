@@ -1509,20 +1509,23 @@ app.put('/api/users/:id', async (req, res) => {
 });
 
 // =============================================
-// [GEOCODE PROXY] — Bypass CORS, multi-strategy
-// =============================================
+// [GEOCODE PROXY] — Bypass CORS, multi-strategy + local Indonesia fallback
+// =========================================================================
 app.get('/api/geocode', async (req, res) => {
     const alamat = (req.query.q || '').trim();
     if (!alamat) return res.status(400).json({ error: 'Parameter q wajib diisi.' });
 
-    // Hapus RT/RW
+    // STEP 1: Bersihkan RT/RW/Nomor blok
     const cleaned = alamat
-        .replace(/,?\s*[Rr][Tt]\.?\s*[\d/]+/g, '')
-        .replace(/,?\s*[Rr][Ww]\.?\s*[\d/]+/g, '')
-        .replace(/\s+/g, ' ').replace(/^,+|,+$/g, '').trim();
+        .replace(/,?\s*[Rr][Tt]\.?\s*[0-9\/]+/g, '')
+        .replace(/,?\s*[Rr][Ww]\.?\s*[0-9\/]+/g, '')
+        .replace(/,?\s*[Nn]o\.?\s*[0-9]+/gi, '')
+        .replace(/\s+/g, ' ').replace(/,+/g, ',').replace(/^,+|,+$/g, '').trim();
 
-    // Hapus prefix administratif Indonesia yang tidak dikenali Nominatim
-    const cleanedNoPrefix = cleaned
+    // STEP 2: Hapus semua prefix administratif Indonesia yang tidak dikenali Nominatim
+    const stripAdminPrefix = (s) => s
+        .replace(/,?\s*Gg\.?\s+/gi, ',')
+        .replace(/,?\s*Jl\.?\s*/gi, 'Jalan ')
         .replace(/,?\s*Kec\.?\s+/gi, ',')
         .replace(/,?\s*Kel\.?\s+/gi, ',')
         .replace(/,?\s*Kab\.?\s+/gi, ',')
@@ -1534,13 +1537,20 @@ app.get('/api/geocode', async (req, res) => {
         .replace(/,?\s*Kabupaten\s+/gi, ',')
         .replace(/\s+/g, ' ').replace(/,+/g, ',').replace(/^,+|,+$/g, '').trim();
 
+    const cleanedNoPrefix = stripAdminPrefix(cleaned);
+
+    // STEP 3: Fallback ekstrak nama jalan saja (token sebelum koma pertama)
+    const streetOnly = cleanedNoPrefix.split(',')[0].trim();
+
     const strategies = [
+        cleanedNoPrefix + ', Malang, Indonesia',
+        cleaned + ', Malang, Indonesia',
         cleanedNoPrefix + ', Indonesia',
         cleaned + ', Indonesia',
         cleanedNoPrefix.split(',').slice(0, 3).join(',') + ', Indonesia',
         cleaned.split(',').slice(0, 3).join(',') + ', Indonesia',
         cleanedNoPrefix.split(',').slice(0, 2).join(',') + ', Malang, Indonesia',
-        cleaned.split(',').slice(0, 2).join(',') + ', Malang, Indonesia',
+        streetOnly + ', Malang, Jawa Timur, Indonesia',
     ];
 
     for (const q of strategies) {
@@ -1562,12 +1572,12 @@ app.get('/api/geocode', async (req, res) => {
                     strategy_used: q
                 });
             }
-        } catch (e) {}
+        } catch (e) { /* skip failed strategy */ }
     }
 
     return res.json({
         success: false,
-        error: 'Alamat tidak ditemukan. Tulis lebih spesifik: nama jalan, kelurahan, kota.'
+        error: 'Alamat tidak ditemukan di peta. Coba tulis: nama Jalan + Kelurahan + Kota.'
     });
 });
 

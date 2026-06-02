@@ -861,10 +861,10 @@ window.kirimNotaViaWA = async function(order) {
 
   const waCustomer = order.phone.startsWith('0') ? '62' + order.phone.slice(1) : order.phone;
 
-  let pesanNota = `Halo ${order.name} 😊%0A%0A`;
+  let pesanNota = `Halo ${order.name}%0A%0A`;
   pesanNota += `Pesanan Anda di *Sparkling Cleaners* sudah selesai dikerjakan dan siap dikirim setelah pembayaran.%0A%0A`;
   pesanNota += `*NOTA LAYANAN*%0A`;
-  pesanNota += `━━━━━━━━━━━━━━━━━━━━%0A`;
+  pesanNota += `---------------------%0A`;
   pesanNota += `No. Order     : *${order.id}*%0A`;
   pesanNota += `Nama          : ${order.name}%0A`;
   pesanNota += `Tanggal Masuk : ${tglMasuk}%0A`;
@@ -872,15 +872,15 @@ window.kirimNotaViaWA = async function(order) {
   pesanNota += `*Rincian Layanan:*%0A`;
   cart.forEach(item => {
     const h = Math.round((item.harga || item.price || 0) / 1000);
-    pesanNota += `• ${item.nama || item.name} (${item.qty || 1}x) : ${h}K%0A`;
+    pesanNota += `- ${item.nama || item.name} (${item.qty || 1}x) : ${h}K%0A`;
   });
-  if (ongkir > 0) pesanNota += `• Ongkir : ${Math.round(ongkir/1000)}K%0A`;
-  pesanNota += `━━━━━━━━━━━━━━━━━━━━%0A`;
+  if (ongkir > 0) pesanNota += `- Ongkir : ${Math.round(ongkir/1000)}K%0A`;
+  pesanNota += `---------------------%0A`;
   pesanNota += `*Total : ${Math.round(total/1000)}K*%0A%0A`;
   pesanNota += `*Pembayaran ke:*%0A`;
   pesanNota += `BCA : 4480896021 a.n EVAN NOVANDI KRISMANUEL%0A`;
   pesanNota += `Blu : 007280954378 a.n Evan Novandi Krismanuel%0A%0A`;
-  pesanNota += `Mohon konfirmasi pembayaran ke WA Admin setelah transfer. Terima kasih! 🙏`;
+  pesanNota += `Mohon konfirmasi pembayaran ke WA Admin setelah transfer. Terima kasih!`;
 
   const waUrl = `https://wa.me/${waCustomer}?text=${pesanNota}`;
 
@@ -1941,11 +1941,16 @@ window.manHitungOngkir = function() {
   const ongkir = jarak > 10 ? (jarak - 10) * 2000 : 0;
   window._manOngkir = ongkir;
 
+  // Simpan maps link dari alamat ketik — format universal http://maps.google.com/?q=
   const alamat = document.getElementById('manAlamat')?.value.trim();
   const gmapsLink = document.getElementById('manGmapsLink');
-  if (gmapsLink && alamat) {
-    gmapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(alamat)}`;
-    gmapsLink.style.display = 'block';
+  if (alamat) {
+    const gmapsUrl = `http://maps.google.com/?q=${encodeURIComponent(alamat + ', Malang')}`;
+    window._gmapsLinkCustomer = gmapsUrl;
+    if (gmapsLink) {
+      gmapsLink.href = gmapsUrl;
+      gmapsLink.style.display = 'block';
+    }
   }
 
   window.manHitung();
@@ -2079,7 +2084,8 @@ window.simpanPesananManual = async function() {
     address: alamat,
     distance: jarak,
     schedule: jadwal,
-    notes: `[Kasir: ${kasir}] [Diskon: ${DB.formatCurrency(diskon)}] ${benefitNote} ${catatan}${window._gmapsLinkCustomer ? ` [Maps: ${window._gmapsLinkCustomer}]` : ''}`.trim(),
+    notes: `[Kasir: ${kasir}] [Diskon: ${DB.formatCurrency(diskon)}] ${benefitNote} ${catatan}`.trim(),
+    maps_link: window._gmapsLinkCustomer || null,
     price: subtotal,
     express_price: 0,
     ongkir: ongkir,

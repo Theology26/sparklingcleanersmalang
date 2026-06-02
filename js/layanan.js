@@ -604,37 +604,37 @@ window.processOrder = async function(event) {
         return;
     }
 
-    // Build WhatsApp message
+    // Build WhatsApp message — emoji minimal, hanya yang universal-safe
     const shopPhone = window.WA_NUMBER || "6285965957290";
-    let msg = `Halo kak, saya mau pesan layanan cuci di *Sparkling Cleaners* ✨%0A%0A`;
+    let msg = `Halo kak, saya mau pesan layanan cuci di *Sparkling Cleaners*%0A%0A`;
     msg += `*Detail Pesanan:*%0A`;
-    msg += `- No. Order: *${orderId}*%0A`;
-    msg += `- Nama: ${name}%0A`;
-    msg += `- WhatsApp: ${phone}%0A%0A`;
+    msg += `- No. Order : *${orderId}*%0A`;
+    msg += `- Nama     : ${name}%0A`;
+    msg += `- WhatsApp : ${phone}%0A%0A`;
     msg += `*Layanan yang Dipilih:*%0A`;
     window.cart.forEach(item => {
         msg += `- ${item.name} (${item.qty}x) - ${DB.formatCurrency(item.price * item.qty)}%0A`;
     });
-    msg += `%0A- Express: ${expressVal !== 'none' ? expressVal : 'Normal'}%0A`;
-    msg += `- Estimasi Selesai: *${est}*%0A`;
-    msg += `- Catatan: ${notes || '-'}%0A%0A`;
+    msg += `%0A- Express       : ${expressVal !== 'none' ? expressVal : 'Normal'}%0A`;
+    msg += `- Est. Selesai   : *${est}*%0A`;
+    msg += `- Catatan        : ${notes || '-'}%0A%0A`;
 
     if (delivery === 'Ya') {
         msg += `*Pengiriman:*%0A`;
-        msg += `- Jadwal Pickup: ${schedule}%0A`;
-        msg += `- Alamat: ${address}%0A`;
+        msg += `- Jadwal Pickup : ${schedule}%0A`;
+        msg += `- Alamat        : ${address}%0A`;
         if (window._gmapsLinkCustomer) {
-            msg += `- 📍 Link Maps: ${window._gmapsLinkCustomer}%0A`;
+            msg += `- Link Maps     : ${window._gmapsLinkCustomer}%0A`;
         }
         msg += `%0A`;
     }
 
     msg += `*Estimasi Biaya:*%0A`;
-    msg += `- Subtotal: ${DB.formatCurrency(subtotal)}%0A`;
-    if (expressPrice > 0) msg += `- Biaya Express: ${DB.formatCurrency(expressPrice * totalQty)}%0A`;
-    if (delivery === 'Ya') msg += `- Ongkos Kirim: ${ongkir === 0 ? 'Gratis' : DB.formatCurrency(ongkir)}%0A`;
-    msg += `- Total: *${DB.formatCurrency(total)}*%0A%0A`;
-    msg += `Mohon segera dikonfirmasi ya kak, terima kasih! 🙏`;
+    msg += `- Subtotal : ${DB.formatCurrency(subtotal)}%0A`;
+    if (expressPrice > 0) msg += `- Express  : ${DB.formatCurrency(expressPrice * totalQty)}%0A`;
+    if (delivery === 'Ya') msg += `- Ongkir   : ${ongkir === 0 ? 'Gratis' : DB.formatCurrency(ongkir)}%0A`;
+    msg += `- *Total   : ${DB.formatCurrency(total)}*%0A%0A`;
+    msg += `Mohon segera dikonfirmasi ya kak, terima kasih!`;
 
     const waURL = `https://wa.me/${shopPhone}?text=${msg}`;
 
@@ -765,15 +765,14 @@ function terapkanJarak(km, metode, customerLat = null, customerLon = null, alama
   if (distEl) distEl.value = km;
   window.calculateTotal();
 
-  // Buat Google Maps link ke workshop dari titik customer
+  // Buat Google Maps link — format universal agar bisa dibuka di semua device
   let gmapsUrl = '';
   if (customerLat && customerLon) {
-    // GPS: pakai koordinat presisi
-    gmapsUrl = `https://www.google.com/maps/dir/${customerLat},${customerLon}/${SHOP_LAT},${SHOP_LON}`;
+    // GPS: pakai koordinat presisi — format yang kompatibel universal di WA
+    gmapsUrl = `http://maps.google.com/?q=${customerLat},${customerLon}`;
   } else if (alamatText) {
-    // Alamat manual: pakai teks alamat
-    const encodedAlamat = encodeURIComponent(alamatText);
-    gmapsUrl = `https://www.google.com/maps/dir/${encodedAlamat}/${SHOP_LAT},${SHOP_LON}`;
+    // Alamat manual: encode teks
+    gmapsUrl = `http://maps.google.com/?q=${encodeURIComponent(alamatText + ', Malang')}`;
   }
 
   // Simpan ke window agar bisa diakses processOrder()
@@ -889,11 +888,10 @@ window.onAddressChange = function() {
   clearTimeout(_alamatDebounceTimer);
   const alamat = document.getElementById('orderAddress')?.value?.trim();
 
-  // Update maps link berdasarkan teks alamat saat ini
+  // Update maps link berdasarkan teks alamat saat ini — format universal
   const mapsLink = document.getElementById('mapsLinkCustomer');
   if (mapsLink && alamat) {
-    const encodedAlamat = encodeURIComponent(alamat);
-    const gmapsUrl = `https://www.google.com/maps/dir/${encodedAlamat}/${SHOP_LAT},${SHOP_LON}`;
+    const gmapsUrl = `http://maps.google.com/?q=${encodeURIComponent(alamat + ', Malang')}`;
     mapsLink.href = gmapsUrl;
     mapsLink.style.display = 'flex';
     window._gmapsLinkCustomer = gmapsUrl;
