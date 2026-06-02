@@ -13,3 +13,9 @@ photo_paths.json
 # Local Backup & Archives
 *.zip
 Photo From Sparkling/
+
+# AI, Prompting & Planning
+CLAUDE.md
+MASTER_PROMPT.md
+implementation_plan.md
+
