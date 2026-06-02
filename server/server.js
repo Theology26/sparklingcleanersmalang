@@ -15,8 +15,78 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Middleware
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
 
+// --- DATABASE POOLING ---
+const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'sparkling_cleaners',
+    waitForConnections: true,
+    connectionLimit: 15,
+    queueLimit: 0
+});
+
 // Root path for static files
 const rootDir = path.resolve(__dirname, '..');
+
+// Helper for dynamic index.html page meta tag replacement
+const serveDynamicHtml = (fileName) => {
+    return async (req, res, next) => {
+        try {
+            const filePath = path.join(rootDir, fileName);
+            if (!fs.existsSync(filePath)) {
+                return next();
+            }
+
+            // Default values if DB query fails or has no values
+            let titleVal = 'Laundry Sepatu & Helm Premium';
+            let subtitleVal = 'Layanan cuci spesialis Sepatu, Tas, Helm premium di Malang. Aesthetic, terpercaya, dan profesional.';
+
+            try {
+                const [rows] = await pool.query(
+                    "SELECT nama_kunci, teks_nilai FROM konfigurasi_sistem WHERE nama_kunci IN ('hero_welcome_title', 'hero_welcome_subtitle')"
+                );
+                rows.forEach(row => {
+                    if (row.nama_kunci === 'hero_welcome_title' && row.teks_nilai) {
+                        titleVal = row.teks_nilai;
+                    } else if (row.nama_kunci === 'hero_welcome_subtitle' && row.teks_nilai) {
+                        subtitleVal = row.teks_nilai;
+                    }
+                });
+            } catch (dbErr) {
+                console.error('Database query error in serveDynamicHtml:', dbErr);
+            }
+
+            // Read the file content
+            let html = fs.readFileSync(filePath, 'utf8');
+
+            // Format titles and descriptions
+            const fullTitle = `Sparkling Cleaners Malang | ${titleVal}`;
+
+            // Replace standard title and meta tags
+            html = html.replace(/<title>.*?<\/title>/gi, `<title>${fullTitle}</title>`);
+            
+            // Replace <meta name="description" content="...">
+            html = html.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/gi, `<meta name="description" content="${subtitleVal}">`);
+            
+            // Replace Open Graph title: <meta property="og:title" content="...">
+            html = html.replace(/<meta\s+property="og:title"\s+content=".*?"\s*\/?>/gi, `<meta property="og:title" content="${fullTitle}">`);
+            
+            // Replace Open Graph description: <meta property="og:description" content="...">
+            html = html.replace(/<meta\s+property="og:description"\s+content=".*?"\s*\/?>/gi, `<meta property="og:description" content="${subtitleVal}">`);
+
+            res.send(html);
+        } catch (err) {
+            console.error('Error in serveDynamicHtml:', err);
+            next();
+        }
+    };
+};
+
+// Intercept requests for main pages before static assets are served
+app.get('/', serveDynamicHtml('index.html'));
+app.get('/index.html', serveDynamicHtml('index.html'));
+
 app.use(express.static(rootDir));
 
 // Setup folder uploads
@@ -77,22 +147,10 @@ app.use((err, req, res, next) => {
 });
 
 // Friendly Routes
-app.get('/', (req, res) => res.sendFile(path.join(rootDir, 'index.html')));
 app.get('/layanan', (req, res) => res.sendFile(path.join(rootDir, 'layanan.html')));
 app.get('/lacak', (req, res) => res.sendFile(path.join(rootDir, 'lacak.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(rootDir, 'dashboard.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(rootDir, 'login.html')));
-
-// --- DATABASE POOLING ---
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'sparkling_cleaners',
-    waitForConnections: true,
-    connectionLimit: 15,
-    queueLimit: 0
-});
 
 // =============================================
 // AUTO-MIGRATION & DATA SEEDING
