@@ -149,3 +149,8 @@
 - **Geocode Proxy Upgrade:** `/api/geocode` now has 8 ordered strategies, strips `Gg.`, `No.`, normalizes `Jl.→Jalan`, and has ultimate fallback of `streetOnly + ', Malang, Jawa Timur, Indonesia'`.
 - **Google Maps URL Standardized:** `terapkanJarak()` and `manHitungOngkir()` use `http://maps.google.com/?q=lat,lon` (universal format, opens correctly in WA mobile).
 - **WA Message Cleanup:** Removed emoji from order confirmation messages in `layanan.js` and nota WA in `dashboard.js` to prevent box/garbled character on older Android WA.
+
+## Refactoring & Bug Fixes (v5.4) — Booking Modal Close Button Visibility & Centering
+- **Sticky Close Button:** Restructured the order booking modal in `layanan.html` by wrapping scrollable contents in `.booking-modal-body` and keeping `.booking-modal-close` sticky at the top, so it never scrolls away.
+- **Pixel-Perfect Centering:** Replaced the text character `&times;` in the close button with FontAwesome `<i class="fa-solid fa-xmark"></i>` to ensure cross-device centering, and updated `.booking-modal-close` style to center using flexbox layout.
+
