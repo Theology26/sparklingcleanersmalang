@@ -2,6 +2,68 @@
 // js/dashboard.js - VERSI MASTER FULL PRODUCTION ENGINE
 console.log("Sistem Manajemen Utama Sparkling Ops Berhasil Diaktifkan");
 
+// =============================================
+// IMAGE OPTIMIZER: Auto-convert ANY format → WebP
+// Canvas-based, lossless quality 87%, runs client-side
+// =============================================
+window.optimizeImageToWebP = function(file, quality = 0.87) {
+  return new Promise((resolve, reject) => {
+    if (!file) return reject(new Error('No file provided'));
+    // If already WebP and small, skip conversion
+    if (file.type === 'image/webp' && file.size < 300 * 1024) return resolve(file);
+
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      try {
+        // Cap max dimension to 1600px to reduce size without quality loss
+        const MAX_DIM = 1600;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (w > MAX_DIM || h > MAX_DIM) {
+          const ratio = Math.min(MAX_DIM / w, MAX_DIM / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          URL.revokeObjectURL(url);
+          if (!blob) return reject(new Error('Canvas toBlob failed'));
+          // Preserve original filename but change extension to .webp
+          const newName = file.name.replace(/\.[^.]+$/, '') + '.webp';
+          resolve(new File([blob], newName, { type: 'image/webp' }));
+        }, 'image/webp', quality);
+      } catch(e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+    img.src = url;
+  });
+};
+
+// =============================================
+// SKELETON LOADER HELPERS
+// =============================================
+window.showSkeletonCards = function(containerId, count = 6) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = Array.from({ length: count }).map(() => `
+    <div class="skeleton-card">
+      <span class="skeleton skeleton-img"></span>
+      <span class="skeleton skeleton-line medium"></span>
+      <span class="skeleton skeleton-line short"></span>
+      <span class="skeleton skeleton-line price"></span>
+    </div>`).join('');
+};
+
+window.removeSkeletonCards = function(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.querySelectorAll('.skeleton-card').forEach(c => c.remove());
+};
+
+
 let grafikAktif = {};
 window.pesananSaatIni = [];
 window.inventarisBahan = [];
@@ -1177,8 +1239,10 @@ async function loadAdditionalChecklist(idLayanan = null) {
 
 window.previewServiceMainPhoto = async function(input) {
   if (!input.files || !input.files[0]) return;
+  let file = input.files[0];
+  try { file = await window.optimizeImageToWebP(file); } catch(e) { /* use original if canvas fails */ }
   const formData = new FormData();
-  formData.append('image', input.files[0]);
+  formData.append('image', file);
   try {
     const resp = await fetch('/api/upload', { method: 'POST', body: formData });
     const res = await resp.json();
@@ -1194,7 +1258,11 @@ window.previewServiceMainPhoto = async function(input) {
 window.uploadServiceAdditionalPhotos = async function(input) {
   if (!input.files || !input.files.length) return;
   const formData = new FormData();
-  Array.from(input.files).forEach(f => formData.append('image', f));
+  // Optimize each file to WebP before upload
+  const optimized = await Promise.all(
+    Array.from(input.files).map(f => window.optimizeImageToWebP(f).catch(() => f))
+  );
+  optimized.forEach(f => formData.append('image', f));
   try {
     const resp = await fetch('/api/upload', { method: 'POST', body: formData });
     const res = await resp.json();
@@ -1203,7 +1271,6 @@ window.uploadServiceAdditionalPhotos = async function(input) {
       const newUrls = res.urls.join(', ');
       document.getElementById('serviceFormAdditionalImages').value =
         existing ? `${existing}, ${newUrls}` : newUrls;
-      // Preview thumbnails
       const prevContainer = document.getElementById('serviceFormAdditionalPreview');
       res.urls.forEach(url => {
         const img = document.createElement('img');
@@ -1374,8 +1441,10 @@ window.previewSlideshowUpload = async function (input) {
 
 window.previewAboutImageUpload = async function (input) {
     if (input.files && input.files[0]) {
+        let file = input.files[0];
+        try { file = await window.optimizeImageToWebP(file); } catch(e) { /* use original */ }
         const formData = new FormData();
-        formData.append('image', input.files[0]);
+        formData.append('image', file);
         try {
             const resp = await fetch('/api/upload', { method: 'POST', body: formData });
             const res = await resp.json();
@@ -1593,7 +1662,9 @@ function terapkanBatasanAkses() {
 
 window.previewGaleriUpload = async function (input) {
     if (input.files && input.files[0]) {
-        const formData = new FormData(); formData.append('image', input.files[0]);
+        let file = input.files[0];
+        try { file = await window.optimizeImageToWebP(file); } catch(e) { /* use original */ }
+        const formData = new FormData(); formData.append('image', file);
         const resp = await fetch('/api/upload', { method: 'POST', body: formData });
         const res = await resp.json();
         if (res.success) {

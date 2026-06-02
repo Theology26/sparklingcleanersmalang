@@ -138,3 +138,14 @@
 - **Removed Duplicate DB.js Declarations:** Removed second block of `getGaleri`/`addGaleri`/`deleteGaleri` declarations in `js/db.js` that mapped to system config JSON instead of REST endpoints.
 - **Dashboard Robustness:** Added null checks to all KPI widgets in `rendorRingkasanKinerja()` to prevent crash if elements (e.g. `kpi-stock`) are missing. Added config fallback object in `cetakNotaManual()` to prevent page freezing.
 - **Subtitle Color Mismatch Fix:** Synchronized `hero_font_subtitle_color` key name usage inside `js/beranda.js` to fix hero text style binding.
+
+## Refactoring & Bug Fixes (v5.3) — Frontend Performance & Mobile UX
+- **WebP Auto-Convert:** `window.optimizeImageToWebP(file, quality=0.87)` added to `dashboard.js`. Uses HTML5 Canvas to auto-convert any upload (PNG/JPG/HEIC) to WebP ≤1600px before hitting `/api/upload`. Intercepts: `previewServiceMainPhoto`, `uploadServiceAdditionalPhotos`, `previewAboutImageUpload`, `previewGaleriUpload`.
+- **Skeleton Loading UI:** `.skeleton`, `.skeleton-card`, `.skeleton-img`, `.skeleton-line` CSS added to `main.css` with `skeletonPulse` animation. Helpers: `window.showSkeletonCards(id, n)` / `window.removeSkeletonCards(id)` in `dashboard.js`. `openKategori()` in `layanan.js` shows 4 skeleton cards while fetching.
+- **Cart Drawer Close Button Sticky:** `.cart-drawer-header` now uses `position: sticky; top: 0` so the close button never scrolls away when item list is long.
+- **Navbar Hamburger Mobile Fix:** `.navbar` at ≤768px uses `flex-direction: row !important` to keep logo-left / hamburger-right. `.hamburger-btn` gets `margin-left: auto` to lock it to the far right edge.
+- **Cart Drawer Mobile Defense:** On `DOMContentLoaded` in `layanan.js`, if `window.innerWidth ≤ 768` the drawer is force-closed to prevent auto-open bug on mobile.
+- **Anti-CLS (SEO):** `.service-card-img` and `.gallery-item img` get explicit `aspect-ratio: 4/3` in CSS. Category grid images use `loading="lazy"` + `class="service-card-img"`.
+- **Geocode Proxy Upgrade:** `/api/geocode` now has 8 ordered strategies, strips `Gg.`, `No.`, normalizes `Jl.→Jalan`, and has ultimate fallback of `streetOnly + ', Malang, Jawa Timur, Indonesia'`.
+- **Google Maps URL Standardized:** `terapkanJarak()` and `manHitungOngkir()` use `http://maps.google.com/?q=lat,lon` (universal format, opens correctly in WA mobile).
+- **WA Message Cleanup:** Removed emoji from order confirmation messages in `layanan.js` and nota WA in `dashboard.js` to prevent box/garbled character on older Android WA.

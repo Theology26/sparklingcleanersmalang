@@ -250,9 +250,14 @@ h1, h2, h3, h4 {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .navbar {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    /* FIX: keep logo-left + hamburger-right on one row, no column wrapping */
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+    padding: 0.75rem 1rem;
+    position: relative;
   }
   .nav-links {
     gap: 1rem;
@@ -1026,9 +1031,10 @@ footer {
   box-shadow: -10px 0 40px rgba(31, 38, 135, 0.1);
   z-index: 10000;
   transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 2rem;
+  padding: 0; /* reset: header handles its own padding */
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* children scroll, not drawer itself */
 }
 
 .cart-drawer.open {
@@ -1039,9 +1045,14 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  /* FIX: sticky header so close btn never scrolls away */
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.98);
+  z-index: 1;
+  padding: 1.5rem 2rem 1rem;
   border-bottom: 1px solid rgba(0,0,0,0.08);
-  padding-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .cart-drawer-close {
@@ -1055,7 +1066,7 @@ footer {
 .cart-items-list {
   flex: 1;
   overflow-y: auto;
-  margin-bottom: 1.5rem;
+  padding: 0 2rem 1.5rem; /* compensate removed padding on .cart-drawer */
 }
 
 .cart-item {
@@ -2378,3 +2389,65 @@ select.form-control {
 .about-misi-list-item:nth-child(4) { animation-delay: 1.06s; }
 .about-misi-list-item:nth-child(5) { animation-delay: 1.18s; }
 .about-misi-list-item:nth-child(6) { animation-delay: 1.30s; }
+
+/* =========================================
+   SKELETON LOADING UI (Anti-Flickering)
+   ========================================= */
+@keyframes skeletonPulse {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #e8edf2 25%, #f5f7fa 50%, #e8edf2 75%);
+  background-size: 800px 100%;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Skeleton card: mirrors service card layout */
+.skeleton-card {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 0;
+}
+.skeleton-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 0;
+}
+.skeleton-line {
+  height: 14px;
+  margin: 1rem 1rem 0.5rem;
+  border-radius: 6px;
+}
+.skeleton-line.short { width: 55%; }
+.skeleton-line.medium { width: 75%; }
+.skeleton-line.price {
+  height: 18px;
+  width: 40%;
+  margin-bottom: 1rem;
+}
+
+/* Service card img: explicit aspect-ratio to prevent CLS */
+.service-card-img,
+.gallery-item img {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Hamburger: always forced to far right via margin-left auto */
+@media (max-width: 768px) {
+  .hamburger-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  /* Cart drawer z-index above sidebar (z:900) but below overlay (z:10001) */
+  .cart-drawer { z-index: 10000; }
+  .cart-drawer-backdrop { z-index: 9999; }
+}

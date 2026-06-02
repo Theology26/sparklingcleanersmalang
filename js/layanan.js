@@ -8,6 +8,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.PRICING = await DB.getPricing();
     window.WA_NUMBER = await DB.getWhatsAppNumber();
 
+    // FIX 4: Defensively close cart drawer on mobile at init
+    // Prevents random auto-open on small screens
+    if (window.innerWidth <= 768) {
+      const drawer = document.getElementById('cartDrawer');
+      if (drawer) drawer.classList.remove('open');
+    }
+
     await initFulfillmentToggle();
     await renderKategoriGrid();
     window.updateCartUI();
@@ -55,15 +62,16 @@ async function renderKategoriGrid() {
 
   grid.innerHTML = categories.map(cat => `
     <div class="kategori-card glass-card"
-         onclick="window.openKategori(${cat.id}, '${cat.nama_kategori.replace(/'/g, "\\'")}')"
+         onclick="window.openKategori(${cat.id}, '${cat.nama_kategori.replace(/'/g, "\\'")}')" 
          role="button"
          tabindex="0"
          aria-label="Lihat layanan kategori ${cat.nama_kategori}"
-         onkeydown="if(event.key==='Enter'||event.key===' ')window.openKategori(${cat.id},'${cat.nama_kategori.replace(/'/g, "\\'")}')">
+         onkeydown="if(event.key==='Enter'||event.key===' ')window.openKategori(${cat.id},'${cat.nama_kategori.replace(/'/g, "\\'")}')"> 
       <div style="overflow:hidden;">
         <img src="${cat.foto_kategori || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=600'}"
-             alt="Kategori layanan ${cat.nama_kategori} - Sparkling Cleaners"
-             loading="lazy">
+             alt="Kategori layanan ${cat.nama_kategori} - Sparkling Cleaners Malang"
+             loading="lazy"
+             class="service-card-img">
       </div>
       <div class="kategori-card-label">
         <span>${cat.nama_kategori}</span>
@@ -86,11 +94,15 @@ window.openKategori = async function(idKategori, namaKategori) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const container = document.getElementById('layanan-in-kategori-grid');
-  container.innerHTML = `
-    <div style="text-align:center; padding:3rem; color:var(--text-muted);">
-      <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
-      <p style="margin-top:1rem;">Memuat layanan...</p>
-    </div>`;
+
+  // FIX 5: Skeleton loading — 4 placeholder cards instead of bare spinner
+  container.innerHTML = Array.from({ length: 4 }).map(() => `
+    <div class="skeleton-card glass-card">
+      <span class="skeleton skeleton-img"></span>
+      <span class="skeleton skeleton-line medium"></span>
+      <span class="skeleton skeleton-line short"></span>
+      <span class="skeleton skeleton-line price"></span>
+    </div>`).join('');
 
   const layananList = await DB.getLayananByKategori(idKategori);
 
