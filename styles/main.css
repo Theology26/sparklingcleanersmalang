@@ -1537,30 +1537,29 @@ select.form-control {
 }
 
 .booking-modal-close {
-  /* FIX: sticky to top of .glass-panel, NOT scrolls with content */
   position: sticky;
   top: 0;
-  float: right;
-  /* Shift out of normal flow to sit at top-right */
-  margin-left: auto;
+  align-self: flex-end;
+  flex-shrink: 0;
+  margin: 1rem 1rem 0 auto;
+  /* Perfect circle with centered × */
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  /* Center the × character */
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1.5px solid rgba(0,0,0,0.08);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  font-size: 1.3rem;
+  line-height: 1;
+  font-size: 1.25rem;
+  padding: 0;
   cursor: pointer;
   color: var(--primary-navy);
   transition: all 0.2s ease;
   z-index: 100;
-  /* Position it visually at top-right inside the panel */
-  align-self: flex-end;
-  flex-shrink: 0;
-  margin: 1rem 1rem 0 auto;
 }
 
 .booking-modal-close:hover {
