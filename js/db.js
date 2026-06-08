@@ -20,19 +20,34 @@ const FALLBACKS = {
 
 const DB = {
     async call(endpoint, method = 'GET', data = null) {
+        const token = localStorage.getItem('token');
         const options = {
             method,
             headers: { 
-                'Content-Type': 'application/json',
-                'X-User-Role': localStorage.getItem('role') || 'guest'
+                'Content-Type': 'application/json'
             },
             mode: 'cors',
             cache: 'no-store'
         };
+        if (token) {
+            options.headers['Authorization'] = `Bearer ${token}`;
+        }
         if (data) options.body = JSON.stringify(data);
         
         try {
             const resp = await fetch(`${API_BASE}${endpoint}`, options);
+            
+            // Check for 401 Unauthorized / Token Expired
+            if (resp.status === 401) {
+                // Do not intercept if it's the login endpoint to allow normal error reporting
+                if (!endpoint.includes('/login')) {
+                    console.warn('Session expired or unauthorized. Redirecting to login...');
+                    localStorage.clear();
+                    window.location.href = '/login.html';
+                    return null;
+                }
+            }
+            
             const result = await resp.json();
             if (!resp.ok) {
                 if (method === 'GET') return null;
@@ -332,6 +347,71 @@ const DB = {
 };
 
 window.DB = DB;
+
+// --- GLOBAL FETCH INTERCEPTOR FOR DIRECT AJAX CALLS ---
+// Overrides the standard window.fetch to automatically inject the Bearer token,
+// strip any legacy 'X-User-Role' headers, and handle 401 Session Expiration globally.
+(function() {
+    const originalFetch = window.fetch;
+    window.fetch = async function(resource, init) {
+        let url = typeof resource === 'string' ? resource : (resource && resource.url);
+        
+        if (url && (url.startsWith('/api/') || url.includes('/api/'))) {
+            init = init || {};
+            init.headers = init.headers || {};
+            
+            // Clean up legacy X-User-Role header to prevent spoofing warnings
+            if (init.headers instanceof Headers) {
+                init.headers.delete('x-user-role');
+            } else if (Array.isArray(init.headers)) {
+                init.headers = init.headers.filter(([k]) => k.toLowerCase() !== 'x-user-role');
+            } else {
+                delete init.headers['X-User-Role'];
+                delete init.headers['x-user-role'];
+            }
+            
+            // Inject new crypto Token
+            const token = localStorage.getItem('token');
+            if (token) {
+                if (init.headers instanceof Headers) {
+                    if (!init.headers.has('Authorization')) {
+                        init.headers.set('Authorization', `Bearer ${token}`);
+                    }
+                } else if (Array.isArray(init.headers)) {
+                    if (!init.headers.some(([k]) => k.toLowerCase() === 'authorization')) {
+                        init.headers.push(['Authorization', `Bearer ${token}`]);
+                    }
+                } else {
+                    let hasAuth = false;
+                    for (const key of Object.keys(init.headers)) {
+                        if (key.toLowerCase() === 'authorization') {
+                            hasAuth = true;
+                            break;
+                        }
+                    }
+                    if (!hasAuth) {
+                        init.headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+            }
+        }
+        
+        try {
+            const response = await originalFetch(resource, init);
+            if (response.status === 401 && url && (url.startsWith('/api/') || url.includes('/api/'))) {
+                // Ignore login endpoint 401 to let the login page show standard auth failed error
+                if (!url.endsWith('/api/login')) {
+                    console.warn('[AUTH] Unauthorized access. Clearing local storage and redirecting to login...');
+                    localStorage.clear();
+                    window.location.href = '/login.html';
+                }
+            }
+            return response;
+        } catch (err) {
+            throw err;
+        }
+    };
+})();
 
 document.addEventListener('DOMContentLoaded', () => {
     DB.renderFooterMeta();

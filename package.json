@@ -1,0 +1,24 @@
+{
+  "name": "full-develop",
+  "version": "1.0.0",
+  "description": "> **Sistem Manajemen Bisnis & Landing Page Premium** untuk layanan cuci sepatu, tas, dan helm berbasis di Wagir, Malang. Kini hadir dengan arsitektur **Production-Ready** menggunakan MySQL Backend & Aesthetic Frost UI.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Theology26/sparklingcleanersmalang.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Theology26/sparklingcleanersmalang/issues"
+  },
+  "homepage": "https://github.com/Theology26/sparklingcleanersmalang#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0"
+  }
+}

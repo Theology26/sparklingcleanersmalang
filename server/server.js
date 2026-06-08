@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
@@ -15,12 +16,66 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Middleware
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
 
+// --- SECURITY CRYTPO & AUTHENTICATION CONFIG ---
+const JWT_SECRET = process.env.JWT_SECRET || 'sparkling_cleaners_default_secret_key_12345';
+
+// SHA-256 password hashing helper
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Custom HMAC SHA-256 token helpers (JWT-like base64url payload)
+function generateToken(username, role) {
+    const payload = {
+        username,
+        role,
+        exp: Date.now() + 24 * 60 * 60 * 1000 // Valid for 24 hours
+    };
+    const header = { alg: 'HS256', typ: 'JWT' };
+    
+    const headerBase64 = Buffer.from(JSON.stringify(header)).toString('base64url');
+    const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    
+    const signature = crypto
+        .createHmac('sha256', JWT_SECRET)
+        .update(`${headerBase64}.${payloadBase64}`)
+        .digest('base64url');
+        
+    return `${headerBase64}.${payloadBase64}.${signature}`;
+}
+
+function verifyToken(token) {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const [headerBase64, payloadBase64, signature] = parts;
+        
+        const expectedSignature = crypto
+            .createHmac('sha256', JWT_SECRET)
+            .update(`${headerBase64}.${payloadBase64}`)
+            .digest('base64url');
+            
+        if (signature !== expectedSignature) {
+            return null;
+        }
+        
+        const payload = JSON.parse(Buffer.from(payloadBase64, 'base64url').toString('utf8'));
+        if (payload.exp && Date.now() > payload.exp) {
+            return null; // Expired
+        }
+        return payload;
+    } catch (e) {
+        return null;
+    }
+}
+
 // --- DATABASE POOLING ---
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'sparkling_cleaners',
+    port: parseInt(process.env.DB_PORT || '3306'),
     waitForConnections: true,
     connectionLimit: 15,
     queueLimit: 0
@@ -96,7 +151,12 @@ app.use('/uploads', express.static(uploadsDir));
 
 // Multer storage config
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadsDir),
+    destination: (req, file, cb) => {
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        cb(null, uploadsDir);
+    },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
         const uniqueName = `img-${Date.now()}-${Math.floor(Math.random()*1000)}${ext}`;
@@ -115,24 +175,50 @@ const upload = multer({
 });
 
 // [UPLOAD IMAGE]
-app.post('/api/upload', upload.array('image', 10), (req, res) => {
+app.post('/api/upload', (req, res, next) => {
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    next();
+}, upload.array('image', 10), (req, res) => {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'Tidak ada file yang diupload.' });
     const imageUrls = req.files.map(file => `/uploads/${file.filename}`);
     res.json({ success: true, urls: imageUrls, url: imageUrls[0] });
 });
 
-// [SIMPAN NOTA - Base64 Canvas to File]
+// [SIMPAN NOTA - Merged Base64 Canvas/Image to File]
 app.post('/api/simpan-nota', async (req, res) => {
     try {
-        const { imageBase64, invoiceId } = req.body;
-        if (!imageBase64) return res.status(400).json({ success: false, error: 'Data base64 tidak ditemukan' });
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
 
-        const base64Data = imageBase64.replace(/^data:image\/png;base64,/, "");
-        const fileName = `nota-${invoiceId || Date.now()}.png`;
+        const { image, imageBase64, invoiceId } = req.body;
+        const base64Str = image || imageBase64;
+        
+        if (!base64Str) {
+            return res.status(400).json({ success: false, error: 'Tidak ada data gambar base64.' });
+        }
+        
+        const matches = base64Str.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+        let buffer;
+        let ext = 'png';
+        
+        if (matches) {
+            ext = matches[1];
+            buffer = Buffer.from(matches[2], 'base64');
+        } else {
+            const cleanBase64 = base64Str.replace(/^data:image\/[a-zA-Z0-9]+;base64,/, "");
+            buffer = Buffer.from(cleanBase64, 'base64');
+        }
+        
+        const fileName = `nota-${invoiceId || Date.now()}.${ext === 'jpeg' ? 'jpg' : ext}`;
         const filePath = path.join(uploadsDir, fileName);
-
-        fs.writeFileSync(filePath, base64Data, 'base64');
-        res.json({ success: true, url: `/uploads/${fileName}` });
+        
+        fs.writeFileSync(filePath, buffer);
+        
+        const publicUrl = `${req.protocol}://${req.get('host')}/uploads/${fileName}`;
+        res.json({ success: true, url: publicUrl });
     } catch (err) {
         console.error('Simpan nota error:', err);
         res.status(500).json({ success: false, error: err.message });
@@ -326,8 +412,26 @@ app.get('/login', (req, res) => res.sendFile(path.join(rootDir, 'login.html')));
                 ])]
             ];
             for (const [k, v] of sysSeeds) {
-                await pool.query('INSERT IGNORE INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?)', [k, v]);
+                let val = v;
+                if (k === 'owner_password' || k === 'admin_password') {
+                    val = hashPassword(v);
+                }
+                await pool.query('INSERT IGNORE INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?)', [k, val]);
             }
+        }
+
+        // Migration: automatically upgrade any existing plaintext passwords in database to SHA-256 hashes
+        try {
+            const [pwRows] = await pool.query('SELECT nama_kunci, teks_nilai FROM konfigurasi_sistem WHERE nama_kunci IN ("owner_password", "admin_password")');
+            for (const row of pwRows) {
+                if (row.teks_nilai && row.teks_nilai.length !== 64) {
+                    const hashed = hashPassword(row.teks_nilai);
+                    await pool.query('UPDATE konfigurasi_sistem SET teks_nilai = ? WHERE nama_kunci = ?', [hashed, row.nama_kunci]);
+                    console.log(`[MIGRATION] Password for ${row.nama_kunci} successfully migrated to SHA-256 hash.`);
+                }
+            }
+        } catch (migErr) {
+            console.error('Password hash migration failed:', migErr);
         }
 
         // Pastikan key about_image dan hero_slideshow_images tetap terisi meskipun db sudah terlanjur seeded
@@ -433,11 +537,71 @@ app.get('/login', (req, res) => res.sendFile(path.join(rootDir, 'login.html')));
 // API ENDPOINTS
 // =============================================
 
+// --- GLOBAL AUTHENTICATION & ROLE-BASED ACCESS CONTROL MIDDLEWARES ---
+const authenticate = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+    }
+
+    if (token) {
+        const decoded = verifyToken(token);
+        if (!decoded) {
+            return res.status(401).json({ success: false, error: 'Token invalid or expired.' });
+        }
+        req.user = decoded;
+    } else {
+        req.user = { role: 'guest' };
+    }
+    
+    const path = req.path;
+    const method = req.method;
+    
+    // Allow public GET requests
+    if (method === 'GET') {
+        return next();
+    }
+    
+    // Specific public POST endpoints relative to /api mount path
+    const publicPostPaths = [
+        '/login',
+        '/pesanan',
+        '/orders',
+        '/pesanan-manual',
+        '/testimoni',
+        '/testimonials',
+        '/upload',
+        '/simpan-nota'
+    ];
+    
+    if (method === 'POST' && publicPostPaths.includes(path)) {
+        return next();
+    }
+    
+    // Block guests for other POST/PUT/DELETE
+    if (req.user.role === 'guest') {
+        return res.status(401).json({ success: false, error: 'Authentication required.' });
+    }
+    
+    next();
+};
+
+// Mount authentication middleware globally on all /api endpoints
+app.use('/api', authenticate);
+
 // Middleware Owner Validation
 const validateOwner = (req, res, next) => {
-    const role = req.headers['x-user-role'];
-    if (role !== 'owner') {
+    if (!req.user || req.user.role !== 'owner') {
         return res.status(403).json({ success: false, error: 'Access Denied: Owner role required.' });
+    }
+    next();
+};
+
+// Middleware Admin or Owner Validation
+const validateAdminOrOwner = (req, res, next) => {
+    if (!req.user || (req.user.role !== 'owner' && req.user.role !== 'admin')) {
+        return res.status(403).json({ success: false, error: 'Access Denied: Admin or Owner role required.' });
     }
     next();
 };
@@ -906,7 +1070,7 @@ app.get('/api/riwayat-customer', async (req, res) => {
 });
 
 // [STATUS PROSES PESANAN]
-app.put('/api/pesanan/:id/status_proses', async (req, res) => {
+app.put('/api/pesanan/:id/status_proses', validateAdminOrOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body; // integer 1-9
@@ -925,7 +1089,7 @@ app.put('/api/pesanan/:id/status_proses', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/orders/:id/status', async (req, res) => {
+app.put('/api/orders/:id/status', validateAdminOrOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body; // integer 1-9
@@ -945,7 +1109,7 @@ app.put('/api/orders/:id/status', async (req, res) => {
 });
 
 // [STATUS PEMBAYARAN PESANAN]
-app.put('/api/pesanan/:id/status_pembayaran', async (req, res) => {
+app.put('/api/pesanan/:id/status_pembayaran', validateAdminOrOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { lunas } = req.body; // 0 or 1
@@ -955,7 +1119,7 @@ app.put('/api/pesanan/:id/status_pembayaran', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/orders/:id', async (req, res) => {
+app.put('/api/orders/:id', validateAdminOrOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { lunas } = req.body;
@@ -1018,27 +1182,6 @@ const handleDeleteTestimoni = async (req, res) => {
 };
 app.delete('/api/testimoni/:id', validateOwner, handleDeleteTestimoni);
 app.delete('/api/testimonials/:id', validateOwner, handleDeleteTestimoni);
-
-// [SIMPAN NOTA - Base64 Image Upload to uploads/ folder]
-app.post('/api/simpan-nota', async (req, res) => {
-    try {
-        const { image } = req.body;
-        if (!image) return res.status(400).json({ error: 'Tidak ada data gambar base64.' });
-        
-        const matches = image.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
-        if (!matches) return res.status(400).json({ error: 'Format base64 tidak valid.' });
-        
-        const ext = matches[1];
-        const buffer = Buffer.from(matches[2], 'base64');
-        const fileName = `nota-${Date.now()}.${ext === 'jpeg' ? 'jpg' : ext}`;
-        const filePath = path.join(uploadsDir, fileName);
-        
-        await fs.promises.writeFile(filePath, buffer);
-        
-        const publicUrl = `${req.protocol}://${req.get('host')}/uploads/${fileName}`;
-        res.json({ success: true, url: publicUrl });
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
 
 // [INVENTORY / STOK BAHAN BACKWARD COMPATIBILITY VIA JSON STORAGE IN CONFIG]
 app.get('/api/inventory', async (req, res) => {
@@ -1117,7 +1260,7 @@ app.put('/api/inventory/:id/details', validateOwner, async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/inventory/:id', async (req, res) => {
+app.put('/api/inventory/:id', validateAdminOrOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { amount, action } = req.body;
@@ -1261,7 +1404,7 @@ app.get('/api/restock', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/restock', async (req, res) => {
+app.post('/api/restock', validateAdminOrOwner, async (req, res) => {
     try {
         const { itemId, qty, notes, role } = req.body;
         const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "riwayat_restok_gudang"');
@@ -1286,7 +1429,7 @@ app.post('/api/restock', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/restock/:id', async (req, res) => {
+app.put('/api/restock/:id', validateOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
@@ -1498,14 +1641,18 @@ app.post('/api/login', async (req, res) => {
         rows.forEach(r => { configMap[r.nama_kunci] = r.teks_nilai; });
 
         const ownerUsername = configMap.owner_username || 'owner';
-        const ownerPassword = configMap.owner_password || 'owner123';
+        const ownerPassword = configMap.owner_password || hashPassword('owner123');
         const adminUsername = configMap.admin_username || 'admin';
-        const adminPassword = configMap.admin_password || 'admin123';
+        const adminPassword = configMap.admin_password || hashPassword('admin123');
 
-        if (username === ownerUsername && password === ownerPassword) {
-            return res.json({ success: true, role: 'owner' });
-        } else if (username === adminUsername && password === adminPassword) {
-            return res.json({ success: true, role: 'admin' });
+        const hashedInput = hashPassword(password);
+
+        if (username === ownerUsername && hashedInput === ownerPassword) {
+            const token = generateToken(username, 'owner');
+            return res.json({ success: true, role: 'owner', token });
+        } else if (username === adminUsername && hashedInput === adminPassword) {
+            const token = generateToken(username, 'admin');
+            return res.json({ success: true, role: 'admin', token });
         } else {
             return res.status(401).json({ success: false, error: 'Username atau password salah.' });
         }
@@ -1540,10 +1687,16 @@ app.get('/api/users', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/users/:id', async (req, res) => {
+app.put('/api/users/:id', validateAdminOrOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { display_name, password, avatar } = req.body;
+        
+        // Prevent admin from editing owner profile (id 1)
+        if (id == 1 && req.user.role !== 'owner') {
+            return res.status(403).json({ success: false, error: 'Access Denied: Only the owner can update their own profile.' });
+        }
+        
         const prefix = (id == 1) ? 'owner' : 'admin';
         
         await pool.query(
@@ -1557,9 +1710,10 @@ app.put('/api/users/:id', async (req, res) => {
             );
         }
         if (password) {
+            const hashed = hashPassword(password);
             await pool.query(
                 'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-                [`${prefix}_password`, password, password]
+                [`${prefix}_password`, hashed, hashed]
             );
         }
         res.json({ success: true });
