@@ -213,7 +213,7 @@ const DB = {
         return await this.call(`/pesanan/${id}/status_pembayaran`, 'PUT', { lunas });
     },
 
-    // [INVENTORY] - Mapped to /api/inventory (stored in konfigurasi_sistem as JSON)
+    // [INVENTORY] - Mapped to /api/inventory (stored in tabel stok_bahan)
     async getInventory() {
         return (await this.call('/inventory')) || FALLBACKS.inventory;
     },
@@ -235,7 +235,7 @@ const DB = {
         return (await this.call('/finance')) || [];
     },
 
-    // [RESTOCK] - Mapped to /api/restock (stored in konfigurasi_sistem as JSON)
+    // [RESTOCK] - Mapped to /api/restock (stored in tabel riwayat_restok)
     async getRestockRequests() {
         return (await this.call('/restock')) || [];
     },

@@ -2,6 +2,16 @@
 // js/dashboard.js - VERSI MASTER FULL PRODUCTION ENGINE
 console.log("Sistem Manajemen Utama Sparkling Ops Berhasil Diaktifkan");
 
+window.escapeHTML = function(str) {
+  if (str === null || str === undefined) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 // =============================================
 // IMAGE OPTIMIZER: Auto-convert ANY format → WebP
 // Canvas-based, lossless quality 87%, runs client-side
@@ -81,6 +91,7 @@ window.onload = async () => {
 
     inisialisasiTab();
     alihkanPeran(peran);
+    await muatProfilPengguna();
     await muatDataDashboard(peran);
 
     if (window.location.hash) {
@@ -599,20 +610,20 @@ async function renderDaftarPesanan() {
         dataPesanan.forEach(p => {
             const baris = document.createElement('tr');
             baris.innerHTML = `
-                <td>#${p.id}</td>
+                <td>#${window.escapeHTML(p.id)}</td>
                 <td>${new Date(p.date).toLocaleDateString('id-ID')}</td>
-                <td><strong>${p.name}</strong><br>
-                    <small style="color:var(--text-muted);">${p.phone}</small>
-                    ${p.maps_link ? `<br><a href="${p.maps_link}" target="_blank" 
+                <td><strong>${window.escapeHTML(p.name)}</strong><br>
+                    <small style="color:var(--text-muted);">${window.escapeHTML(p.phone)}</small>
+                    ${p.maps_link ? `<br><a href="${window.escapeHTML(p.maps_link)}" target="_blank" 
                         style="font-size:0.75rem; color:#3b82f6; text-decoration:none;">
                         📍 Lihat Maps</a>` : ''}
                 </td>
-                <td>${p.service || 'Treatment'}</td>
-                <td><span class="status-badge" style="background:rgba(6,182,212,0.1); color:var(--primary-sky);">${teksStatus[p.status || 1]}</span></td>
+                <td>${window.escapeHTML(p.service || 'Treatment')}</td>
+                <td><span class="status-badge" style="background:rgba(6,182,212,0.1); color:var(--primary-sky);">${window.escapeHTML(teksStatus[p.status || 1])}</span></td>
                 <td>
                     <div style="display:flex; gap:5px;">
-                        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="window.bukaModalStatus('${p.id}', ${p.status})">Status</button>
-                        <button class="btn" style="padding:6px 12px; font-size:0.8rem; background:#10b981; color:white;" onclick="window.eksporNotaGambar('${p.id}')">Nota</button>
+                        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="window.bukaModalStatus('${window.escapeHTML(p.id)}', ${p.status})">Status</button>
+                        <button class="btn" style="padding:6px 12px; font-size:0.8rem; background:#10b981; color:white;" onclick="window.eksporNotaGambar('${window.escapeHTML(p.id)}')">Nota</button>
                     </div>
                 </td>
             `;
@@ -977,13 +988,13 @@ async function renderStokBahan() {
         dataInventory.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${item.id}</td>
-                <td>${item.name}</td>
-                <td><strong>${item.stock} ${item.unit}</strong></td>
+                <td>${window.escapeHTML(item.id)}</td>
+                <td>${window.escapeHTML(item.name)}</td>
+                <td><strong style="font-size:1.1rem; color:var(--primary-navy);">${item.stock}</strong> <span style="font-size:0.85rem; color:var(--text-muted); margin-left:4px;">${window.escapeHTML(item.unit)}</span></td>
                 <td>Rp ${parseFloat(item.price).toLocaleString('id-ID')}</td>
                 <td>
-                    <button class="btn btn-primary" style="padding:4px 8px; font-size:0.8rem;" onclick="window.modifikasiStok('${item.id}', 'subtract')">Pakai</button>
-                    ${localStorage.getItem('role') === 'owner' ? `<button class="btn" style="padding:4px 8px; font-size:0.8rem; background:#e74c3c; color:white; margin-left:5px;" onclick="window.hapusItemStok('${item.id}')">Hapus</button>` : ''}
+                    <button class="btn btn-primary" style="padding:4px 8px; font-size:0.8rem;" onclick="window.modifikasiStok('${window.escapeHTML(item.id)}', 'subtract')">Pakai</button>
+                    ${localStorage.getItem('role') === 'owner' ? `<button class="btn" style="padding:4px 8px; font-size:0.8rem; background:#e74c3c; color:white; margin-left:5px;" onclick="window.hapusItemStok('${window.escapeHTML(item.id)}')">Hapus</button>` : ''}
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1027,8 +1038,22 @@ window.saveStockItem = async function (e) {
 
 window.modifikasiStok = async function (id, aksi) {
     const jumlah = prompt("Masukkan jumlah penggunaan:"); if (!jumlah || isNaN(jumlah)) return;
-    await fetch(`/api/inventory/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: parseFloat(jumlah), action: aksi }) });
-    await renderStokBahan();
+    try {
+        const resp = await fetch(`/api/inventory/${id}`, { 
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ amount: parseFloat(jumlah), action: aksi }) 
+        });
+        if (!resp.ok) {
+            const data = await resp.json().catch(() => ({}));
+            alert(data.error || 'Gagal mengubah stok.');
+            return;
+        }
+        await renderStokBahan();
+    } catch (err) {
+        console.error(err);
+        alert('Terjadi kesalahan saat memproses data.');
+    }
 };
 
 window.hapusItemStok = async function (id) {
@@ -1047,7 +1072,7 @@ async function renderRestock() {
         const daftarBahan = await responBahan.json();
         if (selectBahan) {
             selectBahan.innerHTML = '<option value="">- Pilih Bahan Baku -</option>';
-            daftarBahan.forEach(b => { selectBahan.innerHTML += `<option value="${b.id}">${b.name}</option>`; });
+            daftarBahan.forEach(b => { selectBahan.innerHTML += `<option value="${window.escapeHTML(b.id)}">${window.escapeHTML(b.name)}</option>`; });
         }
 
         const responRestock = await fetch('/api/restock');
@@ -1059,13 +1084,13 @@ async function renderRestock() {
             let badge = p.status === 'Pending' ? `<span class="status-badge" style="background:rgba(241,196,15,0.1); color:var(--accent-yellow); float:right;">Diajukan</span>` : `<span class="status-badge" style="background:rgba(46,204,113,0.1); color:#2ecc71; float:right;">Selesai ACC</span>`;
 
             if (p.status === 'Pending' && localStorage.getItem('role') === 'owner') {
-                badge = `<button class="btn btn-primary" style="padding:4px 8px; font-size:0.7rem; float:right;" onclick="window.prosesPersetujuanRestok('${p.id}', 'Completed')">✓ SETUJUI (ACC)</button>`;
+                badge = `<button class="btn btn-primary" style="padding:4px 8px; font-size:0.7rem; float:right;" onclick="window.prosesPersetujuanRestok('${window.escapeHTML(p.id)}', 'Completed')">✓ SETUJUI (ACC)</button>`;
             }
 
             const itemCard = document.createElement('div');
             itemCard.className = 'glass-card';
             itemCard.style.cssText = 'padding:1rem; margin-top:10px; border-left:4px solid var(--accent-yellow);';
-            itemCard.innerHTML = `${badge}<strong>Bahan: ${p.itemId}</strong><p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">Jumlah Req: ${p.qty} Unit <br> Catatan: ${p.notes || '-'}</p>`;
+            itemCard.innerHTML = `${badge}<strong>Bahan: ${window.escapeHTML(p.itemId)}</strong><p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">Jumlah Req: ${parseFloat(p.qty)} Unit <br> Catatan: ${window.escapeHTML(p.notes || '-')}</p>`;
             kontainerStatus.appendChild(itemCard);
         });
     } catch (e) { console.error(e); }
@@ -1104,15 +1129,15 @@ async function renderKatalogDanHargaLive() {
         daftarLayanan.forEach(layanan => {
             const baris = document.createElement('tr');
             baris.innerHTML = `
-                <td><img src="${layanan.image || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=60'}" alt="Foto ${layanan.name}" loading="lazy" style="width:45px; height:30px; object-fit:cover; border-radius:4px;"></td>
-                <td><strong>${layanan.name}</strong></td>
-                <td><span class="status-badge" style="background:rgba(6,182,212,0.1); color:var(--primary-sky);">${layanan.category}</span></td>
-                <td>${layanan.treatment}</td>
+                <td><img src="${window.escapeHTML(layanan.image || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?w=60')}" alt="Foto ${window.escapeHTML(layanan.name)}" loading="lazy" style="width:45px; height:30px; object-fit:cover; border-radius:4px;"></td>
+                <td><strong>${window.escapeHTML(layanan.name)}</strong></td>
+                <td><span class="status-badge" style="background:rgba(6,182,212,0.1); color:var(--primary-sky);">${window.escapeHTML(layanan.category)}</span></td>
+                <td>${window.escapeHTML(layanan.treatment)}</td>
                 <td>Rp ${parseFloat(layanan.price).toLocaleString('id-ID')}</td>
-                <td>${layanan.estimation}</td>
+                <td>${window.escapeHTML(layanan.estimation)}</td>
                 <td>
-                    <button class="btn btn-primary owner-only" style="padding:4px 8px; font-size:0.8rem;" onclick="window.openServiceModal('${layanan.id}')" aria-label="Edit Layanan ${layanan.name}"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn owner-only" style="padding:4px 8px; font-size:0.8rem; background:#e74c3c; color:white; margin-left:5px;" onclick="window.deleteServiceItem('${layanan.id}')" aria-label="Hapus Layanan ${layanan.name}"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn btn-primary owner-only" style="padding:4px 8px; font-size:0.8rem;" onclick="window.openServiceModal('${window.escapeHTML(layanan.id)}')" aria-label="Edit Layanan ${window.escapeHTML(layanan.name)}"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn owner-only" style="padding:4px 8px; font-size:0.8rem; background:#e74c3c; color:white; margin-left:5px;" onclick="window.deleteServiceItem('${window.escapeHTML(layanan.id)}')" aria-label="Hapus Layanan ${window.escapeHTML(layanan.name)}"><i class="fa-solid fa-trash"></i></button>
                 </td>`;
             listBody.appendChild(baris);
         });
@@ -1523,19 +1548,19 @@ async function renderTestimonials() {
 
         const fotoHtml = t.image
           ? t.image.split(',').map(u => u.trim()).filter(Boolean).map(u =>
-              `<img src="${u}"
-                    alt="Foto bukti testimoni dari ${t.name}"
+              `<img src="${window.escapeHTML(u)}"
+                    alt="Foto bukti testimoni dari ${window.escapeHTML(t.name)}"
                     loading="lazy"
                     style="width:56px;height:56px;object-fit:cover;border-radius:8px;
                            cursor:pointer;margin-right:4px;border:2px solid var(--glass-border);"
-                    onclick="window.open('${u}','_blank')">`
+                    onclick="window.open('${window.escapeHTML(u)}','_blank')">`
             ).join('')
           : `<span style="color:var(--text-muted);font-size:0.8rem;">—</span>`;
 
         tbody.innerHTML += `<tr>
-          <td><strong>${t.name}</strong></td>
+          <td><strong>${window.escapeHTML(t.name)}</strong></td>
           <td>${'⭐'.repeat(t.rating)}</td>
-          <td><em style="font-size:0.9rem;">"${t.content}"</em></td>
+          <td><em style="font-size:0.9rem;">"${window.escapeHTML(t.content)}"</em></td>
           <td>${fotoHtml}</td>
           <td>${badgeStatus}</td>
           <td>${tombolAksi}</td>
@@ -1556,11 +1581,11 @@ async function renderGaleriTab() {
     const tbody = document.getElementById('galeriTableBody'); if (!tbody) return;
     const res = await fetch('/api/galeri'); const foto = await res.json(); tbody.innerHTML = '';
     foto.forEach(f => {
-        const safePath = (f.path_gambar || '').replace(/'/g, "\\'");
-        const safeLink = (f.link_instagram || '').replace(/'/g, "\\'");
+        const safePath = window.escapeHTML(f.path_gambar || '').replace(/'/g, "\\'");
+        const safeLink = window.escapeHTML(f.link_instagram || '').replace(/'/g, "\\'");
         tbody.innerHTML += `<tr>
-            <td><img src="${f.path_gambar}" style="width:60px; height:40px; object-fit:cover; border-radius:6px;"></td>
-            <td><a href="${f.link_instagram || '#'}" target="_blank" style="color:var(--primary-sky);">Link Feed</a></td>
+            <td><img src="${window.escapeHTML(f.path_gambar)}" style="width:60px; height:40px; object-fit:cover; border-radius:6px;"></td>
+            <td><a href="${window.escapeHTML(f.link_instagram || '#')}" target="_blank" style="color:var(--primary-sky);">Link Feed</a></td>
             <td>
                 <button class="btn btn-primary" style="padding:4px 8px; font-size:0.8rem; margin-right:5px;" onclick="window.openEditGaleriModal(${f.id}, '${safePath}', '${safeLink}')">Edit</button>
                 <button class="btn" style="background:#e74c3c; color:white; padding:4px 8px; font-size:0.8rem;" onclick="window.hapusFotoGaleri(${f.id})">Hapus</button>
@@ -1696,14 +1721,14 @@ async function renderKategoriTab() {
   items.forEach(k => {
     tbody.innerHTML += `<tr>
       <td>
-        <img src="${k.foto_kategori || ''}"
-             alt="Foto kategori ${k.nama_kategori}"
+        <img src="${window.escapeHTML(k.foto_kategori || '')}"
+             alt="Foto kategori ${window.escapeHTML(k.nama_kategori)}"
              loading="lazy"
              style="width:70px; height:50px; object-fit:cover;
                     border-radius:8px; background:#f0f4ff;"
              onerror="this.style.display='none'">
       </td>
-      <td><strong>${k.nama_kategori}</strong></td>
+      <td><strong>${window.escapeHTML(k.nama_kategori)}</strong></td>
       <td>${k.urutan}</td>
       <td>
         <span class="status-badge"
@@ -1817,9 +1842,9 @@ async function renderAdditionalTab() {
   }
   items.forEach(a => {
     tbody.innerHTML += `<tr>
-      <td><strong>${a.nama}</strong></td>
+      <td><strong>${window.escapeHTML(a.nama)}</strong></td>
       <td>${DB.formatCurrency(a.harga)}</td>
-      <td style="color:var(--text-muted); font-size:0.88rem;">${a.deskripsi || '—'}</td>
+      <td style="color:var(--text-muted); font-size:0.88rem;">${window.escapeHTML(a.deskripsi || '—')}</td>
       <td>
         <button class="btn btn-primary" style="padding:4px 8px; font-size:0.8rem;"
                 onclick="window.openAdditionalModal(${a.id})">Edit</button>
@@ -1968,7 +1993,7 @@ window.manRenderCart = function() {
                 padding:8px 12px; background:white; border-radius:10px;
                 border:1px solid rgba(0,0,0,0.07); gap:8px;">
       <div style="flex:1;">
-        <div style="font-weight:600; font-size:0.9rem;">${item.nama}</div>
+        <div style="font-weight:600; font-size:0.9rem;">${window.escapeHTML(item.nama)}</div>
         <div style="font-size:0.8rem; color:var(--text-muted);">
           ${DB.formatCurrency(item.harga)} × ${item.qty}
         </div>
@@ -2213,7 +2238,7 @@ window.cariRiwayat = async function() {
       <div class="glass-card" style="padding:1.5rem; text-align:center;">
         <i class="fa-solid fa-user-slash" style="font-size:2rem; color:var(--text-muted);"></i>
         <p style="margin-top:1rem; color:var(--text-muted);">
-          Tidak ada transaksi ditemukan untuk "<strong>${q}</strong>" dalam 1 tahun terakhir.
+          Tidak ada transaksi ditemukan untuk "<strong>${window.escapeHTML(q)}</strong>" dalam 1 tahun terakhir.
         </p>
       </div>`;
     return;
@@ -2236,14 +2261,14 @@ window.cariRiwayat = async function() {
           <i class="fa-solid fa-user"></i>
         </div>
         <div style="flex:1;">
-          <h3 style="margin:0; color:var(--primary-navy);">${data.customer?.name || q}</h3>
+          <h3 style="margin:0; color:var(--primary-navy);">${window.escapeHTML(data.customer?.name || q)}</h3>
           <p style="margin:0; color:var(--text-muted); font-size:0.88rem;">
-            ${data.customer?.phone || '–'}
+            ${window.escapeHTML(data.customer?.phone || '–')}
           </p>
         </div>
         <div style="text-align:right;">
           <div style="font-size:0.82rem; color:var(--text-muted);">Periode</div>
-          <div style="font-size:0.85rem; font-weight:600;">${data.periode || '–'}</div>
+          <div style="font-size:0.85rem; font-weight:600;">${window.escapeHTML(data.periode || '–')}</div>
         </div>
       </div>
     </div>
@@ -2320,15 +2345,15 @@ window.cariRiwayat = async function() {
                 'Selesai'
               ];
               return `<tr>
-                <td><strong>${p.id}</strong></td>
+                <td><strong>${window.escapeHTML(p.id)}</strong></td>
                 <td>${DB.formatDate(p.date)}</td>
                 <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis;
-                           white-space:nowrap;">${p.service || '–'}</td>
+                           white-space:nowrap;">${window.escapeHTML(p.service || '–')}</td>
                 <td>${DB.formatCurrency(p.total)}</td>
                 <td>
                   <span class="status-badge"
                         style="background:rgba(6,182,212,0.1); color:var(--primary-sky);">
-                    ${statusMap[parseInt(p.status)] || 'Unknown'}
+                    ${window.escapeHTML(statusMap[parseInt(p.status)] || 'Unknown')}
                   </span>
                 </td>
               </tr>`;
@@ -2338,4 +2363,128 @@ window.cariRiwayat = async function() {
       </div>
     </div>
   `;
+};
+
+// ==========================================
+// USER PROFILE MANAGEMENT
+// ==========================================
+window.currentLoggedUser = null;
+
+async function muatProfilPengguna() {
+    try {
+        const res = await fetch('/api/users/me');
+        if (!res.ok) return;
+        const user = await res.json();
+        
+        window.currentLoggedUser = user;
+        
+        // Update sidebar and top nav name
+        const namaProfilSidebar = document.getElementById('sidebarProfileName');
+        const namaPenggunaNav = document.getElementById('navUsername');
+        if (namaProfilSidebar) namaProfilSidebar.innerText = user.display_name || user.username;
+        if (namaPenggunaNav) namaPenggunaNav.innerText = user.display_name || user.username;
+        
+        // Update avatar
+        const wadahAvatarNav = document.querySelector('.user-avatar-wrapper');
+        const wadahAvatarSidebar = document.querySelector('.sidebar-profile .profile-avatar-circle');
+        
+        const avatarHtml = user.avatar 
+            ? `<img src="${window.escapeHTML(user.avatar)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Avatar">`
+            : `<div style="width:100%; height:100%; background:var(--primary-sky); color:white; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.2rem;">${window.escapeHTML(user.username[0].toUpperCase())}</div>`;
+            
+        if (wadahAvatarNav) wadahAvatarNav.innerHTML = avatarHtml;
+        
+        // Replace user-tie icon with avatar inside sidebar profile
+        if (wadahAvatarSidebar) {
+            wadahAvatarSidebar.innerHTML = avatarHtml;
+            wadahAvatarSidebar.style.overflow = 'hidden';
+        }
+    } catch (e) {
+        console.error('Gagal memuat profil pengguna:', e);
+    }
+}
+
+window.openProfileModal = async function() {
+    try {
+        const res = await fetch('/api/users/me');
+        if (!res.ok) return;
+        const user = await res.json();
+        
+        document.getElementById('profileFormUsername').value = user.username;
+        document.getElementById('profileFormEmail').value = user.email || '';
+        document.getElementById('profileFormDisplayName').value = user.display_name || '';
+        document.getElementById('profileFormPassword').value = '';
+        document.getElementById('profileFormAvatar').value = user.avatar || '';
+        
+        const prev = document.getElementById('profileAvatarPreview');
+        if (user.avatar) {
+            prev.src = user.avatar;
+            prev.style.display = 'block';
+        } else {
+            prev.style.display = 'none';
+        }
+        
+        document.getElementById('profileModal').style.display = 'flex';
+        window.resetModalScroll('profileModal');
+    } catch (e) {
+        console.error('Gagal membuka modal profil:', e);
+    }
+};
+
+window.previewProfileAvatarUpload = async function(input) {
+  if (!input.files || !input.files[0]) return;
+  let file = input.files[0];
+  try { file = await window.optimizeImageToWebP(file); } catch(e) { /* use original if optimization fails */ }
+  const formData = new FormData();
+  formData.append('image', file);
+  try {
+    const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+    const res = await resp.json();
+    if (res.success) {
+      document.getElementById('profileFormAvatar').value = res.url;
+      const prev = document.getElementById('profileAvatarPreview');
+      if (prev) {
+        prev.src = res.url;
+        prev.style.display = 'block';
+      }
+    }
+  } catch(e) { alert('Gagal upload avatar.'); }
+};
+
+window.saveProfileSettings = async function(e) {
+    e.preventDefault();
+    if (!window.currentLoggedUser) return;
+    
+    const payload = {
+        username: document.getElementById('profileFormUsername').value.trim(),
+        email: document.getElementById('profileFormEmail').value.trim(),
+        display_name: document.getElementById('profileFormDisplayName').value.trim(),
+        avatar: document.getElementById('profileFormAvatar').value.trim()
+    };
+    
+    const password = document.getElementById('profileFormPassword').value;
+    if (password) {
+        payload.password = password;
+    }
+    
+    try {
+        const resp = await fetch(`/api/users/${window.currentLoggedUser.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+        if (res.success) {
+            alert('Profil berhasil diubah.');
+            if (res.token) {
+                localStorage.setItem('token', res.token);
+            }
+            document.getElementById('profileModal').style.display = 'none';
+            await muatProfilPengguna();
+        } else {
+            alert('Gagal mengubah profil: ' + (res.error || 'Terjadi kesalahan.'));
+        }
+    } catch(err) {
+        alert('Terjadi kesalahan saat menyimpan profil.');
+    }
 };

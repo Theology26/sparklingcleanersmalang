@@ -106,11 +106,14 @@ sparklingcleanersmalang/
 
 ---
 
-## 🛠️ Fitur Produksi Terkini (v6.2)
+## 🛠️ Fitur Produksi Terkini (v7.0)
 
-- **Inventory Tracking**: Pengurangan stok otomatis saat bahan/alat digunakan dan penambahan otomatis saat restok diselesaikan oleh Owner.
-- **Financial Analytics**: Grafik batang (infografis) pendapatan 7 hari terakhir yang dinamis menggunakan Chart.js.
-- **Restok Moderation**: Admin mengajukan request pembelian barang, Owner menyetujui, stok bertambah otomatis.
+- **Database Migration & Dedicated Tables**: Migrasi penuh dari basis penyimpanan JSON (`konfigurasi_sistem`) ke tabel relasional MySQL terdedikasi (`stok_bahan`, `riwayat_restok`, `pengguna`) untuk keandalan data dan performa optimal.
+- **User Profile & Account Settings**: Fitur edit data akun terintegrasi (username, email, display name, password, dan foto profil/avatar) langsung dari modal profil di dashboard dengan dukungan unggah avatar yang dioptimalkan secara otomatis ke format WebP di sisi klien.
+- **Anti-XSS Security**: Penerapan filter sanitasi XSS (`escapeHTML`) pada rendering DOM dashboard untuk melindungi data pelanggan dan transaksi dari serangan injeksi skrip.
+- **Inventory Tracking (SQL-Backed)**: Pengurangan stok otomatis saat bahan/alat digunakan dan penambahan otomatis saat restok disetujui (ACC) oleh Owner, dilengkapi proteksi validasi stok minimum di server.
+- **Financial Analytics**: Grafik pendapatan 7 hari terakhir yang dinamis menggunakan Chart.js.
+- **Restok Moderation**: Admin mengajukan request pembelian barang, Owner menyetujui, stok bertambah otomatis secara real-time.
 - **Live Config Editor**: Owner bisa mengubah Judul Hero, Nomor WhatsApp, Akun Instagram, dan Alamat Workshop langsung dari dashboard tanpa edit kode.
 - **Multilayanan Catalog & Checkout Drawer**: Navigasi bertingkat kategori (Level 1) ke detail sub-layanan (Level 2). Slider gambar bebas potong dengan rasio 1:1, add-ons opsional, detail keranjang belanja, dan penyesuaian biaya express dinamis.
 - **GPS Distance Cost (Haversine)**: Integrasi HTML5 Geolocation dengan kalkulasi rumus Haversine untuk estimasi jarak dari workshop ke lokasi pelanggan dan penghitungan biaya ongkir otomatis.

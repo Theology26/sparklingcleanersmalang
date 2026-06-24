@@ -365,6 +365,20 @@ app.get('/login', (req, res) => res.sendFile(path.join(rootDir, 'login.html')));
             )
         `);
 
+        // 6. Tabel Pengguna (Credentials)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS pengguna (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL UNIQUE,
+                email VARCHAR(100) NOT NULL UNIQUE,
+                password VARCHAR(64) NOT NULL,
+                display_name VARCHAR(100),
+                avatar TEXT,
+                role VARCHAR(20) NOT NULL DEFAULT 'admin',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         // Seed konfigurasi_sistem defaults if empty
         const [sysCount] = await pool.query('SELECT COUNT(*) as count FROM konfigurasi_sistem');
         if (sysCount[0].count === 0) {
@@ -418,6 +432,17 @@ app.get('/login', (req, res) => res.sendFile(path.join(rootDir, 'login.html')));
                 }
                 await pool.query('INSERT IGNORE INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?)', [k, val]);
             }
+        }
+
+        // Seeding default users
+        const [userCount] = await pool.query('SELECT COUNT(*) as count FROM pengguna');
+        if (userCount[0].count === 0) {
+            console.log('Seeding default users into pengguna table...');
+            await pool.query(`
+                INSERT INTO pengguna (username, email, password, display_name, role) VALUES
+                ('owner', 'owner@sparklingcleaners.com', ?, 'Owner Sparkling', 'owner'),
+                ('admin', 'admin@sparklingcleaners.com', ?, 'Admin Kasir', 'admin')
+            `, [hashPassword('owner123'), hashPassword('admin123')]);
         }
 
         // Migration: automatically upgrade any existing plaintext passwords in database to SHA-256 hashes
@@ -526,6 +551,88 @@ app.get('/login', (req, res) => res.sendFile(path.join(rootDir, 'login.html')));
         await pool.query("UPDATE layanan SET id_kategori = 1 WHERE kategori = 'Sepatu' AND id_kategori IS NULL");
         await pool.query("UPDATE layanan SET id_kategori = 2 WHERE kategori = 'Helm' AND id_kategori IS NULL");
         await pool.query("UPDATE layanan SET id_kategori = 3 WHERE kategori = 'Tas' AND id_kategori IS NULL");
+
+        // 7. Tabel Stok Bahan (menggantikan JSON data_stok_bahan di konfigurasi_sistem)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS stok_bahan (
+                id VARCHAR(30) PRIMARY KEY,
+                nama VARCHAR(100) NOT NULL,
+                kategori VARCHAR(50) DEFAULT '',
+                satuan VARCHAR(20) DEFAULT '',
+                harga DECIMAL(10,2) DEFAULT 0,
+                stok DECIMAL(10,2) DEFAULT 0,
+                stok_minimum DECIMAL(10,2) DEFAULT 2,
+                dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // 8. Tabel Riwayat Restok (menggantikan JSON riwayat_restok_gudang di konfigurasi_sistem)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS riwayat_restok (
+                id VARCHAR(50) PRIMARY KEY,
+                id_bahan VARCHAR(30) NOT NULL,
+                jumlah DECIMAL(10,2) NOT NULL,
+                catatan TEXT,
+                role_pengaju VARCHAR(20) DEFAULT 'admin',
+                status VARCHAR(20) DEFAULT 'Pending',
+                tanggal TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // AUTO-MIGRASI: Pindahkan data JSON dari konfigurasi_sistem ke tabel baru
+        const [stokBahanCount] = await pool.query('SELECT COUNT(*) as count FROM stok_bahan');
+        if (stokBahanCount[0].count === 0) {
+            // Cek apakah ada data JSON lama di konfigurasi_sistem
+            const [jsonRows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"');
+            if (jsonRows.length > 0 && jsonRows[0].teks_nilai) {
+                try {
+                    const jsonData = JSON.parse(jsonRows[0].teks_nilai);
+                    if (Array.isArray(jsonData) && jsonData.length > 0) {
+                        console.log(`[MIGRASI] Memindahkan ${jsonData.length} item stok dari JSON ke tabel stok_bahan...`);
+                        for (const item of jsonData) {
+                            await pool.query(
+                                'INSERT IGNORE INTO stok_bahan (id, nama, kategori, satuan, harga, stok, stok_minimum) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                [item.id, item.name, item.category || '', item.unit || '', parseFloat(item.price || 0), parseFloat(item.stock || 0), parseFloat(item.min_stock || 2)]
+                            );
+                        }
+                        // Hapus key JSON lama setelah migrasi berhasil
+                        await pool.query('DELETE FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"');
+                        console.log('[MIGRASI] ✅ data_stok_bahan berhasil dipindahkan ke tabel stok_bahan.');
+                    }
+                } catch (parseErr) {
+                    console.error('[MIGRASI] Gagal parse JSON data_stok_bahan:', parseErr.message);
+                }
+            } else {
+                // Seed default jika belum ada data sama sekali
+                console.log('Seeding: stok_bahan defaults...');
+                await pool.query(`INSERT IGNORE INTO stok_bahan (id, nama, kategori, satuan, harga, stok, stok_minimum) VALUES
+                    ('INV-001', 'Sabun Upper Cleaner', 'Soap', 'Liter', 50000, 5.00, 2.00),
+                    ('INV-002', 'Parfum Sepatu Lemon', 'Scent', 'Liter', 75000, 1.50, 2.00),
+                    ('INV-003', 'Solvent Leather', 'Chemical', 'Liter', 120000, 3.00, 1.00)
+                `);
+            }
+
+            // Migrasi riwayat restok
+            const [restokRows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "riwayat_restok_gudang"');
+            if (restokRows.length > 0 && restokRows[0].teks_nilai) {
+                try {
+                    const restokData = JSON.parse(restokRows[0].teks_nilai);
+                    if (Array.isArray(restokData) && restokData.length > 0) {
+                        console.log(`[MIGRASI] Memindahkan ${restokData.length} riwayat restok ke tabel riwayat_restok...`);
+                        for (const req of restokData) {
+                            await pool.query(
+                                'INSERT IGNORE INTO riwayat_restok (id, id_bahan, jumlah, catatan, role_pengaju, status, tanggal) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                [req.id, req.itemId, parseFloat(req.qty || 0), req.notes || '', req.role || 'admin', req.status || 'Pending', req.date ? new Date(req.date) : new Date()]
+                            );
+                        }
+                        await pool.query('DELETE FROM konfigurasi_sistem WHERE nama_kunci = "riwayat_restok_gudang"');
+                        console.log('[MIGRASI] ✅ riwayat_restok_gudang berhasil dipindahkan ke tabel riwayat_restok.');
+                    }
+                } catch (parseErr) {
+                    console.error('[MIGRASI] Gagal parse JSON riwayat_restok_gudang:', parseErr.message);
+                }
+            }
+        }
 
         console.log('✅ Migrasi & Seeding Berhasil.');
     } catch (err) {
@@ -1183,22 +1290,19 @@ const handleDeleteTestimoni = async (req, res) => {
 app.delete('/api/testimoni/:id', validateOwner, handleDeleteTestimoni);
 app.delete('/api/testimonials/:id', validateOwner, handleDeleteTestimoni);
 
-// [INVENTORY / STOK BAHAN BACKWARD COMPATIBILITY VIA JSON STORAGE IN CONFIG]
+// [INVENTORY / STOK BAHAN — TABEL SQL DEDICATED]
 app.get('/api/inventory', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"');
-        if (rows.length === 0) return res.json([]);
-        const list = JSON.parse(rows[0].teks_nilai || '[]');
-        // Map to original for dashboard
-        const mapped = list.map(r => ({
+        const [rows] = await pool.query('SELECT * FROM stok_bahan ORDER BY dibuat_pada ASC');
+        const mapped = rows.map(r => ({
             id: r.id,
-            name: r.name,
-            category: r.category,
-            unit: r.unit,
-            price: r.price,
-            stock: r.stock,
-            min_stock: r.min_stock,
-            minStock: r.min_stock // support casing variation
+            name: r.nama,
+            category: r.kategori,
+            unit: r.satuan,
+            price: parseFloat(r.harga),
+            stock: parseFloat(r.stok),
+            min_stock: parseFloat(r.stok_minimum),
+            minStock: parseFloat(r.stok_minimum)
         }));
         res.json(mapped);
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1207,23 +1311,10 @@ app.get('/api/inventory', async (req, res) => {
 app.post('/api/inventory', validateOwner, async (req, res) => {
     try {
         const { name, category, unit, price, stock, min_stock } = req.body;
-        const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"');
-        const list = rows.length > 0 ? JSON.parse(rows[0].teks_nilai || '[]') : [];
-        
         const id = `INV-${Date.now()}`;
-        list.push({
-            id,
-            name,
-            category,
-            unit,
-            price: parseFloat(price),
-            stock: parseFloat(stock || 0),
-            min_stock: parseFloat(min_stock || 2)
-        });
-        
         await pool.query(
-            'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-            ['data_stok_bahan', JSON.stringify(list), JSON.stringify(list)]
+            'INSERT INTO stok_bahan (id, nama, kategori, satuan, harga, stok, stok_minimum) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [id, name, category || '', unit || '', parseFloat(price || 0), parseFloat(stock || 0), parseFloat(min_stock || 2)]
         );
         res.status(201).json({ success: true, id });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1233,29 +1324,11 @@ app.put('/api/inventory/:id/details', validateOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, category, unit, price, min_stock, stock } = req.body;
-        const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"');
-        if (rows.length === 0) return res.status(404).json({ error: 'Stok tidak ditemukan' });
-        
-        let list = JSON.parse(rows[0].teks_nilai || '[]');
-        list = list.map(item => {
-            if (item.id === id) {
-                return {
-                    ...item,
-                    name,
-                    category,
-                    unit,
-                    price: parseFloat(price),
-                    min_stock: parseFloat(min_stock),
-                    stock: parseFloat(stock)
-                };
-            }
-            return item;
-        });
-        
-        await pool.query(
-            'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-            ['data_stok_bahan', JSON.stringify(list), JSON.stringify(list)]
+        const [result] = await pool.query(
+            'UPDATE stok_bahan SET nama = ?, kategori = ?, satuan = ?, harga = ?, stok_minimum = ?, stok = ? WHERE id = ?',
+            [name, category || '', unit || '', parseFloat(price), parseFloat(min_stock), parseFloat(stock), id]
         );
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Stok tidak ditemukan' });
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1265,22 +1338,21 @@ app.put('/api/inventory/:id', validateAdminOrOwner, async (req, res) => {
         const { id } = req.params;
         const { amount, action } = req.body;
         const val = parseFloat(amount);
-        const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"');
+
+        // Cek stok saat ini
+        const [rows] = await pool.query('SELECT stok, satuan FROM stok_bahan WHERE id = ?', [id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Stok tidak ditemukan' });
-        
-        let list = JSON.parse(rows[0].teks_nilai || '[]');
-        list = list.map(item => {
-            if (item.id === id) {
-                const ns = action === 'add' ? (item.stock + val) : (item.stock - val);
-                return { ...item, stock: ns };
-            }
-            return item;
-        });
-        
-        await pool.query(
-            'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-            ['data_stok_bahan', JSON.stringify(list), JSON.stringify(list)]
-        );
+
+        const currentStock = parseFloat(rows[0].stok);
+        if (action !== 'add' && currentStock < val) {
+            return res.status(400).json({ error: `Stok tidak mencukupi untuk dipakai! Sisa stok saat ini: ${currentStock} ${rows[0].satuan}` });
+        }
+
+        if (action === 'add') {
+            await pool.query('UPDATE stok_bahan SET stok = stok + ? WHERE id = ?', [val, id]);
+        } else {
+            await pool.query('UPDATE stok_bahan SET stok = stok - ? WHERE id = ?', [val, id]);
+        }
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1288,16 +1360,7 @@ app.put('/api/inventory/:id', validateAdminOrOwner, async (req, res) => {
 app.delete('/api/inventory/:id', validateOwner, async (req, res) => {
     try {
         const { id } = req.params;
-        const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"');
-        if (rows.length === 0) return res.status(404).json({ error: 'Stok tidak ditemukan' });
-        
-        let list = JSON.parse(rows[0].teks_nilai || '[]');
-        list = list.filter(item => item.id !== id);
-        
-        await pool.query(
-            'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-            ['data_stok_bahan', JSON.stringify(list), JSON.stringify(list)]
-        );
+        await pool.query('DELETE FROM stok_bahan WHERE id = ?', [id]);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1368,19 +1431,14 @@ app.get('/api/ringkasan', async (req, res) => {
       else breakdown_delivery.drop_off++;
     });
 
-    const [stokRow] = await pool.query(
-      'SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"'
-    );
+    const [stokRows] = await pool.query('SELECT stok, stok_minimum FROM stok_bahan');
     let stok_rata_persen = 0;
-    if (stokRow.length > 0) {
-      const stokList = JSON.parse(stokRow[0].teks_nilai || '[]');
-      if (stokList.length > 0) {
-        stok_rata_persen = Math.round(
-          stokList.reduce((acc, item) =>
-            acc + Math.min((item.stock / (item.min_stock * 3)) * 100, 100), 0
-          ) / stokList.length
-        );
-      }
+    if (stokRows.length > 0) {
+      stok_rata_persen = Math.round(
+        stokRows.reduce((acc, item) =>
+          acc + Math.min((parseFloat(item.stok) / (parseFloat(item.stok_minimum) * 3)) * 100, 100), 0
+        ) / stokRows.length
+      );
     }
 
     res.json({
@@ -1395,35 +1453,30 @@ app.get('/api/ringkasan', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// [RESTOCK / REQUEST RESTOK COMPATIBILITY]
+// [RESTOCK / REQUEST RESTOK — TABEL SQL DEDICATED]
 app.get('/api/restock', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "riwayat_restok_gudang"');
-        if (rows.length === 0) return res.json([]);
-        res.json(JSON.parse(rows[0].teks_nilai || '[]'));
+        const [rows] = await pool.query('SELECT * FROM riwayat_restok ORDER BY tanggal DESC');
+        const mapped = rows.map(r => ({
+            id: r.id,
+            itemId: r.id_bahan,
+            qty: parseFloat(r.jumlah),
+            notes: r.catatan,
+            role: r.role_pengaju,
+            status: r.status,
+            date: r.tanggal
+        }));
+        res.json(mapped);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/restock', validateAdminOrOwner, async (req, res) => {
     try {
         const { itemId, qty, notes, role } = req.body;
-        const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "riwayat_restok_gudang"');
-        const list = rows.length > 0 ? JSON.parse(rows[0].teks_nilai || '[]') : [];
-        
         const id = `REQ-${Date.now()}`;
-        list.push({
-            id,
-            itemId,
-            qty: parseFloat(qty),
-            notes,
-            role,
-            status: 'Pending',
-            date: new Date().toISOString()
-        });
-        
         await pool.query(
-            'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-            ['riwayat_restok_gudang', JSON.stringify(list), JSON.stringify(list)]
+            'INSERT INTO riwayat_restok (id, id_bahan, jumlah, catatan, role_pengaju, status) VALUES (?, ?, ?, ?, ?, ?)',
+            [id, itemId, parseFloat(qty), notes || '', role || 'admin', 'Pending']
         );
         res.status(201).json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1433,44 +1486,19 @@ app.put('/api/restock/:id', validateOwner, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        
-        const [rows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "riwayat_restok_gudang"');
-        if (rows.length === 0) return res.status(404).json({ error: 'Permintaan tidak ditemukan' });
-        
-        let list = JSON.parse(rows[0].teks_nilai || '[]');
-        let itemIdToUpdate = null;
-        let qtyToUpdate = 0;
-        
-        list = list.map(reqs => {
-            if (reqs.id === id) {
-                itemIdToUpdate = reqs.itemId;
-                qtyToUpdate = parseFloat(reqs.qty);
-                return { ...reqs, status };
-            }
-            return reqs;
-        });
-        
-        await pool.query(
-            'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-            ['riwayat_restok_gudang', JSON.stringify(list), JSON.stringify(list)]
-        );
-        
-        // If Completed, update stock of that item in data_stok_bahan
-        if (status === 'Completed' && itemIdToUpdate) {
-            const [stockRows] = await pool.query('SELECT teks_nilai FROM konfigurasi_sistem WHERE nama_kunci = "data_stok_bahan"');
-            if (stockRows.length > 0) {
-                let stockList = JSON.parse(stockRows[0].teks_nilai || '[]');
-                stockList = stockList.map(item => {
-                    if (item.id === itemIdToUpdate) {
-                        return { ...item, stock: item.stock + qtyToUpdate };
-                    }
-                    return item;
-                });
-                await pool.query(
-                    'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-                    ['data_stok_bahan', JSON.stringify(stockList), JSON.stringify(stockList)]
-                );
-            }
+
+        // Ambil data request restok
+        const [reqRows] = await pool.query('SELECT id_bahan, jumlah FROM riwayat_restok WHERE id = ?', [id]);
+        if (reqRows.length === 0) return res.status(404).json({ error: 'Permintaan tidak ditemukan' });
+
+        // Update status
+        await pool.query('UPDATE riwayat_restok SET status = ? WHERE id = ?', [status, id]);
+
+        // If Completed, tambah stok di tabel stok_bahan
+        if (status === 'Completed') {
+            const idBahan = reqRows[0].id_bahan;
+            const jumlah = parseFloat(reqRows[0].jumlah);
+            await pool.query('UPDATE stok_bahan SET stok = stok + ? WHERE id = ?', [jumlah, idBahan]);
         }
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1634,25 +1662,16 @@ app.post('/api/login', async (req, res) => {
         if (!username || !password) {
             return res.status(400).json({ success: false, error: 'Username dan password wajib diisi.' });
         }
-        const [rows] = await pool.query(
-            'SELECT * FROM konfigurasi_sistem WHERE nama_kunci IN ("owner_username", "owner_password", "admin_username", "admin_password")'
-        );
-        const configMap = {};
-        rows.forEach(r => { configMap[r.nama_kunci] = r.teks_nilai; });
-
-        const ownerUsername = configMap.owner_username || 'owner';
-        const ownerPassword = configMap.owner_password || hashPassword('owner123');
-        const adminUsername = configMap.admin_username || 'admin';
-        const adminPassword = configMap.admin_password || hashPassword('admin123');
-
         const hashedInput = hashPassword(password);
-
-        if (username === ownerUsername && hashedInput === ownerPassword) {
-            const token = generateToken(username, 'owner');
-            return res.json({ success: true, role: 'owner', token });
-        } else if (username === adminUsername && hashedInput === adminPassword) {
-            const token = generateToken(username, 'admin');
-            return res.json({ success: true, role: 'admin', token });
+        const [rows] = await pool.query(
+            'SELECT * FROM pengguna WHERE username = ? AND password = ?',
+            [username, hashedInput]
+        );
+        
+        if (rows.length > 0) {
+            const user = rows[0];
+            const token = generateToken(user.username, user.role);
+            return res.json({ success: true, role: user.role, token });
         } else {
             return res.status(401).json({ success: false, error: 'Username atau password salah.' });
         }
@@ -1664,59 +1683,82 @@ app.post('/api/login', async (req, res) => {
 // [USERS AND LOGIN COMPATIBILITY]
 app.get('/api/users', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM konfigurasi_sistem WHERE nama_kunci IN ("owner_username", "owner_display_name", "owner_avatar", "admin_username", "admin_display_name", "admin_avatar")');
-        const usersMap = {};
-        rows.forEach(r => { usersMap[r.nama_kunci] = r.teks_nilai; });
-        const users = [
-            {
-                id: 1,
-                username: usersMap.owner_username || 'owner',
-                display_name: usersMap.owner_display_name || 'Owner Sparkling',
-                avatar: usersMap.owner_avatar || '',
-                role: 'owner'
-            },
-            {
-                id: 2,
-                username: usersMap.admin_username || 'admin',
-                display_name: usersMap.admin_display_name || 'Admin Kasir',
-                avatar: usersMap.admin_avatar || '',
-                role: 'admin'
-            }
-        ];
-        res.json(users);
+        const [rows] = await pool.query('SELECT id, username, email, display_name, avatar, role FROM pengguna');
+        res.json(rows);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/users/me', async (req, res) => {
+    try {
+        if (!req.user || req.user.role === 'guest') {
+            return res.status(401).json({ success: false, error: 'Authentication required.' });
+        }
+        const [rows] = await pool.query(
+            'SELECT id, username, email, display_name, avatar, role FROM pengguna WHERE username = ?',
+            [req.user.username]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User tidak ditemukan.' });
+        }
+        res.json(rows[0]);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.put('/api/users/:id', validateAdminOrOwner, async (req, res) => {
     try {
         const { id } = req.params;
-        const { display_name, password, avatar } = req.body;
+        const { username, email, display_name, password, avatar } = req.body;
         
-        // Prevent admin from editing owner profile (id 1)
-        if (id == 1 && req.user.role !== 'owner') {
+        // Fetch target user role & username first
+        const [targetUser] = await pool.query('SELECT role, username FROM pengguna WHERE id = ?', [id]);
+        if (targetUser.length === 0) {
+            return res.status(404).json({ success: false, error: 'User tidak ditemukan.' });
+        }
+        
+        if (targetUser[0].role === 'owner' && req.user.role !== 'owner') {
             return res.status(403).json({ success: false, error: 'Access Denied: Only the owner can update their own profile.' });
         }
         
-        const prefix = (id == 1) ? 'owner' : 'admin';
+        // Dynamically build the update query
+        const updates = [];
+        const params = [];
         
-        await pool.query(
-            'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-            [`${prefix}_display_name`, display_name, display_name]
-        );
-        if (avatar !== undefined && avatar !== null) {
-            await pool.query(
-                'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-                [`${prefix}_avatar`, avatar, avatar]
-            );
+        if (username) {
+            updates.push('username = ?');
+            params.push(username);
+        }
+        if (email) {
+            updates.push('email = ?');
+            params.push(email);
+        }
+        if (display_name) {
+            updates.push('display_name = ?');
+            params.push(display_name);
+        }
+        if (avatar !== undefined) {
+            updates.push('avatar = ?');
+            params.push(avatar);
         }
         if (password) {
-            const hashed = hashPassword(password);
-            await pool.query(
-                'INSERT INTO konfigurasi_sistem (nama_kunci, teks_nilai) VALUES (?, ?) ON DUPLICATE KEY UPDATE teks_nilai = ?',
-                [`${prefix}_password`, hashed, hashed]
-            );
+            updates.push('password = ?');
+            params.push(hashPassword(password));
         }
-        res.json({ success: true });
+        
+        if (updates.length === 0) {
+            return res.json({ success: true, message: 'Tidak ada data yang diubah.' });
+        }
+        
+        params.push(id);
+        await pool.query(`UPDATE pengguna SET ${updates.join(', ')} WHERE id = ?`, params);
+        
+        // If the updated user is the currently logged in user, return a new token
+        let newToken = null;
+        if (targetUser[0].username === req.user.username) {
+            const finalUsername = username || targetUser[0].username;
+            newToken = generateToken(finalUsername, req.user.role);
+        }
+        
+        res.json({ success: true, token: newToken });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
